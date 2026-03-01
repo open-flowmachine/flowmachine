@@ -26,7 +26,13 @@ type WorkflowEdge = z.output<typeof workflowEdgeSchema>;
 const workflowDefinitionEntityProps = z.object({
   name: z.string().min(1).max(255),
   description: z.string().max(2000).optional(),
-  projectId: entityIdSchema.nullable(),
+  projects: z
+    .object({
+      id: entityIdSchema,
+      syncStatus: z.enum(["idle", "pending", "success", "error"]),
+      syncedAt: z.date().nullable(),
+    })
+    .array(),
   actions: workflowActionSchema.array(),
   edges: workflowEdgeSchema.array(),
   isActive: z.boolean(),

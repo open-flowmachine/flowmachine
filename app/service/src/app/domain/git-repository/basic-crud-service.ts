@@ -20,13 +20,14 @@ export class GitRepositoryBasicCrudService implements GitRepositoryCrudService {
     input: z.infer<typeof gitRepositoryCrudServiceInputSchema.create>,
   ) {
     const { ctx, payload } = input;
-    const { name, url, config, integration } = payload;
+    const { name, url, config, integration, projects } = payload;
 
     const newEntity = GitRepositoryEntity.makeNew(ctx.tenant, {
       name,
       url,
       config,
       integration,
+      projects,
     });
 
     return await this.#gitRepositoryCrudRepository.insert({

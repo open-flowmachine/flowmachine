@@ -13,6 +13,7 @@ const gitRepositoryResponseDtoSchema = z.object({
   url: gitRepositoryEntityProps.shape.url,
   config: gitRepositoryEntityProps.shape.config,
   integration: gitRepositoryEntityProps.shape.integration,
+  projects: gitRepositoryEntityProps.shape.projects,
 });
 type GitRepositoryResponseDto = z.output<typeof gitRepositoryResponseDtoSchema>;
 
@@ -22,6 +23,8 @@ const postGitRepositoryRequestBodyDtoSchema = z.object({
   config: gitRepositoryCrudServiceInputSchema.create.shape.payload.shape.config,
   integration:
     gitRepositoryCrudServiceInputSchema.create.shape.payload.shape.integration,
+  projects:
+    gitRepositoryCrudServiceInputSchema.create.shape.payload.shape.projects,
 });
 
 const patchGitRepositoryRequestParamsDtoSchema = z.object({
@@ -33,6 +36,7 @@ const patchGitRepositoryRequestBodyDtoSchema = z.object({
   url: gitRepositoryEntityProps.shape.url.optional(),
   config: gitRepositoryEntityProps.shape.config.optional(),
   integration: gitRepositoryEntityProps.shape.integration.optional(),
+  projects: gitRepositoryEntityProps.shape.projects.optional(),
 });
 
 const deleteGitRepositoryRequestParamsDtoSchema = z.object({

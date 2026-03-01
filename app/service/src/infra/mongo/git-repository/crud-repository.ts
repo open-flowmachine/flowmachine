@@ -28,8 +28,12 @@ class GitRepositoryMongoCrudRepository implements GitRepositoryCrudRepository {
 
     try {
       const collection = await this.#getCollection();
+      const query: Record<string, unknown> = { tenant: ctx.tenant };
+      if (input.filter?.projectId) {
+        query["projects.id"] = input.filter.projectId;
+      }
       const result = await collection
-        .find({ tenant: ctx.tenant }, { session: ctx.mongoClientSession })
+        .find(query, { session: ctx.mongoClientSession })
         .toArray();
       return ok(result.map(this.#toDomain));
     } catch (error) {
@@ -123,6 +127,7 @@ class GitRepositoryMongoCrudRepository implements GitRepositoryCrudRepository {
         url: model.url,
         config: model.config,
         integration: model.integration,
+        projects: model.projects,
       },
     );
   }

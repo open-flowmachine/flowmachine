@@ -15,7 +15,7 @@ const workflowDefinitionResponseDtoSchema = z.object({
   tenant: tenantSchema,
   name: workflowDefinitionEntityProps.shape.name,
   description: workflowDefinitionEntityProps.shape.description,
-  projectId: workflowDefinitionEntityProps.shape.projectId,
+  projects: workflowDefinitionEntityProps.shape.projects,
   actions: z.array(workflowActionSchema),
   edges: z.array(workflowEdgeSchema),
   isActive: workflowDefinitionEntityProps.shape.isActive,
@@ -30,9 +30,9 @@ const postWorkflowDefinitionRequestBodyDtoSchema = z.object({
   description:
     workflowDefinitionCrudServiceInputSchema.create.shape.payload.shape
       .description,
-  projectId:
+  projects:
     workflowDefinitionCrudServiceInputSchema.create.shape.payload.shape
-      .projectId,
+      .projects,
   actions:
     workflowDefinitionCrudServiceInputSchema.create.shape.payload.shape.actions,
   edges:
@@ -49,7 +49,7 @@ const patchWorkflowDefinitionRequestParamsDtoSchema = z.object({
 const patchWorkflowDefinitionRequestBodyDtoSchema = z.object({
   name: workflowDefinitionEntityProps.shape.name.optional(),
   description: workflowDefinitionEntityProps.shape.description,
-  projectId: workflowDefinitionEntityProps.shape.projectId.optional(),
+  projects: workflowDefinitionEntityProps.shape.projects.optional(),
   actions: workflowDefinitionEntityProps.shape.actions.optional(),
   edges: workflowDefinitionEntityProps.shape.edges.optional(),
   isActive: workflowDefinitionEntityProps.shape.isActive.optional(),

@@ -24,6 +24,11 @@ const gitRepositoryCrudRepositoryInputSchema = {
 
   findMany: z.object({
     ctx: ctxSchema,
+    filter: z
+      .object({
+        projectId: entityIdSchema,
+      })
+      .optional(),
   }),
 
   update: z.object({

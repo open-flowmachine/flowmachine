@@ -23,6 +23,13 @@ const gitRepositoryEntityProps = z.object({
     provider: z.enum(gitProviders),
     credentialId: entityIdSchema,
   }),
+  projects: z
+    .object({
+      id: entityIdSchema,
+      syncStatus: z.enum(["idle", "pending", "success", "error"]),
+      syncedAt: z.date().nullable(),
+    })
+    .array(),
 });
 type GitRepositoryEntityProps = z.output<typeof gitRepositoryEntityProps>;
 

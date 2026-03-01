@@ -86,6 +86,7 @@ export class GitRepositoryV1HttpRouterFactory {
                   url: body.url,
                   config: body.config,
                   integration: body.integration,
+                  projects: body.projects,
                 },
               });
               if (result.isErr()) {
@@ -127,6 +128,7 @@ export class GitRepositoryV1HttpRouterFactory {
       url: entity.props.url,
       config: entity.props.config,
       integration: entity.props.integration,
+      projects: entity.props.projects,
     } as const satisfies GitRepositoryResponseDto;
   }
 }

@@ -28,8 +28,12 @@ class WorkflowDefinitionMongoCrudRepository implements WorkflowDefinitionCrudRep
 
     try {
       const collection = await this.#getCollection();
+      const query: Record<string, unknown> = { tenant: ctx.tenant };
+      if (input.filter?.projectId) {
+        query["projects.id"] = input.filter.projectId;
+      }
       const result = await collection
-        .find({ tenant: ctx.tenant }, { session: ctx.mongoClientSession })
+        .find(query, { session: ctx.mongoClientSession })
         .toArray();
       return ok(result.map(this.#toDomain));
     } catch (error) {
@@ -121,7 +125,7 @@ class WorkflowDefinitionMongoCrudRepository implements WorkflowDefinitionCrudRep
       {
         name: model.name,
         description: model.description,
-        projectId: model.projectId,
+        projects: model.projects,
         actions: model.actions,
         edges: model.edges,
         isActive: model.isActive,

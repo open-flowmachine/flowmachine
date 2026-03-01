@@ -22,6 +22,7 @@ const gitRepositoryCrudServiceInputSchema = {
       url: gitRepositoryEntityProps.shape.url,
       config: gitRepositoryEntityProps.shape.config,
       integration: gitRepositoryEntityProps.shape.integration,
+      projects: gitRepositoryEntityProps.shape.projects,
     }),
   }),
 
@@ -44,6 +45,7 @@ const gitRepositoryCrudServiceInputSchema = {
       url: gitRepositoryEntityProps.shape.url.optional(),
       config: gitRepositoryEntityProps.shape.config.optional(),
       integration: gitRepositoryEntityProps.shape.integration.optional(),
+      projects: gitRepositoryEntityProps.shape.projects.optional(),
     }),
   }),
 

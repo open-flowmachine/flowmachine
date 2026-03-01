@@ -24,6 +24,11 @@ const workflowDefinitionCrudRepositoryInputSchema = {
 
   findMany: z.object({
     ctx: ctxSchema,
+    filter: z
+      .object({
+        projectId: entityIdSchema,
+      })
+      .optional(),
   }),
 
   update: z.object({
