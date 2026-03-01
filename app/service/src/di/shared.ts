@@ -4,6 +4,7 @@ import { HttpRequestCtxFactory } from "@/api/plugin/http-request-ctx-factory";
 import { BetterAuthClientFactory } from "@/infra/better-auth/client-factory";
 import { BetterAuthService } from "@/infra/better-auth/service";
 import { EnvConfigService } from "@/infra/env/env-config-service";
+import { JiraExternalProjectService } from "@/infra/jira/service";
 import { MongoClientFactory } from "@/infra/mongo/client";
 import { logger } from "@/infra/pino/logger";
 import { ResendClientFactory } from "@/infra/resend/client-factory";
@@ -13,6 +14,8 @@ const envConfigService = new EnvConfigService();
 
 const mongoClientFactory = new MongoClientFactory(envConfigService);
 const mongoClient = mongoClientFactory.make();
+
+const jiraExternalProjectService = new JiraExternalProjectService();
 
 const resendClientFactory = new ResendClientFactory(envConfigService);
 const resendClient = resendClientFactory.make();
@@ -37,5 +40,6 @@ export {
   httpRequestCtxFactory,
   httpAuthGuardFactory,
   httpErrorHandlerFactory,
+  jiraExternalProjectService,
   mongoClient,
 };

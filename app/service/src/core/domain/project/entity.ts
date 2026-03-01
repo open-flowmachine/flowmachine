@@ -15,6 +15,7 @@ const projectEntityProps = z.object({
   name: z.string().min(1).max(256),
   integration: z
     .object({
+      baseUrl: z.url().max(2048),
       externalId: z.string().min(1).max(32),
       externalKey: z.string().min(1).max(32),
       provider: z.enum(projectProviders),

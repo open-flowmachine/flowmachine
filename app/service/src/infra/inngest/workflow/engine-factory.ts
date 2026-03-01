@@ -12,9 +12,7 @@ import type { WorkflowEngine } from "@/core/infra/workflow/engine/type";
 class InngestWorkflowEngineFactory implements WorkflowEngineFactory {
   #workflowDefinitionCrudService: WorkflowDefinitionCrudService;
 
-  constructor(
-    workflowDefinitionCrudService: WorkflowDefinitionCrudService,
-  ) {
+  constructor(workflowDefinitionCrudService: WorkflowDefinitionCrudService) {
     this.#workflowDefinitionCrudService = workflowDefinitionCrudService;
   }
 

@@ -22,6 +22,7 @@
         "@inngest/workflow-kit": "catalog:",
         "@openrouter/sdk": "catalog:",
         "autumn-js": "catalog:",
+        "axios": "catalog:",
         "better-auth": "catalog:",
         "dotenv": "catalog:",
         "elysia": "catalog:",

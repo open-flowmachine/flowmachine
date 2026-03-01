@@ -102,10 +102,12 @@ common/ → (no internal deps)
 ## Entity Pattern
 
 Base classes in `common/domain/`:
+
 - `Entity<T>` — id (UUIDv7), props: T, createdAt, updatedAt, update(partial) via es-toolkit merge
 - `TenantAwareEntity<T>` extends Entity — adds tenant: { id: EntityId, type: "organization" | "user" }
 
 Factory methods:
+
 - `Entity.makeNew(tenant, props)` — generates new UUIDv7 id
 - `Entity.makeExisting(id, createdAt, updatedAt, tenant, props)` — rehydration from DB
 
@@ -114,36 +116,39 @@ IAM entities (User, Member, Session) only have `makeExisting` — managed by Bet
 ## Port/Contract Pattern
 
 Every service and repository in `core/` defined as:
+
 1. A companion Zod input schema object (e.g., `documentCrudServiceInputSchema`)
 2. A TypeScript interface using `z.infer<>` for parameter types
 3. All methods return `Promise<Result<T, Err>>` via neverthrow
 
 Context composed from mongo + tenant schemas:
+
 ```typescript
 const ctxSchema = z.object({
-  ...mongoCtxSchema.shape,   // { mongoDb: Db, mongoClientSession?: ClientSession }
-  ...tenantCtxSchema.shape,  // { tenant: { id: EntityId, type: "organization"|"user" } }
+  ...mongoCtxSchema.shape, // { mongoDb: Db, mongoClientSession?: ClientSession }
+  ...tenantCtxSchema.shape, // { tenant: { id: EntityId, type: "organization"|"user" } }
 });
 ```
 
 ## Port-to-Adapter Mapping
 
-| Core Interface (Port) | Infra Implementation (Adapter) |
-|---|---|
-| DocumentCrudRepository | DocumentMongoCrudRepository |
-| ProjectCrudRepository | ProjectMongoCrudRepository |
-| AiAgentCrudRepository | AiAgentMongoCrudRepository |
-| CredentialCrudRepository | CredentialMongoCrudRepository |
-| GitRepositoryCrudRepository | GitRepositoryMongoCrudRepository |
+| Core Interface (Port)            | Infra Implementation (Adapter)        |
+| -------------------------------- | ------------------------------------- |
+| DocumentCrudRepository           | DocumentMongoCrudRepository           |
+| ProjectCrudRepository            | ProjectMongoCrudRepository            |
+| AiAgentCrudRepository            | AiAgentMongoCrudRepository            |
+| CredentialCrudRepository         | CredentialMongoCrudRepository         |
+| GitRepositoryCrudRepository      | GitRepositoryMongoCrudRepository      |
 | WorkflowDefinitionCrudRepository | WorkflowDefinitionMongoCrudRepository |
-| AuthService | BetterAuthService |
-| EmailService | ResendEmailService |
-| WorkflowFunctionFactory | InngestFunctionFactory |
-| WorkflowEngineFactory | InngestWorkflowEngineFactory |
+| AuthService                      | BetterAuthService                     |
+| EmailService                     | ResendEmailService                    |
+| WorkflowFunctionFactory          | InngestFunctionFactory                |
+| WorkflowEngineFactory            | InngestWorkflowEngineFactory          |
 
 ## App Layer Pattern (BasicCrudService)
 
 All 6 domain services follow identical template:
+
 - `create`: Entity.makeNew() → repository.insert()
 - `get`: repository.findOne() → null check → ok(entity)
 - `update`: repository.findOne() → entity.update(partial) → repository.update()
@@ -155,10 +160,12 @@ Constructor receives repository interface (core port), not concrete implementati
 ## HTTP Layer Pattern
 
 Each resource module has:
+
 - `http-router-factory.ts` — Elysia router with CRUD routes
 - `http-dto.ts` — Zod schemas for request body/params/response (derived from core schemas)
 
 Routes use two scoped plugins:
+
 1. `HttpRequestCtxFactory.make()` — creates MongoCtx, manages transaction (derive/onBeforeHandle/onAfterHandle/onError/onAfterResponse)
 2. `HttpAuthGuardFactory.make()` — resolves tenant from Better Auth session cookie
 
@@ -169,6 +176,7 @@ Response envelope: `{ status, code, message, data? }` via `okEnvelope()` / `errE
 ## DI Pattern
 
 Manual constructor injection, no IoC container:
+
 ```
 di/shared.ts:     ResendEmailService → BetterAuthClientFactory → BetterAuthService → HttpAuthGuardFactory
 di/<domain>.ts:   MongoCrudRepository → BasicCrudService → V1HttpRouterFactory(authGuard, ctxFactory, service)
@@ -205,13 +213,13 @@ di/<domain>.ts:   MongoCrudRepository → BasicCrudService → V1HttpRouterFacto
 
 ## External Services
 
-| Service | Infra Class | Purpose |
-|---|---|---|
-| MongoDB 8 | native driver | Primary database |
-| Better Auth | BetterAuthService | Authentication + organizations |
-| Inngest | InngestFunctionFactory + InngestWorkflowEngineFactory | Workflow engine (DAG execution via @inngest/workflow-kit) |
-| Resend | ResendEmailService | Email (OTP, invitations) |
-| Daytona | (not yet implemented) | SDK sandboxes |
+| Service     | Infra Class                                           | Purpose                                                   |
+| ----------- | ----------------------------------------------------- | --------------------------------------------------------- |
+| MongoDB 8   | native driver                                         | Primary database                                          |
+| Better Auth | BetterAuthService                                     | Authentication + organizations                            |
+| Inngest     | InngestFunctionFactory + InngestWorkflowEngineFactory | Workflow engine (DAG execution via @inngest/workflow-kit) |
+| Resend      | ResendEmailService                                    | Email (OTP, invitations)                                  |
+| Daytona     | (not yet implemented)                                 | SDK sandboxes                                             |
 
 ## Workflow Sub-Domain
 

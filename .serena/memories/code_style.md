@@ -16,6 +16,7 @@
 ## Entity Pattern
 
 All domain entities in `core/domain/`:
+
 - Extend `Entity<T>` or `TenantAwareEntity<T>` from `common/domain/`
 - Static factory: `makeNew(tenant, props)` for creation, `makeExisting(...)` for rehydration
 - `update(partial)` uses `es-toolkit/merge` for deep merge + bumps `updatedAt`
@@ -31,6 +32,7 @@ All domain entities in `core/domain/`:
 ## Port/Contract Pattern
 
 Core ports (interfaces) co-located with Zod input schema objects:
+
 ```typescript
 const xCrudServiceInputSchema = {
   create: z.object({ ctx: ctxSchema, payload: z.object({...}) }),
@@ -44,6 +46,7 @@ interface XCrudService {
 ## Service Implementation Pattern (BasicCrudService)
 
 All app-layer services follow identical template:
+
 - Constructor injection of repository interface (core port)
 - `#` private fields for all dependencies
 - `create` → `Entity.makeNew()` → `repository.insert()`
@@ -55,12 +58,14 @@ All app-layer services follow identical template:
 ## HTTP Response Pattern
 
 Envelope: `{ status, code, message, data? }` via `okEnvelope()` / `errEnvelope()`
+
 - `okEnvelope({ data })` strips nil fields via `omitBy(isNil)`
 - `errEnvelope(err)` returns `{ status, code, message }` — no data
 
 ## DTO Pattern
 
 Each API module has `http-dto.ts`:
+
 - Request body schemas derived from core input schemas (reusing .shape fields)
 - PATCH schemas add `.optional()` to each field
 - Response types via `z.output<>` used as TypeScript `satisfies` assertions
@@ -69,6 +74,7 @@ Each API module has `http-dto.ts`:
 ## DI Pattern
 
 Manual constructor injection in `di/*.ts`:
+
 - Module-level singletons (instantiated at import time)
 - `di/shared.ts` — shared auth/ctx factories
 - Per-domain files wire: MongoCrudRepository → BasicCrudService → V1HttpRouterFactory
@@ -90,6 +96,7 @@ const value = result.value;
 ## MongoDB Repository Pattern
 
 All 6 repos structurally identical:
+
 - `#getCollection(ctx)` → gets collection (currently calls createIndexes each time)
 - `#toDomain(model)` → `Entity.makeExisting(...)` with field mapping
 - Write: `tenantAwareEntityToMongoModel(entity)` → `insertOne`/`replaceOne`
@@ -99,6 +106,7 @@ All 6 repos structurally identical:
 ## Elysia Router Pattern
 
 Each router is a factory class (`*HttpRouterFactory`):
+
 - Constructor receives auth guard, ctx factory, and service(s)
 - `.make()` returns an Elysia plugin
 - Uses scoped plugins: `httpRequestCtxFactory.make()` + `httpAuthGuardFactory.make()`
