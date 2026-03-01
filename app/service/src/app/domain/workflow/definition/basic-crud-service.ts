@@ -64,10 +64,11 @@ export class WorkflowDefinitionBasicCrudService implements WorkflowDefinitionCru
   async list(
     input: z.infer<typeof workflowDefinitionCrudServiceInputSchema.list>,
   ) {
-    const { ctx } = input;
+    const { ctx, filter } = input;
 
     return await this.#workflowDefinitionCrudRepository.findMany({
       ctx,
+      filter,
     });
   }
 

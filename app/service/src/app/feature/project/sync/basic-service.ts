@@ -1,15 +1,14 @@
-import { isNil } from "es-toolkit";
 import { err, ok } from "neverthrow";
 import type { Result } from "neverthrow";
 import type z from "zod";
 import { Err } from "@/common/err/err";
-import type { AiAgentCrudRepository } from "@/core/domain/ai-agent/crud-repository";
-import type { CredentialCrudRepository } from "@/core/domain/credential/crud-repository";
+import type { AiAgentCrudService } from "@/core/domain/ai-agent/crud-service";
+import type { CredentialCrudService } from "@/core/domain/credential/crud-service";
 import type { CredentialEntity } from "@/core/domain/credential/entity";
-import type { GitRepositoryCrudRepository } from "@/core/domain/git-repository/crud-repository";
-import type { ProjectCrudRepository } from "@/core/domain/project/crud-repository";
+import type { GitRepositoryCrudService } from "@/core/domain/git-repository/crud-service";
+import type { ProjectCrudService } from "@/core/domain/project/crud-service";
 import type { ProjectEntity } from "@/core/domain/project/entity";
-import type { WorkflowDefinitionCrudRepository } from "@/core/domain/workflow/definition/crud-repository";
+import type { WorkflowDefinitionCrudService } from "@/core/domain/workflow/definition/crud-service";
 import type {
   ProjectSyncService,
   projectSyncServiceInputSchema,
@@ -17,26 +16,26 @@ import type {
 import type { ExternalProjectService } from "@/core/infra/external/project/service";
 
 export class ProjectSyncBasicService implements ProjectSyncService {
-  #projectCrudRepository: ProjectCrudRepository;
-  #credentialCrudRepository: CredentialCrudRepository;
-  #aiAgentCrudRepository: AiAgentCrudRepository;
-  #gitRepositoryCrudRepository: GitRepositoryCrudRepository;
-  #workflowDefinitionCrudRepository: WorkflowDefinitionCrudRepository;
+  #projectCrudService: ProjectCrudService;
+  #credentialCrudService: CredentialCrudService;
+  #aiAgentCrudService: AiAgentCrudService;
+  #gitRepositoryCrudService: GitRepositoryCrudService;
+  #workflowDefinitionCrudService: WorkflowDefinitionCrudService;
   #externalProjectService: ExternalProjectService;
 
   constructor(
-    projectCrudRepository: ProjectCrudRepository,
-    credentialCrudRepository: CredentialCrudRepository,
-    aiAgentCrudRepository: AiAgentCrudRepository,
-    gitRepositoryCrudRepository: GitRepositoryCrudRepository,
-    workflowDefinitionCrudRepository: WorkflowDefinitionCrudRepository,
+    projectCrudService: ProjectCrudService,
+    credentialCrudService: CredentialCrudService,
+    aiAgentCrudService: AiAgentCrudService,
+    gitRepositoryCrudService: GitRepositoryCrudService,
+    workflowDefinitionCrudService: WorkflowDefinitionCrudService,
     externalProjectService: ExternalProjectService,
   ) {
-    this.#projectCrudRepository = projectCrudRepository;
-    this.#credentialCrudRepository = credentialCrudRepository;
-    this.#aiAgentCrudRepository = aiAgentCrudRepository;
-    this.#gitRepositoryCrudRepository = gitRepositoryCrudRepository;
-    this.#workflowDefinitionCrudRepository = workflowDefinitionCrudRepository;
+    this.#projectCrudService = projectCrudService;
+    this.#credentialCrudService = credentialCrudService;
+    this.#aiAgentCrudService = aiAgentCrudService;
+    this.#gitRepositoryCrudService = gitRepositoryCrudService;
+    this.#workflowDefinitionCrudService = workflowDefinitionCrudService;
     this.#externalProjectService = externalProjectService;
   }
 
@@ -55,21 +54,20 @@ export class ProjectSyncBasicService implements ProjectSyncService {
     }
     const { project, credential } = resolveResult.value;
 
-    const findManyResult = await this.#aiAgentCrudRepository.findMany({
+    const listResult = await this.#aiAgentCrudService.list({
       ctx,
       filter: { projectId },
     });
 
-    if (findManyResult.isErr()) {
-      return err(findManyResult.error);
+    if (listResult.isErr()) {
+      return err(listResult.error);
     }
-    for (const aiAgent of findManyResult.value) {
+    for (const aiAgent of listResult.value) {
       aiAgent.markProjectForSync({ projectId });
 
-      await this.#aiAgentCrudRepository.update({
+      await this.#aiAgentCrudService.update({
         ctx,
-        id: aiAgent.id,
-        data: aiAgent,
+        payload: { id: aiAgent.id, projects: aiAgent.props.projects },
       });
 
       const syncResult =
@@ -86,10 +84,9 @@ export class ProjectSyncBasicService implements ProjectSyncService {
         aiAgent.markProjectSyncError({ projectId });
       }
 
-      await this.#aiAgentCrudRepository.update({
+      await this.#aiAgentCrudService.update({
         ctx,
-        id: aiAgent.id,
-        data: aiAgent,
+        payload: { id: aiAgent.id, projects: aiAgent.props.projects },
       });
     }
 
@@ -113,21 +110,23 @@ export class ProjectSyncBasicService implements ProjectSyncService {
     }
     const { project, credential } = resolveResult.value;
 
-    const findManyResult = await this.#gitRepositoryCrudRepository.findMany({
+    const listResult = await this.#gitRepositoryCrudService.list({
       ctx,
       filter: { projectId },
     });
 
-    if (findManyResult.isErr()) {
-      return err(findManyResult.error);
+    if (listResult.isErr()) {
+      return err(listResult.error);
     }
-    for (const gitRepository of findManyResult.value) {
+    for (const gitRepository of listResult.value) {
       gitRepository.markProjectForSync({ projectId });
 
-      await this.#gitRepositoryCrudRepository.update({
+      await this.#gitRepositoryCrudService.update({
         ctx,
-        id: gitRepository.id,
-        data: gitRepository,
+        payload: {
+          id: gitRepository.id,
+          projects: gitRepository.props.projects,
+        },
       });
 
       const syncResult =
@@ -144,10 +143,12 @@ export class ProjectSyncBasicService implements ProjectSyncService {
         gitRepository.markProjectSyncError({ projectId });
       }
 
-      await this.#gitRepositoryCrudRepository.update({
+      await this.#gitRepositoryCrudService.update({
         ctx,
-        id: gitRepository.id,
-        data: gitRepository,
+        payload: {
+          id: gitRepository.id,
+          projects: gitRepository.props.projects,
+        },
       });
     }
 
@@ -171,22 +172,23 @@ export class ProjectSyncBasicService implements ProjectSyncService {
     }
     const { project, credential } = resolveResult.value;
 
-    const findManyResult =
-      await this.#workflowDefinitionCrudRepository.findMany({
-        ctx,
-        filter: { projectId },
-      });
+    const listResult = await this.#workflowDefinitionCrudService.list({
+      ctx,
+      filter: { projectId },
+    });
 
-    if (findManyResult.isErr()) {
-      return err(findManyResult.error);
+    if (listResult.isErr()) {
+      return err(listResult.error);
     }
-    for (const workflowDefinition of findManyResult.value) {
+    for (const workflowDefinition of listResult.value) {
       workflowDefinition.markProjectForSync({ projectId });
 
-      await this.#workflowDefinitionCrudRepository.update({
+      await this.#workflowDefinitionCrudService.update({
         ctx,
-        id: workflowDefinition.id,
-        data: workflowDefinition,
+        payload: {
+          id: workflowDefinition.id,
+          projects: workflowDefinition.props.projects,
+        },
       });
 
       const syncResult =
@@ -203,10 +205,12 @@ export class ProjectSyncBasicService implements ProjectSyncService {
         workflowDefinition.markProjectSyncError({ projectId });
       }
 
-      await this.#workflowDefinitionCrudRepository.update({
+      await this.#workflowDefinitionCrudService.update({
         ctx,
-        id: workflowDefinition.id,
-        data: workflowDefinition,
+        payload: {
+          id: workflowDefinition.id,
+          projects: workflowDefinition.props.projects,
+        },
       });
     }
 
@@ -221,9 +225,9 @@ export class ProjectSyncBasicService implements ProjectSyncService {
   ): Promise<
     Result<{ project: ProjectEntity; credential: CredentialEntity }, Err>
   > {
-    const projectResult = await this.#projectCrudRepository.findOne({
+    const projectResult = await this.#projectCrudService.get({
       ctx,
-      id: projectId,
+      payload: { id: projectId },
     });
 
     if (projectResult.isErr()) {
@@ -231,21 +235,18 @@ export class ProjectSyncBasicService implements ProjectSyncService {
     }
     const project = projectResult.value;
 
-    if (isNil(project)) {
-      return err(Err.code("notFound", { message: "Project not found" }));
-    }
     const integration = project.props.integration;
 
-    if (isNil(integration)) {
+    if (!integration) {
       return err(
         Err.code("badRequest", {
           message: "Project has no integration configured",
         }),
       );
     }
-    const credentialResult = await this.#credentialCrudRepository.findOne({
+    const credentialResult = await this.#credentialCrudService.get({
       ctx,
-      id: integration.credentialId,
+      payload: { id: integration.credentialId },
     });
 
     if (credentialResult.isErr()) {
@@ -253,9 +254,6 @@ export class ProjectSyncBasicService implements ProjectSyncService {
     }
     const credential = credentialResult.value;
 
-    if (isNil(credential)) {
-      return err(Err.code("notFound", { message: "Credential not found" }));
-    }
     return ok({ project, credential });
   }
 }

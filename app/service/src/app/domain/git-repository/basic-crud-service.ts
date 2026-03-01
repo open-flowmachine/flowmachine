@@ -57,10 +57,11 @@ export class GitRepositoryBasicCrudService implements GitRepositoryCrudService {
   }
 
   async list(input: z.infer<typeof gitRepositoryCrudServiceInputSchema.list>) {
-    const { ctx } = input;
+    const { ctx, filter } = input;
 
     return await this.#gitRepositoryCrudRepository.findMany({
       ctx,
+      filter,
     });
   }
 

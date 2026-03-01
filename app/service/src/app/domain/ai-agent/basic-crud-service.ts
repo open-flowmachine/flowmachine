@@ -53,10 +53,11 @@ export class AiAgentBasicCrudService implements AiAgentCrudService {
   }
 
   async list(input: z.infer<typeof aiAgentCrudServiceInputSchema.list>) {
-    const { ctx } = input;
+    const { ctx, filter } = input;
 
     return await this.#aiAgentCrudRepository.findMany({
       ctx,
+      filter,
     });
   }
 
