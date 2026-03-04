@@ -13,10 +13,17 @@ const aiModels = [
   "z-ai/glm-4.7",
 ] as const;
 
+const projectHttpResponseDtoSchema = z.object({
+  id: z.string(),
+  syncStatus: z.enum(["idle", "pending", "success", "error"]),
+  syncedAt: z.iso.datetime().nullable(),
+});
+
 export const aiAgentHttpResponseDtoSchema = z.object({
   ...tenantAwareBaseHttpClientResponseDtoSchema.shape,
   model: z.enum(aiModels),
   name: z.string(),
+  projects: z.array(projectHttpResponseDtoSchema),
 });
 export type AiAgentHttpResponseDto = z.output<
   typeof aiAgentHttpResponseDtoSchema
@@ -25,6 +32,7 @@ export type AiAgentHttpResponseDto = z.output<
 export const createAiAgentHttpRequestBodyDtoSchema = z.object({
   model: z.enum(aiModels),
   name: z.string().min(1).max(256),
+  projects: z.array(projectHttpResponseDtoSchema).default([]),
 });
 export type CreateAiAgentHttpRequestBodyDto = z.output<
   typeof createAiAgentHttpRequestBodyDtoSchema
@@ -54,6 +62,7 @@ export type GetAiAgentByIdClientIn = z.output<
 export const updateAiAgentHttpRequestBodyDtoSchema = z.object({
   model: z.enum(aiModels).optional(),
   name: z.string().min(1).max(256).optional(),
+  projects: z.array(projectHttpResponseDtoSchema).optional(),
 });
 export type UpdateAiAgentHttpRequestBodyDto = z.output<
   typeof updateAiAgentHttpRequestBodyDtoSchema

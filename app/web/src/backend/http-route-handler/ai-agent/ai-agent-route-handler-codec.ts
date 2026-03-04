@@ -14,6 +14,7 @@ export const aiAgentDomainCodec = z.codec(
       updatedAt: dto.updatedAt,
       model: dto.model,
       name: dto.name,
+      projects: dto.projects,
     }),
     encode: noop as () => never,
   },

@@ -6,9 +6,10 @@ export const createAiAgentServicePortInSchema = z.object({
   body: z.object({
     model: aiAgentDomainSchema.shape.model,
     name: aiAgentDomainSchema.shape.name,
+    projects: aiAgentDomainSchema.shape.projects.default([]),
   }),
 });
-export type CreateAiAgentServicePortIn = z.output<
+export type CreateAiAgentServicePortIn = z.input<
   typeof createAiAgentServicePortInSchema
 >;
 
@@ -37,6 +38,7 @@ export const updateAiAgentServicePortInSchema = z.object({
   body: z.object({
     model: aiAgentDomainSchema.shape.model.optional(),
     name: aiAgentDomainSchema.shape.name.optional(),
+    projects: aiAgentDomainSchema.shape.projects.optional(),
   }),
 });
 export type UpdateAiAgentServicePortIn = z.output<

@@ -1,5 +1,9 @@
 import { z } from "zod/v4";
-import { tenantAwareBaseDomainSchema } from "@/domain/entity/shared-schema";
+import {
+  datetimeSchema,
+  domainIdSchema,
+  tenantAwareBaseDomainSchema,
+} from "@/domain/entity/shared-schema";
 
 const aiModels = [
   "anthropic/claude-haiku-4.5",
@@ -14,5 +18,12 @@ export const aiAgentDomainSchema = z.object({
   ...tenantAwareBaseDomainSchema.shape,
   model: z.enum(aiModels),
   name: z.string(),
+  projects: z.array(
+    z.object({
+      id: domainIdSchema,
+      syncStatus: z.enum(["idle", "pending", "success", "error"]),
+      syncedAt: datetimeSchema.nullable(),
+    }),
+  ),
 });
 export type AiAgentDomain = z.infer<typeof aiAgentDomainSchema>;
