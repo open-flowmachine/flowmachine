@@ -1,13 +1,15 @@
-import { HttpAuthGuardFactory } from "@/api/plugin/http-auth-guard-factory";
-import { HttpErrorHandlerFactory } from "@/api/plugin/http-error-handler-factory";
-import { HttpRequestCtxFactory } from "@/api/plugin/http-request-ctx-factory";
 import { BetterAuthClientFactory } from "@/infra/better-auth/client-factory";
 import { BetterAuthService } from "@/infra/better-auth/service";
 import { EnvConfigService } from "@/infra/env/env-config-service";
 import { InngestClientFactory } from "@/infra/inngest/client-factory";
 import { JiraExternalProjectService } from "@/infra/jira/service";
+import { AiAgentMongoCrudRepository } from "@/infra/mongo/ai-agent/crud-repository";
 import { MongoClientFactory } from "@/infra/mongo/client";
-import { logger } from "@/infra/pino/logger";
+import { CredentialMongoCrudRepository } from "@/infra/mongo/credential/crud-repository";
+import { DocumentMongoCrudRepository } from "@/infra/mongo/document/crud-repository";
+import { GitRepositoryMongoCrudRepository } from "@/infra/mongo/git-repository/crud-repository";
+import { ProjectMongoCrudRepository } from "@/infra/mongo/project/crud-repository";
+import { WorkflowDefinitionMongoCrudRepository } from "@/infra/mongo/workflow/definition/crud-repository";
 import { ResendClientFactory } from "@/infra/resend/client-factory";
 import { ResendEmailService } from "@/infra/resend/service";
 
@@ -33,18 +35,41 @@ const betterAuthService = new BetterAuthService(betterAuthClient);
 const inngestClientFactory = new InngestClientFactory();
 const inngestClient = inngestClientFactory.make();
 
-const httpRequestCtxFactory = new HttpRequestCtxFactory(mongoClient);
-const httpAuthGuardFactory = new HttpAuthGuardFactory(betterAuthService);
-const httpErrorHandlerFactory = new HttpErrorHandlerFactory(logger);
+// Repositories
+const projectMongoCrudRepository = new ProjectMongoCrudRepository(
+  envConfigService,
+  mongoClient,
+);
+const credentialMongoCrudRepository = new CredentialMongoCrudRepository(
+  envConfigService,
+  mongoClient,
+);
+const aiAgentMongoCrudRepository = new AiAgentMongoCrudRepository(
+  envConfigService,
+  mongoClient,
+);
+const gitRepositoryMongoCrudRepository = new GitRepositoryMongoCrudRepository(
+  envConfigService,
+  mongoClient,
+);
+const documentMongoCrudRepository = new DocumentMongoCrudRepository(
+  envConfigService,
+  mongoClient,
+);
+const workflowDefinitionMongoCrudRepository =
+  new WorkflowDefinitionMongoCrudRepository(envConfigService, mongoClient);
 
 export {
   betterAuthClient,
   betterAuthService,
   envConfigService,
-  httpAuthGuardFactory,
-  httpErrorHandlerFactory,
-  httpRequestCtxFactory,
   inngestClient,
   jiraExternalProjectService,
   mongoClient,
+  projectMongoCrudRepository,
+  credentialMongoCrudRepository,
+  aiAgentMongoCrudRepository,
+  gitRepositoryMongoCrudRepository,
+  documentMongoCrudRepository,
+  workflowDefinitionMongoCrudRepository,
 };

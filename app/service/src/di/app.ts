@@ -8,43 +8,17 @@ import { ProjectSyncBasicService } from "@/app/feature/project/sync/basic-servic
 import { WorkflowSdlcActionDefinitionCrudService } from "@/app/feature/workflow/sdlc/action-definition-service";
 import { WorkflowSdlcFunctionFactory } from "@/app/feature/workflow/sdlc/durable-function-factory";
 import {
-  envConfigService,
+  aiAgentMongoCrudRepository,
+  credentialMongoCrudRepository,
+  documentMongoCrudRepository,
+  gitRepositoryMongoCrudRepository,
   inngestClient,
   jiraExternalProjectService,
-  mongoClient,
+  projectMongoCrudRepository,
+  workflowDefinitionMongoCrudRepository,
 } from "@/di/infra";
 import { InngestFunctionFactory } from "@/infra/inngest/function-factory";
 import { InngestWorkflowEngineFactory } from "@/infra/inngest/workflow/engine-factory";
-import { AiAgentMongoCrudRepository } from "@/infra/mongo/ai-agent/crud-repository";
-import { CredentialMongoCrudRepository } from "@/infra/mongo/credential/crud-repository";
-import { DocumentMongoCrudRepository } from "@/infra/mongo/document/crud-repository";
-import { GitRepositoryMongoCrudRepository } from "@/infra/mongo/git-repository/crud-repository";
-import { ProjectMongoCrudRepository } from "@/infra/mongo/project/crud-repository";
-import { WorkflowDefinitionMongoCrudRepository } from "@/infra/mongo/workflow/definition/crud-repository";
-
-// Repositories
-const projectMongoCrudRepository = new ProjectMongoCrudRepository(
-  envConfigService,
-  mongoClient,
-);
-const credentialMongoCrudRepository = new CredentialMongoCrudRepository(
-  envConfigService,
-  mongoClient,
-);
-const aiAgentMongoCrudRepository = new AiAgentMongoCrudRepository(
-  envConfigService,
-  mongoClient,
-);
-const gitRepositoryMongoCrudRepository = new GitRepositoryMongoCrudRepository(
-  envConfigService,
-  mongoClient,
-);
-const documentMongoCrudRepository = new DocumentMongoCrudRepository(
-  envConfigService,
-  mongoClient,
-);
-const workflowDefinitionMongoCrudRepository =
-  new WorkflowDefinitionMongoCrudRepository(envConfigService, mongoClient);
 
 // Domain services
 const projectBasicCrudService = new ProjectBasicCrudService(

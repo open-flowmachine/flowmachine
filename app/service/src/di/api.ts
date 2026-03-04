@@ -8,6 +8,9 @@ import { InngestHttpRouterFactory } from "@/api/module/inngest/http-router-facto
 import { ProjectV1HttpRouterFactory } from "@/api/module/project/v1/http-router-factory";
 import { WorkflowActionDefinitionV1HttpRouterFactory } from "@/api/module/workflow/action/v1/http-router-factory";
 import { WorkflowDefinitionV1HttpRouterFactory } from "@/api/module/workflow/definition/v1/http-router-factory";
+import { HttpAuthGuardFactory } from "@/api/plugin/http-auth-guard-factory";
+import { HttpErrorHandlerFactory } from "@/api/plugin/http-error-handler-factory";
+import { HttpRequestCtxFactory } from "@/api/plugin/http-request-ctx-factory";
 import {
   aiAgentBasicCrudService,
   credentialBasicCrudService,
@@ -20,11 +23,16 @@ import {
 } from "@/di/app";
 import {
   betterAuthClient,
+  betterAuthService,
   envConfigService,
-  httpAuthGuardFactory,
-  httpRequestCtxFactory,
   inngestClient,
+  mongoClient,
 } from "@/di/infra";
+import { logger } from "@/infra/pino/logger";
+
+const httpRequestCtxFactory = new HttpRequestCtxFactory(mongoClient);
+const httpAuthGuardFactory = new HttpAuthGuardFactory(betterAuthService);
+const httpErrorHandlerFactory = new HttpErrorHandlerFactory(logger);
 
 const healthHttpRouterFactory = new HealthHttpRouterFactory(envConfigService);
 
@@ -81,6 +89,9 @@ const inngestHttpRouterFactory = new InngestHttpRouterFactory(inngestClient, [
 ]);
 
 export {
+  httpAuthGuardFactory,
+  httpErrorHandlerFactory,
+  httpRequestCtxFactory,
   aiAgentV1HttpRouterFactory,
   betterAuthHttpRouterFactory,
   credentialV1HttpRouterFactory,

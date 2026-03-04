@@ -4,5 +4,6 @@ import z from "zod";
 const mongoCtxSchema = z.object({
   mongoClientSession: z.instanceof(ClientSession).optional(),
 });
+type MongoCtx = z.infer<typeof mongoCtxSchema>;
 
-export { mongoCtxSchema };
+export { type MongoCtx, mongoCtxSchema };

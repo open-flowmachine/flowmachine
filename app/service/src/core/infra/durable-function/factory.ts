@@ -1,4 +1,4 @@
-import type { Handler } from "inngest";
+import type { Handler, Inngest } from "inngest";
 import z from "zod";
 import type { DurableFunction } from "@/core/infra/durable-function/type";
 
@@ -10,7 +10,7 @@ const durableFunctionFactoryInputSchema = {
     trigger: z.object({
       event: z.string(),
     }),
-    handler: z.custom<Handler.Any>(),
+    handler: z.custom<Handler<Inngest.Any>>(),
   }),
 };
 

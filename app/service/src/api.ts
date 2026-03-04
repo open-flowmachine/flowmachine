@@ -9,12 +9,13 @@ import {
   documentV1HttpRouterFactory,
   gitRepositoryV1HttpRouterFactory,
   healthHttpRouterFactory,
+  httpErrorHandlerFactory,
   inngestHttpRouterFactory,
   projectV1HttpRouterFactory,
   workflowActionDefinitionV1HttpRouterFactory,
   workflowDefinitionV1HttpRouterFactory,
 } from "@/di/api";
-import { envConfigService, httpErrorHandlerFactory } from "@/di/infra";
+import { envConfigService } from "@/di/infra";
 
 const app = new Elysia();
 
