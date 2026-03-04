@@ -1,3 +1,4 @@
+import { CopyIcon } from "lucide-react";
 import type { ProjectDomain } from "@/domain/entity/project/project-domain-schema";
 import { makeProjectDomainService } from "@/domain/entity/project/project-domain-service";
 import { Button } from "@/frontend/component/ui/button";
@@ -12,11 +13,13 @@ import {
 
 type EditableProjectDetailsProps = {
   project: ProjectDomain;
+  onCopy: (text: string) => void;
   onEdit: () => void;
 };
 
 export function EditableProjectDetails({
   project,
+  onCopy,
   onEdit,
 }: EditableProjectDetailsProps) {
   const projectDomainService = makeProjectDomainService({ project });
@@ -26,6 +29,19 @@ export function EditableProjectDetails({
       <FieldSet>
         <FieldLegend>Basic</FieldLegend>
         <FieldGroup>
+          <Field>
+            <FieldLabel>ID</FieldLabel>
+            <FieldContent className="flex-row items-center gap-x-1">
+              <span className="text-sm">{project.id}</span>
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                onClick={() => onCopy(project.id)}
+              >
+                <CopyIcon />
+              </Button>
+            </FieldContent>
+          </Field>
           <Field>
             <FieldLabel>Name</FieldLabel>
             <FieldContent>
