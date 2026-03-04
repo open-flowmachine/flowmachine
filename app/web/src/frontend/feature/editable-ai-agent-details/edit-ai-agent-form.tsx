@@ -8,7 +8,20 @@ import {
   aiAgentDomainSchema,
 } from "@/domain/entity/ai-agent/ai-agent-domain-schema";
 import { makeAiAgentDomainService } from "@/domain/entity/ai-agent/ai-agent-domain-service";
+import type { ProjectDomain } from "@/domain/entity/project/project-domain-schema";
 import { Button } from "@/frontend/component/ui/button";
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
+} from "@/frontend/component/ui/combobox";
 import {
   Field,
   FieldContent,
@@ -33,6 +46,7 @@ import type { EditAiAgentFormValues } from "@/frontend/feature/editable-ai-agent
 type EditAiAgentFormProps = {
   aiAgent: AiAgentDomain;
   form: UseFormReturn<EditAiAgentFormValues>;
+  projects: ProjectDomain[];
   onCancel: () => void;
   onValidFormSubmit: (values: EditAiAgentFormValues) => Promise<void>;
   onInvalidFormSubmit: (values: FieldErrors<EditAiAgentFormValues>) => void;
@@ -41,11 +55,13 @@ type EditAiAgentFormProps = {
 export function EditAiAgentForm({
   aiAgent,
   form,
+  projects,
   onCancel,
   onValidFormSubmit,
   onInvalidFormSubmit,
 }: EditAiAgentFormProps) {
   const aiAgentDomainService = makeAiAgentDomainService({ aiAgent });
+  const chipsRef = useComboboxAnchor();
 
   return (
     <form
@@ -119,6 +135,68 @@ export function EditAiAgentForm({
                 </Select>
               </Field>
             )}
+          />
+          <Controller
+            name="projects"
+            control={form.control}
+            render={({ field, fieldState }) => {
+              const selectedProjects = projects.filter((p) =>
+                field.value.includes(p.id),
+              );
+              return (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Assigned projects</FieldLabel>
+                  <FieldDescription>
+                    Add to which projects this AI agent belongs. You can assign
+                    it to multiple projects.
+                  </FieldDescription>
+                  <Combobox
+                    multiple
+                    items={projects}
+                    value={selectedProjects}
+                    onValueChange={(next: ProjectDomain[]) =>
+                      field.onChange(next.map((p) => p.id))
+                    }
+                  >
+                    <ComboboxChips ref={chipsRef}>
+                      <ComboboxValue>
+                        {(value: ProjectDomain[]) => (
+                          <>
+                            {value.map((project) => (
+                              <ComboboxChip
+                                key={project.id}
+                                aria-label={project.name}
+                              >
+                                {project.name}
+                              </ComboboxChip>
+                            ))}
+                            <ComboboxChipsInput
+                              disabled={form.formState.isSubmitting}
+                              placeholder={
+                                value.length > 0 ? "" : "Search projects..."
+                              }
+                            />
+                          </>
+                        )}
+                      </ComboboxValue>
+                    </ComboboxChips>
+                    <ComboboxContent anchor={chipsRef}>
+                      <ComboboxList>
+                        {(project: ProjectDomain) => (
+                          <ComboboxItem key={project.id} value={project}>
+                            {project.name}
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                      <ComboboxEmpty>No projects found</ComboboxEmpty>
+                    </ComboboxContent>
+                  </Combobox>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              );
+            }}
           />
           <Field>
             <FieldLabel>Created at</FieldLabel>

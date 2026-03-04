@@ -1,6 +1,6 @@
 import { UTCDate } from "@date-fns/utc";
 import { randomUUIDv7 } from "bun";
-import { merge } from "es-toolkit";
+import { mergeWith } from "es-toolkit";
 import type { EmptyObject, PartialDeep, UnknownRecord } from "type-fest";
 import z from "zod";
 
@@ -31,7 +31,11 @@ class Entity<T extends UnknownRecord = EmptyObject> {
   }
 
   update(partialProps: PartialDeep<T>) {
-    this.props = merge(this.props, partialProps);
+    this.props = mergeWith(this.props, partialProps, (target, source) => {
+      if (Array.isArray(target) && Array.isArray(source)) {
+        return source;
+      }
+    });
     this.updatedAt = new UTCDate();
   }
 }

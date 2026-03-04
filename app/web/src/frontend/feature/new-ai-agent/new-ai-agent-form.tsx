@@ -5,7 +5,20 @@ import {
   type UseFormReturn,
 } from "react-hook-form";
 import { aiAgentDomainSchema } from "@/domain/entity/ai-agent/ai-agent-domain-schema";
+import type { ProjectDomain } from "@/domain/entity/project/project-domain-schema";
 import { Button } from "@/frontend/component/ui/button";
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
+} from "@/frontend/component/ui/combobox";
 import {
   Field,
   FieldContent,
@@ -29,15 +42,19 @@ import type { NewAiAgentFormValues } from "@/frontend/feature/new-ai-agent/new-a
 
 type NewAiAgentFormProps = {
   form: UseFormReturn<NewAiAgentFormValues>;
+  projects: ProjectDomain[];
   handleValidFormSubmit: SubmitHandler<NewAiAgentFormValues>;
   handleInvalidFormSubmit: SubmitErrorHandler<NewAiAgentFormValues>;
 };
 
 export function NewAiAgentForm({
   form,
+  projects,
   handleValidFormSubmit,
   handleInvalidFormSubmit,
 }: NewAiAgentFormProps) {
+  const chipsRef = useComboboxAnchor();
+
   return (
     <form
       className="max-w-2xl space-y-6"
@@ -117,9 +134,70 @@ export function NewAiAgentForm({
               </Field>
             )}
           />
+          <Controller
+            name="projects"
+            control={form.control}
+            render={({ field, fieldState }) => {
+              const selectedProjects = projects.filter((p) =>
+                field.value.includes(p.id),
+              );
+              return (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Assigned projects</FieldLabel>
+                  <FieldDescription>
+                    Add to which projects this AI agent belongs. You can assign
+                    it to multiple projects.
+                  </FieldDescription>
+                  <Combobox
+                    multiple
+                    items={projects}
+                    value={selectedProjects}
+                    onValueChange={(next: ProjectDomain[]) =>
+                      field.onChange(next.map((p) => p.id))
+                    }
+                  >
+                    <ComboboxChips ref={chipsRef}>
+                      <ComboboxValue>
+                        {(value: ProjectDomain[]) => (
+                          <>
+                            {value.map((project) => (
+                              <ComboboxChip
+                                key={project.id}
+                                aria-label={project.name}
+                              >
+                                {project.name}
+                              </ComboboxChip>
+                            ))}
+                            <ComboboxChipsInput
+                              disabled={form.formState.isSubmitting}
+                              placeholder={
+                                value.length > 0 ? "" : "Search projects..."
+                              }
+                            />
+                          </>
+                        )}
+                      </ComboboxValue>
+                    </ComboboxChips>
+                    <ComboboxContent anchor={chipsRef}>
+                      <ComboboxList>
+                        {(project: ProjectDomain) => (
+                          <ComboboxItem key={project.id} value={project}>
+                            {project.name}
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                      <ComboboxEmpty>No projects found</ComboboxEmpty>
+                    </ComboboxContent>
+                  </Combobox>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              );
+            }}
+          />
         </FieldGroup>
       </FieldSet>
-
       <Field orientation="horizontal">
         <Button
           disabled={form.formState.isSubmitting}

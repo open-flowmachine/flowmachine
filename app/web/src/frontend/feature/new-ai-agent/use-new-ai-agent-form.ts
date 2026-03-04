@@ -12,6 +12,7 @@ export const useNewAiAgentForm = (
     defaultValues: {
       name: "",
       model: "anthropic/claude-opus-4.5",
+      projects: [],
     },
     resolver: standardSchemaResolver(newAiAgentFormValuesSchema),
     ...props,
