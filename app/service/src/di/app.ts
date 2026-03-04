@@ -4,6 +4,7 @@ import { DocumentBasicCrudService } from "@/app/domain/document/basic-crud-servi
 import { GitRepositoryBasicCrudService } from "@/app/domain/git-repository/basic-crud-service";
 import { ProjectBasicCrudService } from "@/app/domain/project/basic-crud-service";
 import { WorkflowDefinitionBasicCrudService } from "@/app/domain/workflow/definition/basic-crud-service";
+import { ProjectBasicService } from "@/app/feature/project/basic-service";
 import { ProjectSyncBasicService } from "@/app/feature/project/sync/basic-service";
 import { WorkflowSdlcActionDefinitionCrudService } from "@/app/feature/workflow/sdlc/action-definition-service";
 import { WorkflowSdlcFunctionFactory } from "@/app/feature/workflow/sdlc/durable-function-factory";
@@ -14,6 +15,7 @@ import {
   gitRepositoryMongoCrudRepository,
   inngestClient,
   jiraExternalProjectService,
+  mongoClient,
   projectMongoCrudRepository,
   workflowDefinitionMongoCrudRepository,
 } from "@/di/infra";
@@ -42,6 +44,14 @@ const workflowActionDefinitionBasicCrudService =
   new WorkflowSdlcActionDefinitionCrudService();
 
 // Feature services
+const projectBasicService = new ProjectBasicService(
+  mongoClient,
+  projectBasicCrudService,
+  aiAgentBasicCrudService,
+  gitRepositoryBasicCrudService,
+  workflowDefinitionBasicCrudService,
+);
+
 const projectSyncBasicService = new ProjectSyncBasicService(
   projectBasicCrudService,
   credentialBasicCrudService,
@@ -75,6 +85,7 @@ export {
   inngestWorkflowEngineFactory,
   inngestWorkflowSdlcFunctionFactory,
   projectBasicCrudService,
+  projectBasicService,
   projectMongoCrudRepository,
   projectSyncBasicService,
   workflowActionDefinitionBasicCrudService,

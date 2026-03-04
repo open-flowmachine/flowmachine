@@ -19,6 +19,7 @@ import {
   gitRepositoryBasicCrudService,
   inngestWorkflowSdlcFunctionFactory,
   projectBasicCrudService,
+  projectBasicService,
   projectSyncBasicService,
   workflowActionDefinitionBasicCrudService,
   workflowDefinitionBasicCrudService,
@@ -70,6 +71,7 @@ const projectV1HttpRouterFactory = new ProjectV1HttpRouterFactory(
   httpAuthGuardFactory,
   httpRequestCtxFactory,
   projectBasicCrudService,
+  projectBasicService,
 );
 const projectSyncV1HttpRouterFactory = new ProjectSyncV1HttpRouterFactory(
   httpAuthGuardFactory,

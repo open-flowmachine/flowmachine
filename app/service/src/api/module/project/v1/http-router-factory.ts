@@ -10,20 +10,24 @@ import type { HttpAuthGuardFactory } from "@/api/plugin/http-auth-guard-factory"
 import type { HttpRequestCtxFactory } from "@/api/plugin/http-request-ctx-factory";
 import type { ProjectCrudService } from "@/core/domain/project/crud-service";
 import type { ProjectEntity } from "@/core/domain/project/entity";
+import type { ProjectService } from "@/core/feature/project/service";
 
 export class ProjectV1HttpRouterFactory {
   #httpAuthGuardFactory: HttpAuthGuardFactory;
   #httpRequestCtxFactory: HttpRequestCtxFactory;
   #projectCrudService: ProjectCrudService;
+  #projectService: ProjectService;
 
   constructor(
     httpAuthGuardFactory: HttpAuthGuardFactory,
     httpRequestCtxFactory: HttpRequestCtxFactory,
     projectCrudService: ProjectCrudService,
+    projectService: ProjectService,
   ) {
     this.#httpAuthGuardFactory = httpAuthGuardFactory;
     this.#httpRequestCtxFactory = httpRequestCtxFactory;
     this.#projectCrudService = projectCrudService;
+    this.#projectService = projectService;
   }
 
   make() {
@@ -98,7 +102,7 @@ export class ProjectV1HttpRouterFactory {
           .delete(
             "/:id",
             async ({ ctx, tenant, params }) => {
-              const result = await this.#projectCrudService.delete({
+              const result = await this.#projectService.delete({
                 ctx: { ...ctx, tenant },
                 payload: { id: params.id },
               });
