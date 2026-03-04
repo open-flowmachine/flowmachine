@@ -8,6 +8,7 @@ export const createGitRepositoryServicePortInSchema = z.object({
     url: gitRepositoryDomainSchema.shape.url,
     config: gitRepositoryDomainSchema.shape.config,
     integration: gitRepositoryDomainSchema.shape.integration,
+    projects: gitRepositoryDomainSchema.shape.projects,
   }),
 });
 export type CreateGitRepositoryServicePortIn = z.output<
@@ -41,6 +42,7 @@ export const updateGitRepositoryServicePortInSchema = z.object({
     url: gitRepositoryDomainSchema.shape.url.optional(),
     config: gitRepositoryDomainSchema.shape.config.optional(),
     integration: gitRepositoryDomainSchema.shape.integration.optional(),
+    projects: gitRepositoryDomainSchema.shape.projects.optional(),
   }),
 });
 export type UpdateGitRepositoryServicePortIn = z.output<

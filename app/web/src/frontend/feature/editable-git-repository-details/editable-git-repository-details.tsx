@@ -1,6 +1,8 @@
 import { CopyIcon } from "lucide-react";
+import Link from "next/link";
 import type { GitRepositoryDomain } from "@/domain/entity/git-repository/git-repository-domain-schema";
 import { makeGitRepositoryDomainService } from "@/domain/entity/git-repository/git-repository-domain-service";
+import type { ProjectDomain } from "@/domain/entity/project/project-domain-schema";
 import { Badge } from "@/frontend/component/ui/badge";
 import { Button } from "@/frontend/component/ui/button";
 import {
@@ -14,12 +16,14 @@ import {
 
 type EditableGitRepositoryDetailsProps = {
   gitRepository: GitRepositoryDomain;
+  projects: ProjectDomain[];
   onCopy: (text: string) => void;
   onEdit: () => void;
 };
 
 export function EditableGitRepositoryDetails({
   gitRepository,
+  projects,
   onCopy,
   onEdit,
 }: EditableGitRepositoryDetailsProps) {
@@ -101,6 +105,39 @@ export function EditableGitRepositoryDetails({
               <span className="text-sm">
                 {gitRepository.integration.credentialId}
               </span>
+            </FieldContent>
+          </Field>
+        </FieldGroup>
+      </FieldSet>
+      <FieldSet>
+        <FieldLegend>Projects</FieldLegend>
+        <FieldGroup>
+          <Field>
+            <FieldLabel>Assigned projects</FieldLabel>
+            <FieldContent>
+              {gitRepository.projects.length === 0 ? (
+                <span className="text-muted-foreground text-sm">
+                  No projects assigned
+                </span>
+              ) : (
+                <ul className="space-y-1">
+                  {gitRepository.projects.map((repoProject) => {
+                    const project = projects.find(
+                      (p) => p.id === repoProject.id,
+                    );
+                    return (
+                      <Badge key={repoProject.id} variant="secondary">
+                        <Link
+                          href={`/platform/project/${repoProject.id}`}
+                          className="hover:underline"
+                        >
+                          {project?.name ?? repoProject.id}
+                        </Link>
+                      </Badge>
+                    );
+                  })}
+                </ul>
+              )}
             </FieldContent>
           </Field>
         </FieldGroup>

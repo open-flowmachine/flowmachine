@@ -7,16 +7,30 @@ import { NewGitRepositoryForm } from "@/frontend/feature/new-git-repository/new-
 import type { NewGitRepositoryFormValues } from "@/frontend/feature/new-git-repository/new-git-repository-form-schema";
 import { useNewGitRepositoryForm } from "@/frontend/feature/new-git-repository/use-new-git-repository-form";
 import { useCreateGitRepository } from "@/frontend/hook/git-repository/use-create-git-repository";
+import { useListProjects } from "@/frontend/hook/project/use-list-projects";
 
 export function NewGitRepositoryPage() {
   const router = useRouter();
 
+  const { data: projects = [] } = useListProjects();
   const { isPending, mutateAsync } = useCreateGitRepository();
   const form = useNewGitRepositoryForm({ disabled: isPending });
 
   const handleValidFormSubmit = async (data: NewGitRepositoryFormValues) => {
     try {
-      await mutateAsync({ body: data });
+      await mutateAsync({
+        body: {
+          name: data.name,
+          url: data.url,
+          config: data.config,
+          integration: data.integration,
+          projects: data.projects.map((id) => ({
+            id,
+            syncStatus: "idle" as const,
+            syncedAt: null,
+          })),
+        },
+      });
       form.reset();
       toast.success("Git Repository created successfully");
       router.push("/platform/git-repository");
@@ -30,6 +44,7 @@ export function NewGitRepositoryPage() {
     <PlatformPageTemplate heading="New Git Repository">
       <NewGitRepositoryForm
         form={form}
+        projects={projects}
         handleValidFormSubmit={handleValidFormSubmit}
         handleInvalidFormSubmit={() => {
           toast.error("Please fix the errors in the form");

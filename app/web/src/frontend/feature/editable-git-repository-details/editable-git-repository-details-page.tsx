@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { isNil } from "es-toolkit";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -11,7 +12,9 @@ import { EditableGitRepositoryDetails } from "@/frontend/feature/editable-git-re
 import { useEditGitRepositoryForm } from "@/frontend/feature/editable-git-repository-details/use-edit-git-repository-form";
 import { useGetGitRepository } from "@/frontend/hook/git-repository/use-get-git-repository";
 import { useUpdateGitRepository } from "@/frontend/hook/git-repository/use-update-git-repository";
+import { useListProjects } from "@/frontend/hook/project/use-list-projects";
 import { useCopyToClipboard } from "@/frontend/hook/use-copy-to-clipboard";
+import { makeGetGitRepositoryQueryKey } from "@/frontend/lib/query/query-key";
 
 type EditableGitRepositoryDetailsPageProps = {
   id: string;
@@ -23,7 +26,9 @@ export function EditableGitRepositoryDetailsPage({
   const [isEditing, setIsEditing] = useState(false);
   const [_, copyToClipboard] = useCopyToClipboard();
 
+  const queryClient = useQueryClient();
   const { data, isPending, isError } = useGetGitRepository(id);
+  const { data: projects = [] } = useListProjects();
   const { mutateAsync } = useUpdateGitRepository();
 
   const form = useEditGitRepositoryForm();
@@ -40,6 +45,7 @@ export function EditableGitRepositoryDetailsPage({
         url: data.url,
         config: data.config,
         integration: data.integration,
+        projects: data.projects.map((p) => p.id),
       });
     }
     setIsEditing(true);
@@ -53,7 +59,23 @@ export function EditableGitRepositoryDetailsPage({
     formData: EditGitRepositoryFormValues,
   ) => {
     try {
-      await mutateAsync({ params: { id }, body: formData });
+      await mutateAsync({
+        params: { id },
+        body: {
+          name: formData.name,
+          url: formData.url,
+          config: formData.config,
+          integration: formData.integration,
+          projects: formData.projects.map((projectId) => ({
+            id: projectId,
+            syncStatus: "idle" as const,
+            syncedAt: null,
+          })),
+        },
+      });
+      await queryClient.invalidateQueries({
+        queryKey: makeGetGitRepositoryQueryKey(id),
+      });
       toast.success("Git repository updated successfully");
       setIsEditing(false);
     } catch (error) {
@@ -80,6 +102,7 @@ export function EditableGitRepositoryDetailsPage({
           <EditGitRepositoryForm
             gitRepository={data}
             form={form}
+            projects={projects}
             onCancel={handleCancel}
             onValidFormSubmit={handleValidFormSubmit}
             onInvalidFormSubmit={() => {}}
@@ -87,6 +110,7 @@ export function EditableGitRepositoryDetailsPage({
         ) : (
           <EditableGitRepositoryDetails
             gitRepository={data}
+            projects={projects}
             onCopy={handleCopy}
             onEdit={handleEdit}
           />

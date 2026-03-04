@@ -1,5 +1,9 @@
 import { z } from "zod/v4";
-import { tenantAwareBaseDomainSchema } from "@/domain/entity/shared-schema";
+import {
+  datetimeSchema,
+  domainIdSchema,
+  tenantAwareBaseDomainSchema,
+} from "@/domain/entity/shared-schema";
 
 const gitProviders = ["github", "gitlab"] as const;
 
@@ -20,5 +24,12 @@ export const gitRepositoryDomainSchema = z.object({
   url: z.string(),
   config: gitRepositoryConfigSchema,
   integration: gitRepositoryIntegrationSchema,
+  projects: z.array(
+    z.object({
+      id: domainIdSchema,
+      syncStatus: z.enum(["idle", "pending", "success", "error"]),
+      syncedAt: datetimeSchema.nullable(),
+    }),
+  ),
 });
 export type GitRepositoryDomain = z.infer<typeof gitRepositoryDomainSchema>;

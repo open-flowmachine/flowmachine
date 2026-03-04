@@ -4,7 +4,20 @@ import {
   type SubmitHandler,
   type UseFormReturn,
 } from "react-hook-form";
+import type { ProjectDomain } from "@/domain/entity/project/project-domain-schema";
 import { Button } from "@/frontend/component/ui/button";
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
+} from "@/frontend/component/ui/combobox";
 import {
   Field,
   FieldContent,
@@ -28,15 +41,19 @@ import type { NewGitRepositoryFormValues } from "@/frontend/feature/new-git-repo
 
 type NewGitRepositoryFormProps = {
   form: UseFormReturn<NewGitRepositoryFormValues>;
+  projects: ProjectDomain[];
   handleValidFormSubmit: SubmitHandler<NewGitRepositoryFormValues>;
   handleInvalidFormSubmit: SubmitErrorHandler<NewGitRepositoryFormValues>;
 };
 
 export function NewGitRepositoryForm({
   form,
+  projects,
   handleValidFormSubmit,
   handleInvalidFormSubmit,
 }: NewGitRepositoryFormProps) {
+  const chipsRef = useComboboxAnchor();
+
   return (
     <form
       className="max-w-2xl space-y-6"
@@ -250,6 +267,77 @@ export function NewGitRepositoryForm({
                 )}
               </Field>
             )}
+          />
+        </FieldGroup>
+      </FieldSet>
+
+      <FieldSet>
+        <FieldLegend>Projects</FieldLegend>
+        <FieldDescription>
+          Assign this git repository to one or more projects
+        </FieldDescription>
+        <FieldGroup>
+          <Controller
+            name="projects"
+            control={form.control}
+            render={({ field, fieldState }) => {
+              const selectedProjects = projects.filter((p) =>
+                field.value.includes(p.id),
+              );
+              return (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Assigned projects</FieldLabel>
+                  <FieldDescription>
+                    Select which projects this git repository belongs to. You can
+                    assign it to multiple projects.
+                  </FieldDescription>
+                  <Combobox
+                    multiple
+                    items={projects}
+                    value={selectedProjects}
+                    onValueChange={(next: ProjectDomain[]) =>
+                      field.onChange(next.map((p) => p.id))
+                    }
+                  >
+                    <ComboboxChips ref={chipsRef}>
+                      <ComboboxValue>
+                        {(value: ProjectDomain[]) => (
+                          <>
+                            {value.map((project) => (
+                              <ComboboxChip
+                                key={project.id}
+                                aria-label={project.name}
+                              >
+                                {project.name}
+                              </ComboboxChip>
+                            ))}
+                            <ComboboxChipsInput
+                              disabled={form.formState.isSubmitting}
+                              placeholder={
+                                value.length > 0 ? "" : "Search projects..."
+                              }
+                            />
+                          </>
+                        )}
+                      </ComboboxValue>
+                    </ComboboxChips>
+                    <ComboboxContent anchor={chipsRef}>
+                      <ComboboxList>
+                        {(project: ProjectDomain) => (
+                          <ComboboxItem key={project.id} value={project}>
+                            {project.name}
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                      <ComboboxEmpty>No projects found</ComboboxEmpty>
+                    </ComboboxContent>
+                  </Combobox>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              );
+            }}
           />
         </FieldGroup>
       </FieldSet>

@@ -17,12 +17,19 @@ export const gitRepositoryIntegrationHttpDtoSchema = z.object({
   credentialId: z.string(),
 });
 
+const projectHttpResponseDtoSchema = z.object({
+  id: z.string(),
+  syncStatus: z.enum(["idle", "pending", "success", "error"]),
+  syncedAt: z.iso.datetime().nullable(),
+});
+
 export const gitRepositoryHttpResponseDtoSchema = z.object({
   ...tenantAwareBaseHttpClientResponseDtoSchema.shape,
   name: z.string(),
   url: z.string(),
   config: gitRepositoryConfigHttpDtoSchema,
   integration: gitRepositoryIntegrationHttpDtoSchema,
+  projects: z.array(projectHttpResponseDtoSchema),
 });
 export type GitRepositoryHttpResponseDto = z.output<
   typeof gitRepositoryHttpResponseDtoSchema
@@ -33,6 +40,7 @@ export const createGitRepositoryHttpRequestBodyDtoSchema = z.object({
   url: z.string(),
   config: gitRepositoryConfigHttpDtoSchema,
   integration: gitRepositoryIntegrationHttpDtoSchema,
+  projects: z.array(projectHttpResponseDtoSchema),
 });
 export type CreateGitRepositoryHttpRequestBodyDto = z.output<
   typeof createGitRepositoryHttpRequestBodyDtoSchema

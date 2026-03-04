@@ -21,6 +21,7 @@ export const useNewGitRepositoryForm = (
         provider: "github",
         credentialId: "",
       },
+      projects: [],
     },
     resolver: standardSchemaResolver(newGitRepositoryFormValuesSchema),
     ...props,

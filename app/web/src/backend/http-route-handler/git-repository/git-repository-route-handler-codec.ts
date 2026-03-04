@@ -16,6 +16,7 @@ export const gitRepositoryDomainCodec = z.codec(
       url: dto.url,
       config: dto.config,
       integration: dto.integration,
+      projects: dto.projects,
     }),
     encode: noop as () => never,
   },
