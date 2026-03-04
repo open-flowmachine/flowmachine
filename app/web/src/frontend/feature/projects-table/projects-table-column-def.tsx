@@ -1,5 +1,10 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontalIcon, PencilIcon, TrashIcon } from "lucide-react";
+import {
+  CopyIcon,
+  MoreHorizontalIcon,
+  PencilIcon,
+  TrashIcon,
+} from "lucide-react";
 import Link from "next/link";
 import type { ProjectDomain } from "@/domain/entity/project/project-domain-schema";
 import { makeProjectDomainService } from "@/domain/entity/project/project-domain-service";
@@ -27,6 +32,7 @@ import { Spinner } from "@/frontend/component/ui/spinner";
 type MakeProjectsTableColumnDefInput = {
   isDeleteConfirmationAlertOpen: boolean;
   isDeleting: boolean;
+  onCopyAction: (text: string) => void;
   onDeleteActionCancel: () => void;
   onDeleteActionConfirm: (id: ProjectDomain["id"]) => void;
   onDeleteActionTrigger: () => void;
@@ -35,6 +41,7 @@ type MakeProjectsTableColumnDefInput = {
 export const makeProjectsTableColumnDef = ({
   isDeleteConfirmationAlertOpen,
   isDeleting,
+  onCopyAction,
   onDeleteActionCancel,
   onDeleteActionConfirm,
   onDeleteActionTrigger,
@@ -83,6 +90,10 @@ export const makeProjectsTableColumnDef = ({
                 <MoreHorizontalIcon />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onCopyAction(project.id)}>
+                  <CopyIcon />
+                  Copy
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   nativeButton={false}
                   render={<Link href={`/platform/project/${project.id}`} />}
