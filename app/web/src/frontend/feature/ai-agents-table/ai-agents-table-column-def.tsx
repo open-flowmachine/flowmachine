@@ -1,5 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontalIcon, PencilIcon, TrashIcon } from "lucide-react";
+import { CopyIcon, MoreHorizontalIcon, PencilIcon, TrashIcon } from "lucide-react";
 import Link from "next/link";
 import type { AiAgentDomain } from "@/domain/entity/ai-agent/ai-agent-domain-schema";
 import { makeAiAgentDomainService } from "@/domain/entity/ai-agent/ai-agent-domain-service";
@@ -31,6 +31,7 @@ type MakeAiAgentsTableColumnDefInput = {
   onDeleteActionCancel: () => void;
   onDeleteActionConfirm: (id: AiAgentDomain["id"]) => void;
   onDeleteActionTrigger: () => void;
+  onCopyAction: (text: string) => void;
 };
 
 export const makeAiAgentsTableColumnDef = ({
@@ -39,6 +40,7 @@ export const makeAiAgentsTableColumnDef = ({
   onDeleteActionCancel,
   onDeleteActionConfirm,
   onDeleteActionTrigger,
+  onCopyAction,
 }: MakeAiAgentsTableColumnDefInput) => {
   return [
     {
@@ -101,6 +103,10 @@ export const makeAiAgentsTableColumnDef = ({
                 <MoreHorizontalIcon />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onCopyAction(aiAgent.id)}>
+                  <CopyIcon />
+                  Copy
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   nativeButton={false}
                   render={<Link href={`/platform/ai-agent/${aiAgent.id}`} />}
