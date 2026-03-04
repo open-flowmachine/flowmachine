@@ -12,6 +12,7 @@ import { EditableProjectDetails } from "@/frontend/feature/editable-project-deta
 import { useEditProjectForm } from "@/frontend/feature/editable-project-details/use-edit-project-form";
 import { useGetProject } from "@/frontend/hook/project/use-get-project";
 import { useUpdateProject } from "@/frontend/hook/project/use-update-project";
+import { useCopyToClipboard } from "@/frontend/hook/use-copy-to-clipboard";
 import { makeGetProjectQueryKey } from "@/frontend/lib/query/query-key";
 
 type EditableProjectDetailsPageProps = {
@@ -22,12 +23,18 @@ export function EditableProjectDetailsPage({
   id,
 }: EditableProjectDetailsPageProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [_, copyToClipboard] = useCopyToClipboard();
 
   const queryClient = useQueryClient();
   const { data, isPending, isError } = useGetProject(id);
   const { mutateAsync } = useUpdateProject();
 
   const form = useEditProjectForm();
+
+  const handleCopy = async (text: string) => {
+    await copyToClipboard(text);
+    toast.success("Copied to clipboard");
+  };
 
   const handleEdit = () => {
     if (data) {
@@ -77,7 +84,7 @@ export function EditableProjectDetailsPage({
             onInvalidFormSubmit={() => {}}
           />
         ) : (
-          <EditableProjectDetails project={data} onEdit={handleEdit} />
+          <EditableProjectDetails project={data} onCopy={handleCopy} onEdit={handleEdit} />
         )}
       </div>
     </PlatformPageTemplate>

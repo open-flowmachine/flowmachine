@@ -1,3 +1,4 @@
+import { CopyIcon } from "lucide-react";
 import type { GitRepositoryDomain } from "@/domain/entity/git-repository/git-repository-domain-schema";
 import { makeGitRepositoryDomainService } from "@/domain/entity/git-repository/git-repository-domain-service";
 import { Badge } from "@/frontend/component/ui/badge";
@@ -13,11 +14,13 @@ import {
 
 type EditableGitRepositoryDetailsProps = {
   gitRepository: GitRepositoryDomain;
+  onCopy: (text: string) => void;
   onEdit: () => void;
 };
 
 export function EditableGitRepositoryDetails({
   gitRepository,
+  onCopy,
   onEdit,
 }: EditableGitRepositoryDetailsProps) {
   const gitRepositoryDomainService = makeGitRepositoryDomainService({
@@ -29,6 +32,19 @@ export function EditableGitRepositoryDetails({
       <FieldSet>
         <FieldLegend>Basic</FieldLegend>
         <FieldGroup>
+          <Field>
+            <FieldLabel>ID</FieldLabel>
+            <FieldContent className="flex-row items-center gap-x-1">
+              <span className="text-sm">{gitRepository.id}</span>
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                onClick={() => onCopy(gitRepository.id)}
+              >
+                <CopyIcon />
+              </Button>
+            </FieldContent>
+          </Field>
           <Field>
             <FieldLabel>Name</FieldLabel>
             <FieldContent>

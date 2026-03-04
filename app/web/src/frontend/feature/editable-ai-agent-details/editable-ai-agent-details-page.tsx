@@ -13,6 +13,7 @@ import { useEditAiAgentForm } from "@/frontend/feature/editable-ai-agent-details
 import { useGetAiAgent } from "@/frontend/hook/ai-agent/use-get-ai-agent";
 import { useUpdateAiAgent } from "@/frontend/hook/ai-agent/use-update-ai-agent";
 import { useListProjects } from "@/frontend/hook/project/use-list-projects";
+import { useCopyToClipboard } from "@/frontend/hook/use-copy-to-clipboard";
 import { makeGetAiAgentQueryKey } from "@/frontend/lib/query/query-key";
 
 type EditableAiAgentDetailsPageProps = {
@@ -23,6 +24,7 @@ export function EditableAiAgentDetailsPage({
   id,
 }: EditableAiAgentDetailsPageProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [_, copyToClipboard] = useCopyToClipboard();
 
   const queryClient = useQueryClient();
   const { data, isPending, isError } = useGetAiAgent(id);
@@ -30,6 +32,11 @@ export function EditableAiAgentDetailsPage({
   const { mutateAsync } = useUpdateAiAgent();
 
   const form = useEditAiAgentForm();
+
+  const handleCopy = async (text: string) => {
+    await copyToClipboard(text);
+    toast.success("Copied to clipboard");
+  };
 
   const handleEdit = () => {
     if (data) {
@@ -97,8 +104,9 @@ export function EditableAiAgentDetailsPage({
         ) : (
           <EditableAiAgentDetails
             aiAgent={data}
-            projects={projects}
+            onCopy={handleCopy}
             onEdit={handleEdit}
+            projects={projects}
           />
         )}
       </div>

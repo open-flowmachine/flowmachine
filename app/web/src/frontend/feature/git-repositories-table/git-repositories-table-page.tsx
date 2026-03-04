@@ -2,6 +2,7 @@
 
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import type { GitRepositoryDomain } from "@/domain/entity/git-repository/git-repository-domain-schema";
 import { DataTable } from "@/frontend/component/extended-ui/data-table";
 import { PlatformPageTemplate } from "@/frontend/component/platform/platform-page-template";
@@ -10,13 +11,20 @@ import { makeGitRepositoriesTableColumnDef } from "@/frontend/feature/git-reposi
 import { useDeleteGitRepository } from "@/frontend/hook/git-repository/use-delete-git-repository";
 import { useListGitRepositories } from "@/frontend/hook/git-repository/use-list-git-repositories";
 import { useConfirmableAction } from "@/frontend/hook/use-confirmable-action";
+import { useCopyToClipboard } from "@/frontend/hook/use-copy-to-clipboard";
 
 export default function GitRepositoriesTablePage() {
   const deleteAction = useConfirmableAction();
+  const [_, copyToClipboard] = useCopyToClipboard();
 
   const { data, isPending } = useListGitRepositories();
   const { mutateAsync, isPending: isDeleteGitRepositoryPending } =
     useDeleteGitRepository();
+
+  const handleCopyAction = async (text: string) => {
+    await copyToClipboard(text);
+    toast.success("Copied to clipboard");
+  };
 
   const handleDeleteActionTrigger = deleteAction.triggerAction;
   const handleDeleteActionCancel = deleteAction.resetAction;
@@ -48,6 +56,7 @@ export default function GitRepositoriesTablePage() {
             isDeleting:
               deleteAction.step === "inProgress" ||
               isDeleteGitRepositoryPending,
+            onCopyAction: handleCopyAction,
             onDeleteActionCancel: handleDeleteActionCancel,
             onDeleteActionConfirm: handleDeleteActionConfirm,
             onDeleteActionTrigger: handleDeleteActionTrigger,

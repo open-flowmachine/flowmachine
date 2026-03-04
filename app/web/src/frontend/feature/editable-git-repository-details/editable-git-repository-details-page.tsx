@@ -11,6 +11,7 @@ import { EditableGitRepositoryDetails } from "@/frontend/feature/editable-git-re
 import { useEditGitRepositoryForm } from "@/frontend/feature/editable-git-repository-details/use-edit-git-repository-form";
 import { useGetGitRepository } from "@/frontend/hook/git-repository/use-get-git-repository";
 import { useUpdateGitRepository } from "@/frontend/hook/git-repository/use-update-git-repository";
+import { useCopyToClipboard } from "@/frontend/hook/use-copy-to-clipboard";
 
 type EditableGitRepositoryDetailsPageProps = {
   id: string;
@@ -20,11 +21,17 @@ export function EditableGitRepositoryDetailsPage({
   id,
 }: EditableGitRepositoryDetailsPageProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [_, copyToClipboard] = useCopyToClipboard();
 
   const { data, isPending, isError } = useGetGitRepository(id);
   const { mutateAsync } = useUpdateGitRepository();
 
   const form = useEditGitRepositoryForm();
+
+  const handleCopy = async (text: string) => {
+    await copyToClipboard(text);
+    toast.success("Copied to clipboard");
+  };
 
   const handleEdit = () => {
     if (data) {
@@ -80,6 +87,7 @@ export function EditableGitRepositoryDetailsPage({
         ) : (
           <EditableGitRepositoryDetails
             gitRepository={data}
+            onCopy={handleCopy}
             onEdit={handleEdit}
           />
         )}

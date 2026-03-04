@@ -1,3 +1,4 @@
+import { CopyIcon } from "lucide-react";
 import Link from "next/link";
 import type { AiAgentDomain } from "@/domain/entity/ai-agent/ai-agent-domain-schema";
 import { makeAiAgentDomainService } from "@/domain/entity/ai-agent/ai-agent-domain-service";
@@ -15,14 +16,16 @@ import {
 
 type EditableAiAgentDetailsProps = {
   aiAgent: AiAgentDomain;
-  projects: ProjectDomain[];
+  onCopy: (text: string) => void;
   onEdit: () => void;
+  projects: ProjectDomain[];
 };
 
 export function EditableAiAgentDetails({
   aiAgent,
-  projects,
+  onCopy,
   onEdit,
+  projects,
 }: EditableAiAgentDetailsProps) {
   const aiAgentDomainService = makeAiAgentDomainService({ aiAgent });
 
@@ -31,6 +34,19 @@ export function EditableAiAgentDetails({
       <FieldSet>
         <FieldLegend>Basic</FieldLegend>
         <FieldGroup>
+          <Field>
+            <FieldLabel>ID</FieldLabel>
+            <FieldContent className="flex-row items-center gap-x-1">
+              <span className="text-sm">{aiAgent.id}</span>
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                onClick={() => onCopy(aiAgent.id)}
+              >
+                <CopyIcon />
+              </Button>
+            </FieldContent>
+          </Field>
           <Field>
             <FieldLabel>Name</FieldLabel>
             <FieldContent>

@@ -2,6 +2,7 @@
 
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 import type { AiAgentDomain } from "@/domain/entity/ai-agent/ai-agent-domain-schema";
 import { DataTable } from "@/frontend/component/extended-ui/data-table";
 import { PlatformPageTemplate } from "@/frontend/component/platform/platform-page-template";
@@ -10,12 +11,19 @@ import { makeAiAgentsTableColumnDef } from "@/frontend/feature/ai-agents-table/a
 import { useDeleteAiAgent } from "@/frontend/hook/ai-agent/use-delete-ai-agent";
 import { useListAiAgents } from "@/frontend/hook/ai-agent/use-list-ai-agents";
 import { useConfirmableAction } from "@/frontend/hook/use-confirmable-action";
+import { useCopyToClipboard } from "@/frontend/hook/use-copy-to-clipboard";
 
 export default function AiAgentsTablePage() {
+  const [_, copyToClipboard] = useCopyToClipboard();
   const deleteAction = useConfirmableAction();
 
   const { data, isPending } = useListAiAgents();
   const { mutateAsync, isPending: isDeleteAiAgentPending } = useDeleteAiAgent();
+
+  const handleCopyAction = async (text: string) => {
+    await copyToClipboard(text);
+    toast.success("Copied to clipboard");
+  };
 
   const handleDeleteAiAgentActionTrigger = deleteAction.triggerAction;
   const handleDeleteAiAgentActionCancel = deleteAction.resetAction;
@@ -49,6 +57,7 @@ export default function AiAgentsTablePage() {
             onDeleteActionCancel: handleDeleteAiAgentActionCancel,
             onDeleteActionConfirm: handleDeleteAiAgentActionConfirm,
             onDeleteActionTrigger: handleDeleteAiAgentActionTrigger,
+            onCopyAction: handleCopyAction,
           })}
           data={data ?? []}
           searchKey="name"

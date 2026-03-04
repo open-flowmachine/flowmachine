@@ -1,5 +1,10 @@
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontalIcon, PencilIcon, TrashIcon } from "lucide-react";
+import {
+  CopyIcon,
+  MoreHorizontalIcon,
+  PencilIcon,
+  TrashIcon,
+} from "lucide-react";
 import Link from "next/link";
 import type { GitRepositoryDomain } from "@/domain/entity/git-repository/git-repository-domain-schema";
 import { makeGitRepositoryDomainService } from "@/domain/entity/git-repository/git-repository-domain-service";
@@ -28,6 +33,7 @@ import { Spinner } from "@/frontend/component/ui/spinner";
 type MakeGitRepositoriesTableColumnDefInput = {
   isDeleteConfirmationAlertOpen: boolean;
   isDeleting: boolean;
+  onCopyAction: (text: string) => void;
   onDeleteActionCancel: () => void;
   onDeleteActionConfirm: (id: GitRepositoryDomain["id"]) => void;
   onDeleteActionTrigger: () => void;
@@ -36,6 +42,7 @@ type MakeGitRepositoriesTableColumnDefInput = {
 export const makeGitRepositoriesTableColumnDef = ({
   isDeleteConfirmationAlertOpen,
   isDeleting,
+  onCopyAction,
   onDeleteActionCancel,
   onDeleteActionConfirm,
   onDeleteActionTrigger,
@@ -129,6 +136,10 @@ export const makeGitRepositoriesTableColumnDef = ({
                 <MoreHorizontalIcon />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onCopyAction(repository.id)}>
+                  <CopyIcon />
+                  Copy
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   nativeButton={false}
                   render={
