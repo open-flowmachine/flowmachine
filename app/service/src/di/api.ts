@@ -20,6 +20,7 @@ import {
   inngestWorkflowSdlcFunctionFactory,
   projectBasicCrudService,
   projectSyncBasicService,
+  projectSyncDurableFunctionFactory,
   workflowActionDefinitionBasicCrudService,
   workflowDefinitionBasicCrudService,
 } from "@/di/app";
@@ -93,6 +94,7 @@ const workflowActionDefinitionV1HttpRouterFactory =
 
 const inngestHttpRouterFactory = new InngestHttpRouterFactory(inngestClient, [
   inngestWorkflowSdlcFunctionFactory.make(),
+  projectSyncDurableFunctionFactory.make(),
 ]);
 
 export {

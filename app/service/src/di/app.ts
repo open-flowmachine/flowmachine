@@ -5,6 +5,7 @@ import { GitRepositoryBasicCrudService } from "@/app/domain/git-repository/basic
 import { ProjectBasicCrudService } from "@/app/domain/project/basic-crud-service";
 import { WorkflowDefinitionBasicCrudService } from "@/app/domain/workflow/definition/basic-crud-service";
 import { ProjectSyncBasicService } from "@/app/feature/project/sync/basic-service";
+import { ProjectSyncDurableFunctionFactory } from "@/app/feature/project/sync/durable-function-factory";
 import { WorkflowSdlcActionDefinitionCrudService } from "@/app/feature/workflow/sdlc/action-definition-service";
 import { WorkflowSdlcFunctionFactory } from "@/app/feature/workflow/sdlc/durable-function-factory";
 import {
@@ -61,6 +62,10 @@ const inngestWorkflowSdlcFunctionFactory = new WorkflowSdlcFunctionFactory(
   inngestWorkflowEngineFactory,
   workflowActionDefinitionBasicCrudService,
 );
+const projectSyncDurableFunctionFactory = new ProjectSyncDurableFunctionFactory(
+  inngestFunctionFactory,
+  projectSyncBasicService,
+);
 
 export {
   aiAgentBasicCrudService,
@@ -75,6 +80,7 @@ export {
   inngestWorkflowEngineFactory,
   inngestWorkflowSdlcFunctionFactory,
   projectBasicCrudService,
+  projectSyncDurableFunctionFactory,
   projectMongoCrudRepository,
   projectSyncBasicService,
   workflowActionDefinitionBasicCrudService,

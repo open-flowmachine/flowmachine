@@ -1,3 +1,7 @@
-import type { Engine } from "@inngest/workflow-kit";
+import type { DurableFunctionContext } from "@/core/infra/durable-function/context";
 
-export type WorkflowEngine = Engine;
+interface WorkflowEngine {
+  run(ctx: DurableFunctionContext): Promise<void>;
+}
+
+export type { WorkflowEngine };

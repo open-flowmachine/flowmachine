@@ -3,6 +3,7 @@ import type z from "zod";
 import type { Tenant } from "@/core/domain/tenant-aware-entity";
 import type { WorkflowActionDefinitionEntity } from "@/core/domain/workflow/definition/action/entity";
 import type { WorkflowDefinitionCrudService } from "@/core/domain/workflow/definition/crud-service";
+import type { DurableFunctionContext } from "@/core/infra/durable-function/context";
 import type {
   WorkflowEngineFactory,
   workflowEngineFactoryInputSchema,
@@ -21,7 +22,7 @@ class InngestWorkflowEngineFactory implements WorkflowEngineFactory {
   ): Promise<WorkflowEngine> {
     const { workflowActionDefinitions } = input;
 
-    return new Engine({
+    const engine = new Engine({
       actions: workflowActionDefinitions.map(
         this.#toInngestWorkflowActionDefinition,
       ),
@@ -51,16 +52,23 @@ class InngestWorkflowEngineFactory implements WorkflowEngineFactory {
         };
       },
     });
+
+    return {
+      async run(ctx: DurableFunctionContext) {
+        await engine.run(ctx as Parameters<Engine["run"]>[0]);
+      },
+    };
   }
 
   #toInngestWorkflowActionDefinition(
     workflowActionDefinition: WorkflowActionDefinitionEntity,
-  ) {
+  ): EngineAction {
     return {
       kind: workflowActionDefinition.props.kind,
       name: workflowActionDefinition.props.name,
-      handler: workflowActionDefinition.props.handler,
-    } satisfies EngineAction;
+      handler: workflowActionDefinition.props
+        .handler as unknown as EngineAction["handler"],
+    };
   }
 }
 
