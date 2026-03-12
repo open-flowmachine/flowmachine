@@ -5,8 +5,6 @@ import { GitRepositoryBasicCrudService } from "@/app/domain/git-repository/basic
 import { ProjectBasicCrudService } from "@/app/domain/project/basic-crud-service";
 import { WorkflowDefinitionBasicCrudService } from "@/app/domain/workflow/definition/basic-crud-service";
 import { ProjectSyncBasicService } from "@/app/feature/project/sync/basic-service";
-import { WorkflowSdlcActionDefinitionCrudService } from "@/app/feature/workflow/sdlc/action-definition-service";
-import { WorkflowSdlcFunctionFactory } from "@/app/feature/workflow/sdlc/durable-function-factory";
 import {
   aiAgentMongoCrudRepository,
   credentialMongoCrudRepository,
@@ -17,8 +15,10 @@ import {
   projectMongoCrudRepository,
   workflowDefinitionMongoCrudRepository,
 } from "@/di/infra";
-import { InngestFunctionFactory } from "@/infra/inngest/function-factory";
-import { InngestWorkflowEngineFactory } from "@/infra/inngest/workflow/engine-factory";
+import { InngestFunctionFactory } from "@/orchestrator/inngest/function-factory";
+import { InngestWorkflowEngineFactory } from "@/orchestrator/inngest/workflow-engine-factory";
+import { WorkflowSdlcActionDefinitionCrudService } from "@/orchestrator/workflow/sdlc/action-definition-service";
+import { WorkflowSdlcFunctionFactory } from "@/orchestrator/workflow/sdlc/function-factory";
 
 // Domain services
 const projectBasicCrudService = new ProjectBasicCrudService(
