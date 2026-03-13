@@ -1,16 +1,13 @@
-import type { EngineAction } from "@inngest/workflow-kit";
 import z from "zod";
 import { Entity } from "@/core/domain/entity";
 import { type EntityId, newEntityId } from "@/core/domain/entity";
 
-type Handler = (
-  args: Parameters<EngineAction["handler"]>[0],
-) => Promise<unknown>;
+type WorkflowActionHandler = (...args: unknown[]) => Promise<unknown>;
 
 const workflowActionDefinitionEntityProps = z.object({
   kind: z.string(),
   name: z.string(),
-  handler: z.custom<Handler>(),
+  handler: z.custom<WorkflowActionHandler>(),
 });
 type WorkflowActionDefinitionEntityProps = z.output<
   typeof workflowActionDefinitionEntityProps

@@ -17,7 +17,6 @@ import {
   credentialBasicCrudService,
   documentBasicCrudService,
   gitRepositoryBasicCrudService,
-  inngestWorkflowSdlcFunctionFactory,
   projectBasicCrudService,
   projectSyncBasicService,
   workflowActionDefinitionBasicCrudService,
@@ -30,6 +29,7 @@ import {
   inngestClient,
   mongoClient,
 } from "@/di/infra";
+import { workflowSdlcFunctionFactory } from "@/di/orchestration";
 import { logger } from "@/infra/pino/logger";
 
 const httpRequestCtxFactory = new HttpRequestCtxFactory(mongoClient);
@@ -92,7 +92,7 @@ const workflowActionDefinitionV1HttpRouterFactory =
   );
 
 const inngestHttpRouterFactory = new InngestHttpRouterFactory(inngestClient, [
-  inngestWorkflowSdlcFunctionFactory.make(),
+  workflowSdlcFunctionFactory.make(),
 ]);
 
 export {

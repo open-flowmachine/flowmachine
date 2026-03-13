@@ -1,40 +1,36 @@
 import { Engine, type EngineAction } from "@inngest/workflow-kit";
-import type z from "zod";
-import type { Tenant } from "@/core/domain/tenant-aware-entity";
+import z from "zod";
+import { entityIdSchema } from "@/core/domain/entity";
+import { tenantSchema } from "@/core/domain/tenant-aware-entity";
 import type { WorkflowActionDefinitionEntity } from "@/core/domain/workflow/definition/action/entity";
 import type { WorkflowDefinitionCrudService } from "@/core/domain/workflow/definition/crud-service";
-import type {
-  WorkflowEngineFactory,
-  workflowEngineFactoryInputSchema,
-} from "@/core/infra/workflow/engine/factory";
-import type { WorkflowEngine } from "@/core/infra/workflow/engine/type";
 
-class InngestWorkflowEngineFactory implements WorkflowEngineFactory {
+const eventDataSchema = z.object({
+  workflowDefinitionId: entityIdSchema,
+  tenant: tenantSchema,
+});
+
+class WorkflowSdlcEngineFactory {
   #workflowDefinitionCrudService: WorkflowDefinitionCrudService;
 
   constructor(workflowDefinitionCrudService: WorkflowDefinitionCrudService) {
     this.#workflowDefinitionCrudService = workflowDefinitionCrudService;
   }
 
-  async make(
-    input: z.infer<typeof workflowEngineFactoryInputSchema.make>,
-  ): Promise<WorkflowEngine> {
+  async make(input: {
+    workflowActionDefinitions: WorkflowActionDefinitionEntity[];
+  }) {
     const { workflowActionDefinitions } = input;
 
     return new Engine({
-      actions: workflowActionDefinitions.map(
-        this.#toInngestWorkflowActionDefinition,
-      ),
+      actions: workflowActionDefinitions.map(this.#toEngineAction),
       loader: async (event) => {
-        const { workflowDefinitionId, tenant } = event.data as {
-          workflowDefinitionId: string;
-          tenant: Tenant;
-        };
+        const { workflowDefinitionId, tenant } = eventDataSchema.parse(
+          event.data,
+        );
 
         const result = await this.#workflowDefinitionCrudService.get({
-          ctx: {
-            tenant,
-          },
+          ctx: { tenant },
           payload: { id: workflowDefinitionId },
         });
 
@@ -53,15 +49,16 @@ class InngestWorkflowEngineFactory implements WorkflowEngineFactory {
     });
   }
 
-  #toInngestWorkflowActionDefinition(
+  #toEngineAction(
     workflowActionDefinition: WorkflowActionDefinitionEntity,
-  ) {
+  ): EngineAction {
     return {
       kind: workflowActionDefinition.props.kind,
       name: workflowActionDefinition.props.name,
-      handler: workflowActionDefinition.props.handler,
-    } satisfies EngineAction;
+      handler: workflowActionDefinition.props
+        .handler as EngineAction["handler"],
+    };
   }
 }
 
-export { InngestWorkflowEngineFactory };
+export { WorkflowSdlcEngineFactory };
