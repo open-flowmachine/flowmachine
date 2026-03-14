@@ -18,8 +18,8 @@ class JiraExternalProjectService implements ExternalProjectService {
     }
 
     const jiraHttpCient = JiraHttpClient.makeNew({
-      baseUrl: project.props.integration.baseUrl,
       apiKey: btoa(`${credential.props.username}:${credential.props.password}`),
+      domain: project.props.integration.domain,
     });
 
     const createCustomFieldResult = await jiraHttpCient.createCustomField({
@@ -106,8 +106,8 @@ class JiraExternalProjectService implements ExternalProjectService {
     }
 
     const jiraHttpCient = JiraHttpClient.makeNew({
-      baseUrl: project.props.integration.baseUrl,
       apiKey: btoa(`${credential.props.username}:${credential.props.password}`),
+      domain: project.props.integration.domain,
     });
 
     if (isNil(projectIssueFieldDefinition.props.integration)) {

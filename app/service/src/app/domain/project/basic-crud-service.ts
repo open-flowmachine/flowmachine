@@ -18,10 +18,11 @@ export class ProjectBasicCrudService implements ProjectCrudService {
 
   async create(input: z.infer<typeof projectCrudServiceInputSchema.create>) {
     const { ctx, payload } = input;
-    const { name } = payload;
+    const { name, integration } = payload;
 
     const newEntity = ProjectEntity.makeNew(ctx.tenant, {
       name,
+      integration,
     });
 
     return await this.#projectCrudRepository.insert({
