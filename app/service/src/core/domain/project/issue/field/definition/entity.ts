@@ -11,28 +11,6 @@ import {
   TenantAwareEntity,
 } from "@/core/domain/tenant-aware-entity";
 
-const projectIssueFieldDefinitionEntityPropsCommonSchema = {
-  name: z.string().min(1).max(256),
-  type: z.enum(projectIssueFieldTypes),
-  options: z
-    .object({
-      value: z.string().min(1).max(256),
-      label: z.string().min(1).max(256),
-    })
-    .array(),
-
-  integration: z
-    .object({
-      externalId: z.string().min(1).max(32),
-      externalKey: z.string().min(1).max(32),
-      provider: z.enum(projectProviders),
-    })
-    .optional(),
-  project: z.object({
-    id: entityIdSchema,
-  }),
-};
-
 const projectIssueFieldDefinitionEntityProps = z.object({
   name: z.string().min(1).max(256),
   type: z.enum(projectIssueFieldTypes),

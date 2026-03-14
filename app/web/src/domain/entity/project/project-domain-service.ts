@@ -1,5 +1,8 @@
 import { format } from "date-fns";
-import type { ProjectDomain } from "@/domain/entity/project/project-domain-schema";
+import type {
+  ProjectDomain,
+  projectProviders,
+} from "@/domain/entity/project/project-domain-schema";
 
 type MakeProjectDomainServiceInput = {
   project: ProjectDomain;
@@ -11,3 +14,8 @@ export const makeProjectDomainService = ({
   getCreatedAt: () => format(project.createdAt, "MMM d, yyyy, h:mm a"),
   getUpdatedAt: () => format(project.updatedAt, "MMM d, yyyy, h:mm a"),
 });
+
+export const projectProviderToDisplayName = {
+  jira: "Jira",
+  linear: "Linear",
+} as const satisfies Record<(typeof projectProviders)[number], string>;

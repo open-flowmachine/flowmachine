@@ -3,6 +3,7 @@ import {
   type CreateProjectHttpClientIn,
   type DeleteProjectClientIn,
   type GetProjectByIdClientIn,
+  type SyncProjectByIdHttpClientIn,
   type UpdateProjectHttpClientIn,
   projectHttpResponseDtoSchema,
 } from "@/backend/http-client/project/project-http-client-dto";
@@ -44,6 +45,12 @@ export const makeProjectHttpClient = ({
 
   updateById: async ({ payload }: UpdateProjectHttpClientIn) => {
     await httpClient.patch(`${BASE_PATH}/${payload.id}`, payload.body);
+  },
+
+  syncById: async ({ payload }: SyncProjectByIdHttpClientIn) => {
+    const response = await httpClient.post(`${BASE_PATH}/${payload.id}/sync`);
+    const schema = withHttpEnvelopeSchema(projectHttpResponseDtoSchema);
+    return schema.parse(response.data);
   },
 });
 

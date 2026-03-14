@@ -1,14 +1,10 @@
 import Elysia from "elysia";
-import type { Result } from "neverthrow";
+import { isNil } from "es-toolkit";
 import { errEnvelope, okEnvelope } from "@/api/http-envelope";
-import {
-  postProjectSyncRequestBodyDtoSchema,
-  postProjectSyncRequestParamsDtoSchema,
-} from "@/api/module/project/v1/sync/http-dto";
+import { postProjectSyncRequestParamsDtoSchema } from "@/api/module/project/v1/sync/http-dto";
 import type { HttpAuthGuardFactory } from "@/api/plugin/http-auth-guard-factory";
 import type { HttpRequestCtxFactory } from "@/api/plugin/http-request-ctx-factory";
 import type { ProjectSyncBasicService } from "@/app/feature/project/sync/basic-service";
-import type { Err } from "@/common/err/err";
 
 export class ProjectSyncV1HttpRouterFactory {
   #httpAuthGuardFactory: HttpAuthGuardFactory;
@@ -32,44 +28,34 @@ export class ProjectSyncV1HttpRouterFactory {
       .group("/api/v1/project/:projectId/sync", (r) =>
         r.post(
           "",
-          async ({ body, ctx, params, tenant }) => {
-            const { entityType } = body;
+          async ({ ctx, params, tenant }) => {
             const { projectId } = params;
 
-            let result: Result<void, Err>;
-            switch (entityType) {
-              case "aiAgent": {
-                result = await this.#projectSyncBasicService.syncAiAgents({
-                  ctx: { ...ctx, tenant },
-                  payload: { projectId },
-                });
-                break;
-              }
-              case "gitRepository": {
-                result =
-                  await this.#projectSyncBasicService.syncGitRepositories({
-                    ctx: { ...ctx, tenant },
-                    payload: { projectId },
-                  });
-                break;
-              }
-              case "workflowDefinition": {
-                result =
-                  await this.#projectSyncBasicService.syncWorkflowDefinitions({
-                    ctx: { ...ctx, tenant },
-                    payload: { projectId },
-                  });
-                break;
-              }
-            }
+            const syncEntityResults = await Promise.all([
+              this.#projectSyncBasicService.syncAiAgents({
+                ctx: { ...ctx, tenant },
+                payload: { projectId },
+              }),
+              this.#projectSyncBasicService.syncGitRepositories({
+                ctx: { ...ctx, tenant },
+                payload: { projectId },
+              }),
+              this.#projectSyncBasicService.syncWorkflowDefinitions({
+                ctx: { ...ctx, tenant },
+                payload: { projectId },
+              }),
+            ]);
 
-            if (result.isErr()) {
-              return errEnvelope(result.error);
+            const firstErrResult = syncEntityResults.find((result) =>
+              result.isErr(),
+            );
+
+            if (!isNil(firstErrResult)) {
+              return errEnvelope(firstErrResult.error);
             }
             return okEnvelope();
           },
           {
-            body: postProjectSyncRequestBodyDtoSchema,
             params: postProjectSyncRequestParamsDtoSchema,
           },
         ),

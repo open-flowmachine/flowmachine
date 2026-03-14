@@ -3,22 +3,22 @@ import { err, ok } from "neverthrow";
 import { Err } from "@/common/err/err";
 
 type NewJiraHttpClientInput = {
-  baseUrl: string;
   apiKey: string;
+  domain: string;
 };
 
 class JiraHttpClient {
   #apiKey: string;
-  #baseUrl: string;
+  #domain: string;
 
-  private constructor(baseUrl: string, apiKey: string) {
-    this.#baseUrl = baseUrl;
+  private constructor(domain: string, apiKey: string) {
+    this.#domain = domain;
     this.#apiKey = apiKey;
   }
 
   static makeNew(input: NewJiraHttpClientInput) {
-    const { baseUrl, apiKey } = input;
-    return new JiraHttpClient(baseUrl, apiKey);
+    const { domain, apiKey } = input;
+    return new JiraHttpClient(domain, apiKey);
   }
 
   async createCustomField({
@@ -98,9 +98,21 @@ class JiraHttpClient {
     }
   }
 
+  async getProject({ params }: { params: { projectId: string } }) {
+    try {
+      const { data } = await this.#httpClient().get<{
+        id: string;
+        key: string;
+      }>(`/project/${params.projectId}`);
+      return ok(data);
+    } catch (error) {
+      return err(Err.from(error));
+    }
+  }
+
   #httpClient() {
     return axios.create({
-      baseURL: `${this.#baseUrl}/rest/api/3`,
+      baseURL: `https://${this.#domain}.atlassian.net/rest/api/3`,
       headers: {
         Authorization: `Basic ${this.#apiKey}`,
         "Content-Type": "application/json",

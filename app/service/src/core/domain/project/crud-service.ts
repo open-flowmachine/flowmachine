@@ -19,6 +19,7 @@ const projectCrudServiceInputSchema = {
     ctx: ctxSchema,
     payload: z.object({
       name: projectEntityProps.shape.name,
+      integration: projectEntityProps.shape.integration.optional(),
     }),
   }),
 
@@ -38,6 +39,7 @@ const projectCrudServiceInputSchema = {
     payload: z.object({
       id: entityIdSchema,
       name: projectEntityProps.shape.name.optional(),
+      integration: projectEntityProps.shape.integration.optional(),
     }),
   }),
 

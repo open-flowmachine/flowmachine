@@ -11,6 +11,12 @@ export const useNewProjectForm = (
   return useForm<NewProjectFormValues>({
     defaultValues: {
       name: "",
+      integrationCredentialId: "",
+      integrationDomain: "",
+      integrationExternalId: "",
+      integrationExternalKey: "",
+      integrationProvider: "jira",
+      integrationWebhookSecret: "",
     },
     resolver: standardSchemaResolver(newProjectFormValuesSchema),
     ...props,

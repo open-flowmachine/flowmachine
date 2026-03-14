@@ -42,3 +42,12 @@ export const updateProjectServicePortInSchema = z.object({
 export type UpdateProjectServicePortIn = z.output<
   typeof updateProjectServicePortInSchema
 >;
+
+export const syncProjectServicePortInSchema = z.object({
+  params: z.object({
+    id: domainIdSchema,
+  }),
+});
+export type SyncProjectServicePortIn = z.output<
+  typeof syncProjectServicePortInSchema
+>;

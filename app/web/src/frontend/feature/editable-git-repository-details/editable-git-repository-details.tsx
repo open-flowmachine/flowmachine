@@ -13,6 +13,7 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/frontend/component/ui/field";
+import { Separator } from "@/frontend/component/ui/separator";
 
 type EditableGitRepositoryDetailsProps = {
   gitRepository: GitRepositoryDomain;
@@ -63,6 +64,9 @@ export function EditableGitRepositoryDetails({
           </Field>
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <FieldSet>
         <FieldLegend>Configuration</FieldLegend>
         <FieldGroup>
@@ -88,6 +92,9 @@ export function EditableGitRepositoryDetails({
           </Field>
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <FieldSet>
         <FieldLegend>Integration</FieldLegend>
         <FieldGroup>
@@ -109,6 +116,9 @@ export function EditableGitRepositoryDetails({
           </Field>
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <FieldSet>
         <FieldLegend>Projects</FieldLegend>
         <FieldGroup>
@@ -142,6 +152,9 @@ export function EditableGitRepositoryDetails({
           </Field>
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <FieldSet>
         <FieldGroup>
           <Field>
@@ -162,6 +175,9 @@ export function EditableGitRepositoryDetails({
           </Field>
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <Field orientation="horizontal">
         <Button type="button" variant="outline" onClick={onEdit}>
           Edit

@@ -7,6 +7,7 @@ import {
 const projectProviders = ["jira", "linear"] as const;
 
 const projectIntegrationHttpResponseDtoSchema = z.object({
+  domain: z.string(),
   externalId: z.string(),
   externalKey: z.string(),
   provider: z.enum(projectProviders),
@@ -68,4 +69,13 @@ export const updateProjectHttpClientInSchema = z.object({
 });
 export type UpdateProjectHttpClientIn = z.output<
   typeof updateProjectHttpClientInSchema
+>;
+
+export const syncProjectByIdHttpClientInSchema = z.object({
+  payload: z.object({
+    id: idParamsSchema.shape.id,
+  }),
+});
+export type SyncProjectByIdHttpClientIn = z.output<
+  typeof syncProjectByIdHttpClientInSchema
 >;

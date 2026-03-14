@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/frontend/component/ui/select";
+import { Separator } from "@/frontend/component/ui/separator";
 import { Spinner } from "@/frontend/component/ui/spinner";
 import type { NewCredentialFormValues } from "@/frontend/feature/new-credential/new-credential-form-schema";
 import { cn } from "@/frontend/lib/util";
@@ -280,6 +281,8 @@ export function NewCredentialForm({
           />
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
 
       <Field orientation="horizontal">
         <Button

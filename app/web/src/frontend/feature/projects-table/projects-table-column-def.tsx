@@ -3,6 +3,7 @@ import {
   CopyIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  RefreshCwIcon,
   TrashIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -32,19 +33,23 @@ import { Spinner } from "@/frontend/component/ui/spinner";
 type MakeProjectsTableColumnDefInput = {
   isDeleteConfirmationAlertOpen: boolean;
   isDeleting: boolean;
+  isSyncing: boolean;
   onCopyAction: (text: string) => void;
   onDeleteActionCancel: () => void;
   onDeleteActionConfirm: (id: ProjectDomain["id"]) => void;
   onDeleteActionTrigger: () => void;
+  onSyncAction: (id: ProjectDomain["id"]) => void;
 };
 
 export const makeProjectsTableColumnDef = ({
   isDeleteConfirmationAlertOpen,
   isDeleting,
+  isSyncing,
   onCopyAction,
   onDeleteActionCancel,
   onDeleteActionConfirm,
   onDeleteActionTrigger,
+  onSyncAction,
 }: MakeProjectsTableColumnDefInput) => {
   return [
     {
@@ -100,6 +105,13 @@ export const makeProjectsTableColumnDef = ({
                 >
                   <PencilIcon />
                   Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={isSyncing}
+                  onClick={() => onSyncAction(project.id)}
+                >
+                  {isSyncing ? <Spinner /> : <RefreshCwIcon />}
+                  {isSyncing ? "Syncing..." : "Sync"}
                 </DropdownMenuItem>
                 <AlertDialogTrigger
                   nativeButton={false}

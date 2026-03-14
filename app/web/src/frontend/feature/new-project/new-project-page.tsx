@@ -16,7 +16,19 @@ export function NewProjectPage() {
 
   const handleValidFormSubmit = async (data: NewProjectFormValues) => {
     try {
-      await mutateAsync({ body: data });
+      await mutateAsync({
+        body: {
+          name: data.name,
+          integration: {
+            credentialId: data.integrationCredentialId,
+            domain: data.integrationDomain,
+            externalId: data.integrationExternalId,
+            externalKey: data.integrationExternalKey,
+            provider: data.integrationProvider,
+            webhookSecret: data.integrationWebhookSecret,
+          },
+        },
+      });
       form.reset();
       toast.success("Project created successfully");
       router.push("/platform/project");

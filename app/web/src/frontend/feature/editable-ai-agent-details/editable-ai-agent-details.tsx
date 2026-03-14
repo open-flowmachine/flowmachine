@@ -13,6 +13,7 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/frontend/component/ui/field";
+import { Separator } from "@/frontend/component/ui/separator";
 
 type EditableAiAgentDetailsProps = {
   aiAgent: AiAgentDomain;
@@ -107,6 +108,9 @@ export function EditableAiAgentDetails({
           </Field>
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <Field orientation="horizontal">
         <Button type="button" variant="outline" onClick={onEdit}>
           Edit

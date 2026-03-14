@@ -1,6 +1,8 @@
 import { CopyIcon } from "lucide-react";
 import type { ProjectDomain } from "@/domain/entity/project/project-domain-schema";
 import { makeProjectDomainService } from "@/domain/entity/project/project-domain-service";
+import { projectProviderToDisplayName } from "@/domain/entity/project/project-domain-service";
+import { Badge } from "@/frontend/component/ui/badge";
 import { Button } from "@/frontend/component/ui/button";
 import {
   Field,
@@ -10,6 +12,7 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/frontend/component/ui/field";
+import { Separator } from "@/frontend/component/ui/separator";
 
 type EditableProjectDetailsProps = {
   project: ProjectDomain;
@@ -48,6 +51,70 @@ export function EditableProjectDetails({
               <span className="text-sm">{project.name}</span>
             </FieldContent>
           </Field>
+        </FieldGroup>
+      </FieldSet>
+
+      {project.integration && (
+        <>
+          <Separator />
+          <FieldSet>
+            <FieldLegend>Integration</FieldLegend>
+            <FieldGroup>
+              <Field>
+                <FieldLabel>Provider</FieldLabel>
+                <FieldContent>
+                  <Badge variant="secondary" className="w-fit">
+                    {projectProviderToDisplayName[project.integration.provider]}
+                  </Badge>
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel>Domain</FieldLabel>
+                <FieldContent>
+                  <span className="text-sm">{project.integration.domain}</span>
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel>Credential ID</FieldLabel>
+                <FieldContent>
+                  <span className="text-sm">
+                    {project.integration.credentialId}
+                  </span>
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel>External ID</FieldLabel>
+                <FieldContent>
+                  <span className="text-sm">
+                    {project.integration.externalId}
+                  </span>
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel>External Key</FieldLabel>
+                <FieldContent>
+                  <span className="text-sm">
+                    {project.integration.externalKey}
+                  </span>
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel>Webhook Secret</FieldLabel>
+                <FieldContent>
+                  <span className="text-sm">
+                    {project.integration.webhookSecret}
+                  </span>
+                </FieldContent>
+              </Field>
+            </FieldGroup>
+          </FieldSet>
+        </>
+      )}
+
+      <Separator />
+
+      <FieldSet>
+        <FieldGroup>
           <Field>
             <FieldLabel>Created at</FieldLabel>
             <FieldContent>
@@ -66,6 +133,9 @@ export function EditableProjectDetails({
           </Field>
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <Field orientation="horizontal">
         <Button type="button" variant="outline" onClick={onEdit}>
           Edit

@@ -36,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/frontend/component/ui/select";
+import { Separator } from "@/frontend/component/ui/separator";
 import { Spinner } from "@/frontend/component/ui/spinner";
 import type { NewGitRepositoryFormValues } from "@/frontend/feature/new-git-repository/new-git-repository-form-schema";
 
@@ -117,6 +118,8 @@ export function NewGitRepositoryForm({
         </FieldGroup>
       </FieldSet>
 
+      <Separator />
+
       <FieldSet>
         <FieldLegend>Configuration</FieldLegend>
         <FieldDescription>
@@ -197,6 +200,8 @@ export function NewGitRepositoryForm({
         </FieldGroup>
       </FieldSet>
 
+      <Separator />
+
       <FieldSet>
         <FieldLegend>Integration</FieldLegend>
         <FieldDescription>
@@ -271,6 +276,8 @@ export function NewGitRepositoryForm({
         </FieldGroup>
       </FieldSet>
 
+      <Separator />
+
       <FieldSet>
         <FieldLegend>Projects</FieldLegend>
         <FieldDescription>
@@ -288,8 +295,8 @@ export function NewGitRepositoryForm({
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Assigned projects</FieldLabel>
                   <FieldDescription>
-                    Select which projects this git repository belongs to. You can
-                    assign it to multiple projects.
+                    Select which projects this git repository belongs to. You
+                    can assign it to multiple projects.
                   </FieldDescription>
                   <Combobox
                     multiple
@@ -341,6 +348,8 @@ export function NewGitRepositoryForm({
           />
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
 
       <Field orientation="horizontal">
         <Button

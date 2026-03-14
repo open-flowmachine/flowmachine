@@ -10,11 +10,14 @@ const projectResponseDtoSchema = z.object({
   updatedAt: z.date(),
   tenant: tenantSchema,
   name: projectEntityProps.shape.name,
+  integration: projectEntityProps.shape.integration,
 });
 type ProjectResponseDto = z.output<typeof projectResponseDtoSchema>;
 
 const postProjectRequestBodyDtoSchema = z.object({
   name: projectCrudServiceInputSchema.create.shape.payload.shape.name,
+  integration:
+    projectCrudServiceInputSchema.create.shape.payload.shape.integration,
 });
 
 const patchProjectRequestParamsDtoSchema = z.object({
@@ -23,6 +26,7 @@ const patchProjectRequestParamsDtoSchema = z.object({
 
 const patchProjectRequestBodyDtoSchema = z.object({
   name: projectEntityProps.shape.name.optional(),
+  integration: projectEntityProps.shape.integration.optional(),
 });
 
 const deleteProjectRequestParamsDtoSchema = z.object({
