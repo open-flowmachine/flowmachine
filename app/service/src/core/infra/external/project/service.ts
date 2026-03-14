@@ -2,48 +2,35 @@ import type { Result } from "neverthrow";
 import z from "zod";
 import { tenantCtxSchema } from "@/common/ctx/tenant-ctx";
 import type { Err } from "@/common/err/err";
-import { AiAgentEntity } from "@/core/domain/ai-agent/entity";
 import { CredentialEntity } from "@/core/domain/credential/entity";
-import { GitRepositoryEntity } from "@/core/domain/git-repository/entity";
 import { ProjectEntity } from "@/core/domain/project/entity";
-import { WorkflowDefinitionEntity } from "@/core/domain/workflow/definition/entity";
+import { ProjectIssueFieldDefinitionEntity } from "@/core/domain/project/issue/field/definition/entity";
 
 const externalProjectServiceInputSchema = {
-  syncAiAgentIssueField: z.object({
+  createIssueField: z.object({
     ctx: tenantCtxSchema,
     credential: z.instanceof(CredentialEntity),
     project: z.instanceof(ProjectEntity),
-    aiAgent: z.instanceof(AiAgentEntity),
+    projectIssueFieldDefinition: z.instanceof(
+      ProjectIssueFieldDefinitionEntity,
+    ),
   }),
-  syncGitRepositoryIssueField: z.object({
+  deleteIssueField: z.object({
     ctx: tenantCtxSchema,
     credential: z.instanceof(CredentialEntity),
     project: z.instanceof(ProjectEntity),
-    gitRepository: z.instanceof(GitRepositoryEntity),
-  }),
-  syncWorkflowDefinitionIssueField: z.object({
-    ctx: tenantCtxSchema,
-    credential: z.instanceof(CredentialEntity),
-    project: z.instanceof(ProjectEntity),
-    workflowDefinition: z.instanceof(WorkflowDefinitionEntity),
+    projectIssueFieldDefinition: z.instanceof(
+      ProjectIssueFieldDefinitionEntity,
+    ),
   }),
 };
 
 interface ExternalProjectService {
-  syncAiAgentIssueField(
-    input: z.infer<
-      typeof externalProjectServiceInputSchema.syncAiAgentIssueField
-    >,
-  ): Promise<Result<void, Err>>;
-  syncGitRepositoryIssueField(
-    input: z.infer<
-      typeof externalProjectServiceInputSchema.syncGitRepositoryIssueField
-    >,
-  ): Promise<Result<void, Err>>;
-  syncWorkflowDefinitionIssueField(
-    input: z.infer<
-      typeof externalProjectServiceInputSchema.syncWorkflowDefinitionIssueField
-    >,
+  createCustomIssueField(
+    input: z.infer<typeof externalProjectServiceInputSchema.createIssueField>,
+  ): Promise<Result<{ externalId: string; externalKey: string }, Err>>;
+  deleteCustomIssueField(
+    input: z.infer<typeof externalProjectServiceInputSchema.deleteIssueField>,
   ): Promise<Result<void, Err>>;
 }
 

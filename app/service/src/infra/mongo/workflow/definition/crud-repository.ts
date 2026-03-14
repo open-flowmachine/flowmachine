@@ -8,6 +8,7 @@ import type {
 } from "@/core/domain/workflow/definition/crud-repository";
 import { WorkflowDefinitionEntity } from "@/core/domain/workflow/definition/entity";
 import type { ConfigService } from "@/core/infra/config/service";
+import type { LoggerService } from "@/core/infra/logger/service";
 import { tenantAwareCollectionIndexes } from "@/infra/mongo/constant";
 import { tenantAwareEntityToMongoModel } from "@/infra/mongo/model";
 import type { WorkflowDefinitionMongoModel } from "@/infra/mongo/workflow/definition/model";
@@ -15,10 +16,12 @@ import type { WorkflowDefinitionMongoModel } from "@/infra/mongo/workflow/defini
 class WorkflowDefinitionMongoCrudRepository implements WorkflowDefinitionCrudRepository {
   #configService: ConfigService;
   #mongoClient: MongoClient;
+  #logger: LoggerService;
 
-  constructor(configService: ConfigService, mongoClient: MongoClient) {
+  constructor(configService: ConfigService, mongoClient: MongoClient, logger: LoggerService) {
     this.#configService = configService;
     this.#mongoClient = mongoClient;
+    this.#logger = logger;
   }
 
   async findMany(
@@ -37,7 +40,7 @@ class WorkflowDefinitionMongoCrudRepository implements WorkflowDefinitionCrudRep
         .toArray();
       return ok(result.map(this.#toDomain));
     } catch (error) {
-      console.error(error);
+      this.#logger.error({ error });
       return err(Err.from(error));
     }
   }

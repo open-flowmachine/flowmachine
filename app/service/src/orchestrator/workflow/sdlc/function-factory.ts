@@ -31,7 +31,7 @@ class WorkflowSdlcFunctionFactory {
           await this.#workflowSdlcActionDefinitionCrudService.list();
 
         if (workflowActionDefinitionsResult.isErr()) {
-          return workflowActionDefinitionsResult;
+          throw workflowActionDefinitionsResult.error;
         }
         const workflowEngine = await this.#workflowSdlcEngineFactory.make({
           workflowActionDefinitions: workflowActionDefinitionsResult.value,

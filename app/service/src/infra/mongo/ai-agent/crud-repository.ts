@@ -8,6 +8,7 @@ import type {
 } from "@/core/domain/ai-agent/crud-repository";
 import { AiAgentEntity } from "@/core/domain/ai-agent/entity";
 import type { ConfigService } from "@/core/infra/config/service";
+import type { LoggerService } from "@/core/infra/logger/service";
 import type { AiAgentMongoModel } from "@/infra/mongo/ai-agent/model";
 import { tenantAwareCollectionIndexes } from "@/infra/mongo/constant";
 import { tenantAwareEntityToMongoModel } from "@/infra/mongo/model";
@@ -15,10 +16,16 @@ import { tenantAwareEntityToMongoModel } from "@/infra/mongo/model";
 class AiAgentMongoCrudRepository implements AiAgentCrudRepository {
   #configService: ConfigService;
   #mongoClient: MongoClient;
+  #logger: LoggerService;
 
-  constructor(configService: ConfigService, mongoClient: MongoClient) {
+  constructor(
+    configService: ConfigService,
+    mongoClient: MongoClient,
+    logger: LoggerService,
+  ) {
     this.#configService = configService;
     this.#mongoClient = mongoClient;
+    this.#logger = logger;
   }
 
   async findMany(
@@ -37,7 +44,7 @@ class AiAgentMongoCrudRepository implements AiAgentCrudRepository {
         .toArray();
       return ok(result.map(this.#toDomain));
     } catch (error) {
-      console.error(error);
+      this.#logger.error({ error });
       return err(Err.from(error));
     }
   }

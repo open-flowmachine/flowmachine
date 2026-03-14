@@ -9,6 +9,8 @@ import type { CredentialEntity } from "@/core/domain/credential/entity";
 import type { GitRepositoryCrudService } from "@/core/domain/git-repository/crud-service";
 import type { ProjectCrudService } from "@/core/domain/project/crud-service";
 import type { ProjectEntity } from "@/core/domain/project/entity";
+import type { ProjectIssueFieldDefinitionCrudService } from "@/core/domain/project/issue/field/definition/crud-service";
+import type { IssueFieldType } from "@/core/domain/project/issue/field/type";
 import type { WorkflowDefinitionCrudService } from "@/core/domain/workflow/definition/crud-service";
 import type {
   ProjectSyncService,
@@ -16,12 +18,25 @@ import type {
 } from "@/core/feature/project/sync/service";
 import type { ExternalProjectService } from "@/core/infra/external/project/service";
 
+const entityTypeToFieldName = {
+  aiAgent: "AI Agent",
+  gitRepository: "Git Repository",
+  workflowDefinition: "Workflow Definition",
+} as const satisfies Record<string, string>;
+
+const entityTypeToFieldType = {
+  aiAgent: "select",
+  gitRepository: "select",
+  workflowDefinition: "select",
+} as const satisfies Record<string, IssueFieldType>;
+
 export class ProjectSyncBasicService implements ProjectSyncService {
   #projectCrudService: ProjectCrudService;
   #credentialCrudService: CredentialCrudService;
   #aiAgentCrudService: AiAgentCrudService;
   #gitRepositoryCrudService: GitRepositoryCrudService;
   #workflowDefinitionCrudService: WorkflowDefinitionCrudService;
+  #projectIssueFieldDefinitionCrudService: ProjectIssueFieldDefinitionCrudService;
   #externalProjectService: ExternalProjectService;
 
   constructor(
@@ -30,6 +45,7 @@ export class ProjectSyncBasicService implements ProjectSyncService {
     aiAgentCrudService: AiAgentCrudService,
     gitRepositoryCrudService: GitRepositoryCrudService,
     workflowDefinitionCrudService: WorkflowDefinitionCrudService,
+    projectIssueFieldDefinitionCrudService: ProjectIssueFieldDefinitionCrudService,
     externalProjectService: ExternalProjectService,
   ) {
     this.#projectCrudService = projectCrudService;
@@ -37,6 +53,8 @@ export class ProjectSyncBasicService implements ProjectSyncService {
     this.#aiAgentCrudService = aiAgentCrudService;
     this.#gitRepositoryCrudService = gitRepositoryCrudService;
     this.#workflowDefinitionCrudService = workflowDefinitionCrudService;
+    this.#projectIssueFieldDefinitionCrudService =
+      projectIssueFieldDefinitionCrudService;
     this.#externalProjectService = externalProjectService;
   }
 
@@ -56,42 +74,137 @@ export class ProjectSyncBasicService implements ProjectSyncService {
     }
     const { project, credential } = resolveResult.value;
 
-    const listResult = await this.#aiAgentCrudService.list({
+    if (isNil(project.props.integration)) {
+      return ok();
+    }
+    const listAiAgentsResult = await this.#aiAgentCrudService.list({
       ctx,
       filter: { projectId },
     });
 
-    if (listResult.isErr()) {
-      return err(listResult.error);
+    if (listAiAgentsResult.isErr()) {
+      return err(listAiAgentsResult.error);
     }
-    for (const aiAgent of listResult.value) {
-      aiAgent.markProjectForSync({ projectId });
+    const aiAgents = listAiAgentsResult.value;
 
-      await this.#aiAgentCrudService.update({
+    const listIssueFieldDefinitionsResult =
+      await this.#projectIssueFieldDefinitionCrudService.list({
         ctx,
-        payload: { id: aiAgent.id, projects: aiAgent.props.projects },
+        filter: { projectId, name: entityTypeToFieldName.aiAgent },
       });
 
-      const syncResult =
-        await this.#externalProjectService.syncAiAgentIssueField({
+    if (listIssueFieldDefinitionsResult.isErr()) {
+      return err(listIssueFieldDefinitionsResult.error);
+    }
+    const issueFieldDefinition = listIssueFieldDefinitionsResult.value[0];
+
+    if (isNil(issueFieldDefinition)) {
+      const createIssueFieldDefinitionResult =
+        await this.#projectIssueFieldDefinitionCrudService.create({
+          ctx,
+          payload: {
+            type: entityTypeToFieldType.aiAgent,
+            name: entityTypeToFieldName.aiAgent,
+            options: aiAgents.map((agent) => ({
+              label: agent.props.name,
+              value: agent.id,
+            })),
+            project: { id: projectId },
+          },
+        });
+
+      if (createIssueFieldDefinitionResult.isErr()) {
+        return err(createIssueFieldDefinitionResult.error);
+      }
+      const issueFieldDefinition = createIssueFieldDefinitionResult.value;
+
+      const createExternalIssueFieldResult =
+        await this.#externalProjectService.createCustomIssueField({
           ctx,
           credential,
           project,
-          aiAgent,
+          projectIssueFieldDefinition: issueFieldDefinition,
         });
 
-      if (syncResult.isOk()) {
-        aiAgent.markProjectAsSynced({ projectId });
-      } else {
-        aiAgent.markProjectSyncError({ projectId });
+      if (createExternalIssueFieldResult.isErr()) {
+        return err(createExternalIssueFieldResult.error);
       }
+      const { externalId, externalKey } = createExternalIssueFieldResult.value;
 
-      await this.#aiAgentCrudService.update({
+      const updateResult = await this.#projectIssueFieldDefinitionCrudService.update({
         ctx,
-        payload: { id: aiAgent.id, projects: aiAgent.props.projects },
+        payload: {
+          id: issueFieldDefinition.id,
+          integration: {
+            externalId,
+            externalKey,
+            provider: project.props.integration.provider,
+          },
+        },
       });
+
+      if (updateResult.isErr()) {
+        return err(updateResult.error);
+      }
+      return ok();
     }
 
+    const deleteExternalIssueFieldResult =
+      await this.#externalProjectService.deleteCustomIssueField({
+        ctx,
+        credential,
+        project,
+        projectIssueFieldDefinition: issueFieldDefinition,
+      });
+
+    if (deleteExternalIssueFieldResult.isErr()) {
+      return err(deleteExternalIssueFieldResult.error);
+    }
+    const updateIssueFieldDefinitionResult =
+      await this.#projectIssueFieldDefinitionCrudService.update({
+        ctx,
+        payload: {
+          id: issueFieldDefinition.id,
+          options: aiAgents.map((agent) => ({
+            label: agent.props.name,
+            value: agent.id,
+          })),
+        },
+      });
+
+    if (updateIssueFieldDefinitionResult.isErr()) {
+      return err(updateIssueFieldDefinitionResult.error);
+    }
+    const updatedIssueFieldDefinition = updateIssueFieldDefinitionResult.value;
+
+    const createExternalIssueFieldResult =
+      await this.#externalProjectService.createCustomIssueField({
+        ctx,
+        credential,
+        project,
+        projectIssueFieldDefinition: updatedIssueFieldDefinition,
+      });
+
+    if (createExternalIssueFieldResult.isErr()) {
+      return err(createExternalIssueFieldResult.error);
+    }
+    const { externalId, externalKey } = createExternalIssueFieldResult.value;
+
+    const finalUpdateResult = await this.#projectIssueFieldDefinitionCrudService.update({
+      ctx,
+      payload: {
+        id: updatedIssueFieldDefinition.id,
+        integration: {
+          externalId,
+          externalKey,
+          provider: project.props.integration.provider,
+        },
+      },
+    });
+
+    if (finalUpdateResult.isErr()) {
+      return err(finalUpdateResult.error);
+    }
     return ok();
   }
 
@@ -111,48 +224,139 @@ export class ProjectSyncBasicService implements ProjectSyncService {
     }
     const { project, credential } = resolveResult.value;
 
-    const listResult = await this.#gitRepositoryCrudService.list({
-      ctx,
-      filter: { projectId },
-    });
-
-    if (listResult.isErr()) {
-      return err(listResult.error);
+    if (isNil(project.props.integration)) {
+      return ok();
     }
-    for (const gitRepository of listResult.value) {
-      gitRepository.markProjectForSync({ projectId });
-
-      await this.#gitRepositoryCrudService.update({
+    const listGitRepositoriesResult = await this.#gitRepositoryCrudService.list(
+      {
         ctx,
-        payload: {
-          id: gitRepository.id,
-          projects: gitRepository.props.projects,
-        },
+        filter: { projectId },
+      },
+    );
+
+    if (listGitRepositoriesResult.isErr()) {
+      return err(listGitRepositoriesResult.error);
+    }
+    const gitRepositories = listGitRepositoriesResult.value;
+
+    const listIssueFieldDefinitionsResult =
+      await this.#projectIssueFieldDefinitionCrudService.list({
+        ctx,
+        filter: { projectId, name: entityTypeToFieldName.gitRepository },
       });
 
-      const syncResult =
-        await this.#externalProjectService.syncGitRepositoryIssueField({
+    if (listIssueFieldDefinitionsResult.isErr()) {
+      return err(listIssueFieldDefinitionsResult.error);
+    }
+    const issueFieldDefinition = listIssueFieldDefinitionsResult.value[0];
+
+    if (isNil(issueFieldDefinition)) {
+      const createIssueFieldDefinitionResult =
+        await this.#projectIssueFieldDefinitionCrudService.create({
+          ctx,
+          payload: {
+            type: entityTypeToFieldType.gitRepository,
+            name: entityTypeToFieldName.gitRepository,
+            options: gitRepositories.map((repo) => ({
+              label: repo.props.name,
+              value: repo.id,
+            })),
+            project: { id: projectId },
+          },
+        });
+
+      if (createIssueFieldDefinitionResult.isErr()) {
+        return err(createIssueFieldDefinitionResult.error);
+      }
+      const issueFieldDefinition = createIssueFieldDefinitionResult.value;
+
+      const createExternalIssueFieldResult =
+        await this.#externalProjectService.createCustomIssueField({
           ctx,
           credential,
           project,
-          gitRepository,
+          projectIssueFieldDefinition: issueFieldDefinition,
         });
 
-      if (syncResult.isOk()) {
-        gitRepository.markProjectAsSynced({ projectId });
-      } else {
-        gitRepository.markProjectSyncError({ projectId });
+      if (createExternalIssueFieldResult.isErr()) {
+        return err(createExternalIssueFieldResult.error);
       }
+      const { externalId, externalKey } = createExternalIssueFieldResult.value;
 
-      await this.#gitRepositoryCrudService.update({
+      const updateResult = await this.#projectIssueFieldDefinitionCrudService.update({
         ctx,
         payload: {
-          id: gitRepository.id,
-          projects: gitRepository.props.projects,
+          id: issueFieldDefinition.id,
+          integration: {
+            externalId,
+            externalKey,
+            provider: project.props.integration.provider,
+          },
         },
       });
+
+      if (updateResult.isErr()) {
+        return err(updateResult.error);
+      }
+      return ok();
     }
 
+    const deleteExternalIssueFieldResult =
+      await this.#externalProjectService.deleteCustomIssueField({
+        ctx,
+        credential,
+        project,
+        projectIssueFieldDefinition: issueFieldDefinition,
+      });
+
+    if (deleteExternalIssueFieldResult.isErr()) {
+      return err(deleteExternalIssueFieldResult.error);
+    }
+    const updateIssueFieldDefinitionResult =
+      await this.#projectIssueFieldDefinitionCrudService.update({
+        ctx,
+        payload: {
+          id: issueFieldDefinition.id,
+          options: gitRepositories.map((repo) => ({
+            label: repo.props.name,
+            value: repo.id,
+          })),
+        },
+      });
+
+    if (updateIssueFieldDefinitionResult.isErr()) {
+      return err(updateIssueFieldDefinitionResult.error);
+    }
+    const updatedIssueFieldDefinition = updateIssueFieldDefinitionResult.value;
+
+    const createExternalIssueFieldResult =
+      await this.#externalProjectService.createCustomIssueField({
+        ctx,
+        credential,
+        project,
+        projectIssueFieldDefinition: updatedIssueFieldDefinition,
+      });
+
+    if (createExternalIssueFieldResult.isErr()) {
+      return err(createExternalIssueFieldResult.error);
+    }
+    const { externalId, externalKey } = createExternalIssueFieldResult.value;
+
+    const finalUpdateResult = await this.#projectIssueFieldDefinitionCrudService.update({
+      ctx,
+      payload: {
+        id: updatedIssueFieldDefinition.id,
+        integration: {
+          externalId,
+          externalKey,
+          provider: project.props.integration.provider,
+        },
+      },
+    });
+
+    if (finalUpdateResult.isErr()) {
+      return err(finalUpdateResult.error);
+    }
     return ok();
   }
 
@@ -174,48 +378,138 @@ export class ProjectSyncBasicService implements ProjectSyncService {
     }
     const { project, credential } = resolveResult.value;
 
-    const listResult = await this.#workflowDefinitionCrudService.list({
-      ctx,
-      filter: { projectId },
-    });
-
-    if (listResult.isErr()) {
-      return err(listResult.error);
+    if (isNil(project.props.integration)) {
+      return ok();
     }
-    for (const workflowDefinition of listResult.value) {
-      workflowDefinition.markProjectForSync({ projectId });
-
-      await this.#workflowDefinitionCrudService.update({
+    const listWorkflowDefinitionsResult =
+      await this.#workflowDefinitionCrudService.list({
         ctx,
-        payload: {
-          id: workflowDefinition.id,
-          projects: workflowDefinition.props.projects,
-        },
+        filter: { projectId },
       });
 
-      const syncResult =
-        await this.#externalProjectService.syncWorkflowDefinitionIssueField({
+    if (listWorkflowDefinitionsResult.isErr()) {
+      return err(listWorkflowDefinitionsResult.error);
+    }
+    const workflowDefinitions = listWorkflowDefinitionsResult.value;
+
+    const listIssueFieldDefinitionsResult =
+      await this.#projectIssueFieldDefinitionCrudService.list({
+        ctx,
+        filter: { projectId, name: entityTypeToFieldName.workflowDefinition },
+      });
+
+    if (listIssueFieldDefinitionsResult.isErr()) {
+      return err(listIssueFieldDefinitionsResult.error);
+    }
+    const issueFieldDefinition = listIssueFieldDefinitionsResult.value[0];
+
+    if (isNil(issueFieldDefinition)) {
+      const createIssueFieldDefinitionResult =
+        await this.#projectIssueFieldDefinitionCrudService.create({
+          ctx,
+          payload: {
+            type: entityTypeToFieldType.workflowDefinition,
+            name: entityTypeToFieldName.workflowDefinition,
+            options: workflowDefinitions.map((def) => ({
+              label: def.props.name,
+              value: def.id,
+            })),
+            project: { id: projectId },
+          },
+        });
+
+      if (createIssueFieldDefinitionResult.isErr()) {
+        return err(createIssueFieldDefinitionResult.error);
+      }
+      const issueFieldDefinition = createIssueFieldDefinitionResult.value;
+
+      const createExternalIssueFieldResult =
+        await this.#externalProjectService.createCustomIssueField({
           ctx,
           credential,
           project,
-          workflowDefinition,
+          projectIssueFieldDefinition: issueFieldDefinition,
         });
 
-      if (syncResult.isOk()) {
-        workflowDefinition.markProjectAsSynced({ projectId });
-      } else {
-        workflowDefinition.markProjectSyncError({ projectId });
+      if (createExternalIssueFieldResult.isErr()) {
+        return err(createExternalIssueFieldResult.error);
       }
+      const { externalId, externalKey } = createExternalIssueFieldResult.value;
 
-      await this.#workflowDefinitionCrudService.update({
+      const updateResult = await this.#projectIssueFieldDefinitionCrudService.update({
         ctx,
         payload: {
-          id: workflowDefinition.id,
-          projects: workflowDefinition.props.projects,
+          id: issueFieldDefinition.id,
+          integration: {
+            externalId,
+            externalKey,
+            provider: project.props.integration.provider,
+          },
         },
       });
+
+      if (updateResult.isErr()) {
+        return err(updateResult.error);
+      }
+      return ok();
     }
 
+    const deleteExternalIssueFieldResult =
+      await this.#externalProjectService.deleteCustomIssueField({
+        ctx,
+        credential,
+        project,
+        projectIssueFieldDefinition: issueFieldDefinition,
+      });
+
+    if (deleteExternalIssueFieldResult.isErr()) {
+      return err(deleteExternalIssueFieldResult.error);
+    }
+    const updateIssueFieldDefinitionResult =
+      await this.#projectIssueFieldDefinitionCrudService.update({
+        ctx,
+        payload: {
+          id: issueFieldDefinition.id,
+          options: workflowDefinitions.map((def) => ({
+            label: def.props.name,
+            value: def.id,
+          })),
+        },
+      });
+
+    if (updateIssueFieldDefinitionResult.isErr()) {
+      return err(updateIssueFieldDefinitionResult.error);
+    }
+    const updatedIssueFieldDefinition = updateIssueFieldDefinitionResult.value;
+
+    const createExternalIssueFieldResult =
+      await this.#externalProjectService.createCustomIssueField({
+        ctx,
+        credential,
+        project,
+        projectIssueFieldDefinition: updatedIssueFieldDefinition,
+      });
+
+    if (createExternalIssueFieldResult.isErr()) {
+      return err(createExternalIssueFieldResult.error);
+    }
+    const { externalId, externalKey } = createExternalIssueFieldResult.value;
+
+    const finalUpdateResult = await this.#projectIssueFieldDefinitionCrudService.update({
+      ctx,
+      payload: {
+        id: updatedIssueFieldDefinition.id,
+        integration: {
+          externalId,
+          externalKey,
+          provider: project.props.integration.provider,
+        },
+      },
+    });
+
+    if (finalUpdateResult.isErr()) {
+      return err(finalUpdateResult.error);
+    }
     return ok();
   }
 

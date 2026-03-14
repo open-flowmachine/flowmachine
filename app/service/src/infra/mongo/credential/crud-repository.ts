@@ -9,6 +9,7 @@ import type {
 import type { CredentialEntityProps } from "@/core/domain/credential/entity";
 import { CredentialEntity } from "@/core/domain/credential/entity";
 import type { ConfigService } from "@/core/infra/config/service";
+import type { LoggerService } from "@/core/infra/logger/service";
 import { tenantAwareCollectionIndexes } from "@/infra/mongo/constant";
 import type { CredentialMongoModel } from "@/infra/mongo/credential/model";
 import { tenantAwareEntityToMongoModel } from "@/infra/mongo/model";
@@ -16,10 +17,16 @@ import { tenantAwareEntityToMongoModel } from "@/infra/mongo/model";
 class CredentialMongoCrudRepository implements CredentialCrudRepository {
   #configService: ConfigService;
   #mongoClient: MongoClient;
+  #logger: LoggerService;
 
-  constructor(configService: ConfigService, mongoClient: MongoClient) {
+  constructor(
+    configService: ConfigService,
+    mongoClient: MongoClient,
+    logger: LoggerService,
+  ) {
     this.#configService = configService;
     this.#mongoClient = mongoClient;
+    this.#logger = logger;
   }
 
   async findMany(
@@ -34,7 +41,7 @@ class CredentialMongoCrudRepository implements CredentialCrudRepository {
         .toArray();
       return ok(result.map(this.#toDomain));
     } catch (error) {
-      console.error(error);
+      this.#logger.error({ error });
       return err(Err.from(error));
     }
   }

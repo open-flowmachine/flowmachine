@@ -1,3 +1,12 @@
-const projectIssueFieldTypes = ["textfield", "select"] as const;
+import z from "zod";
 
-export { projectIssueFieldTypes };
+const projectIssueFieldTypes = ["select"] as const;
+const projectIssueFieldTypeSchema = z.enum(projectIssueFieldTypes);
+
+type IssueFieldType = z.infer<typeof projectIssueFieldTypeSchema>;
+
+export {
+  projectIssueFieldTypes,
+  projectIssueFieldTypeSchema,
+  type IssueFieldType,
+};

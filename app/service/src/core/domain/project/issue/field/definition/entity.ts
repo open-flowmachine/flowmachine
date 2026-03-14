@@ -1,5 +1,9 @@
 import z from "zod";
-import { entityIdSchema, newEntityId } from "@/core/domain/entity";
+import {
+  type EntityId,
+  entityIdSchema,
+  newEntityId,
+} from "@/core/domain/entity";
 import { projectIssueFieldTypes } from "@/core/domain/project/issue/field/type";
 import { projectProviders } from "@/core/domain/project/provider";
 import {
@@ -8,16 +12,15 @@ import {
 } from "@/core/domain/tenant-aware-entity";
 
 const projectIssueFieldDefinitionEntityPropsCommonSchema = {
+  name: z.string().min(1).max(256),
   type: z.enum(projectIssueFieldTypes),
   options: z
     .object({
       value: z.string().min(1).max(256),
       label: z.string().min(1).max(256),
     })
-    .array()
-    .optional(),
+    .array(),
 
-  name: z.string().min(1).max(256),
   integration: z
     .object({
       externalId: z.string().min(1).max(32),
@@ -30,23 +33,27 @@ const projectIssueFieldDefinitionEntityPropsCommonSchema = {
   }),
 };
 
-const projectIssueFieldDefinitionEntityProps = z.discriminatedUnion("type", [
-  z.object({
-    ...projectIssueFieldDefinitionEntityPropsCommonSchema,
-    type: z.literal("textfield"),
-    options: z.undefined().optional(),
+const projectIssueFieldDefinitionEntityProps = z.object({
+  name: z.string().min(1).max(256),
+  type: z.enum(projectIssueFieldTypes),
+  options: z
+    .object({
+      value: z.string().min(1).max(256),
+      label: z.string().min(1).max(256),
+    })
+    .array(),
+
+  integration: z
+    .object({
+      externalId: z.string().min(1).max(32),
+      externalKey: z.string().min(1).max(32),
+      provider: z.enum(projectProviders),
+    })
+    .optional(),
+  project: z.object({
+    id: entityIdSchema,
   }),
-  z.object({
-    ...projectIssueFieldDefinitionEntityPropsCommonSchema,
-    type: z.literal("select"),
-    options: z
-      .object({
-        value: z.string().min(1).max(256),
-        label: z.string().min(1).max(256),
-      })
-      .array(),
-  }),
-]);
+});
 type ProjectIssueFieldDefinitionEntityProps = z.output<
   typeof projectIssueFieldDefinitionEntityProps
 >;
@@ -57,6 +64,19 @@ class ProjectIssueFieldDefinitionEntity extends TenantAwareEntity<ProjectIssueFi
     props: ProjectIssueFieldDefinitionEntityProps,
   ) {
     return new ProjectIssueFieldDefinitionEntity(newEntityId(), tenant, props);
+  }
+
+  static makeExisting(
+    id: EntityId,
+    createdAt: Date,
+    updatedAt: Date,
+    tenant: Tenant,
+    props: ProjectIssueFieldDefinitionEntityProps,
+  ) {
+    return new ProjectIssueFieldDefinitionEntity(id, tenant, props, {
+      createdAt,
+      updatedAt,
+    });
   }
 }
 

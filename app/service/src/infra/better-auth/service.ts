@@ -27,7 +27,7 @@ class BetterAuthService implements AuthService {
       const result = await this.#betterAuthClient.api.getSession({ headers });
 
       if (!result) {
-        return err(Err.code("notFound"));
+        return err(Err.code("unauthorized"));
       }
       const session = result.session;
 
@@ -57,7 +57,7 @@ class BetterAuthService implements AuthService {
       const result = await this.#betterAuthClient.api.getSession({ headers });
 
       if (!result) {
-        return err(Err.code("notFound"));
+        return err(Err.code("unauthorized"));
       }
       const user = result.user;
 
@@ -88,7 +88,7 @@ class BetterAuthService implements AuthService {
       });
 
       if (!member) {
-        return err(Err.code("notFound"));
+        return err(Err.code("unauthorized"));
       }
 
       return ok(
