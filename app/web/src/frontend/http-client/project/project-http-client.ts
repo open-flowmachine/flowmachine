@@ -5,6 +5,7 @@ import type {
   CreateProjectServicePortIn,
   DeleteProjectServicePortIn,
   GetProjectServicePortIn,
+  SyncProjectServicePortIn,
   UpdateProjectServicePortIn,
 } from "@/domain/port/project/project-service-port";
 import type { HttpClient } from "@/lib/http/http-client";
@@ -39,6 +40,12 @@ export const makeProjectHttpClient = ({
   list: async () => {
     const response = await httpClient.get(BASE_PATH);
     const schema = withHttpEnvelopeSchema(projectDomainSchema.array());
+    return schema.parse(response.data);
+  },
+
+  syncById: async ({ params }: SyncProjectServicePortIn) => {
+    const response = await httpClient.post(`${BASE_PATH}/${params.id}/sync`);
+    const schema = withHttpEnvelopeSchema(z.void());
     return schema.parse(response.data);
   },
 

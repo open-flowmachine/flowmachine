@@ -6,6 +6,7 @@ import {
   createProjectServicePortInSchema,
   deleteProjectServicePortInSchema,
   getProjectServicePortInSchema,
+  syncProjectServicePortInSchema,
   updateProjectServicePortInSchema,
 } from "@/domain/port/project/project-service-port";
 import { type HttpEnvelope, okHttpEnvelope } from "@/lib/http/http-schema";
@@ -66,6 +67,21 @@ export const makeProjectRouteHandler = ({
     );
 
     return NextResponse.json(okHttpEnvelope({ data }));
+  },
+
+  syncById: async (
+    _: NextRequest,
+    ctx: { params: Promise<{ id: string }> },
+  ) => {
+    const params = await ctx.params;
+
+    const validatedInput = syncProjectServicePortInSchema.parse({ params });
+
+    await projectHttpClient.syncById({
+      payload: { id: validatedInput.params.id },
+    });
+
+    return NextResponse.json(okHttpEnvelope());
   },
 
   updateById: async (

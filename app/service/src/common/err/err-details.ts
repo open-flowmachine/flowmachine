@@ -23,6 +23,10 @@ export const errDetails = {
     message: "Bad request",
     status: 400,
   },
+  unprocessableEntity: {
+    message: "Unprocessable entity",
+    status: 422,
+  },
 } as const satisfies Record<string, { status: number; message: string }>;
 
 export type ErrDetails = typeof errDetails;

@@ -17,7 +17,7 @@ class HttpErrorHandlerFactory {
         this.#logger.error({ error });
 
         if (code === "VALIDATION") {
-          const domainErr = Err.code("badRequest", { cause: error });
+          const domainErr = Err.code("unprocessableEntity", { cause: error });
           return errEnvelope(domainErr);
         }
 

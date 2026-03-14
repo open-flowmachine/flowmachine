@@ -10,6 +10,7 @@ import { Button } from "@/frontend/component/ui/button";
 import { makeProjectsTableColumnDef } from "@/frontend/feature/projects-table/projects-table-column-def";
 import { useDeleteProject } from "@/frontend/hook/project/use-delete-project";
 import { useListProjects } from "@/frontend/hook/project/use-list-projects";
+import { useSyncProject } from "@/frontend/hook/project/use-sync-project";
 import { useConfirmableAction } from "@/frontend/hook/use-confirmable-action";
 import { useCopyToClipboard } from "@/frontend/hook/use-copy-to-clipboard";
 
@@ -19,6 +20,8 @@ export default function ProjectsTablePage() {
 
   const { data, isPending } = useListProjects();
   const { mutateAsync, isPending: isDeleteProjectPending } = useDeleteProject();
+  const { mutateAsync: syncMutateAsync, isPending: isSyncProjectPending } =
+    useSyncProject();
 
   const handleCopyAction = async (text: string) => {
     await copyToClipboard(text);
@@ -32,6 +35,15 @@ export default function ProjectsTablePage() {
       await mutateAsync({ params: { id } });
     },
   );
+
+  const handleSyncAction = async (id: ProjectDomain["id"]) => {
+    try {
+      await syncMutateAsync({ params: { id } });
+      toast.success("Project synced successfully");
+    } catch {
+      toast.error("Failed to sync project");
+    }
+  };
 
   return (
     <PlatformPageTemplate heading="Project" isPending={isPending}>
@@ -52,10 +64,12 @@ export default function ProjectsTablePage() {
               deleteAction.step === "inProgress",
             isDeleting:
               deleteAction.step === "inProgress" || isDeleteProjectPending,
+            isSyncing: isSyncProjectPending,
             onCopyAction: handleCopyAction,
             onDeleteActionCancel: handleDeleteProjectActionCancel,
             onDeleteActionConfirm: handleDeleteProjectActionConfirm,
             onDeleteActionTrigger: handleDeleteProjectActionTrigger,
+            onSyncAction: handleSyncAction,
           })}
           data={data ?? []}
           searchKey="name"

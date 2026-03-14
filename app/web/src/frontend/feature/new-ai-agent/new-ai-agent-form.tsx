@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/frontend/component/ui/select";
+import { Separator } from "@/frontend/component/ui/separator";
 import { Spinner } from "@/frontend/component/ui/spinner";
 import type { NewAiAgentFormValues } from "@/frontend/feature/new-ai-agent/new-ai-agent-form-schema";
 
@@ -198,6 +199,9 @@ export function NewAiAgentForm({
           />
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <Field orientation="horizontal">
         <Button
           disabled={form.formState.isSubmitting}

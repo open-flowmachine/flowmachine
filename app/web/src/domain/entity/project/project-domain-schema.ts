@@ -4,9 +4,10 @@ import {
   tenantAwareBaseDomainSchema,
 } from "@/domain/entity/shared-schema";
 
-const projectProviders = ["jira", "linear"] as const;
+export const projectProviders = ["jira", "linear"] as const;
 
 const projectIntegrationSchema = z.object({
+  domain: z.string(),
   externalId: z.string(),
   externalKey: z.string(),
   provider: z.enum(projectProviders),
