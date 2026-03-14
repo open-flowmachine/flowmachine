@@ -27,6 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/frontend/component/ui/popover";
+import { Separator } from "@/frontend/component/ui/separator";
 import { Spinner } from "@/frontend/component/ui/spinner";
 import type { EditCredentialFormValues } from "@/frontend/feature/editable-credential-details/edit-credential-form-schema";
 import { cn } from "@/frontend/lib/util";
@@ -235,6 +236,9 @@ export function EditCredentialForm({
           </Field>
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <Field orientation="horizontal">
         <Button
           disabled={form.formState.isSubmitting}

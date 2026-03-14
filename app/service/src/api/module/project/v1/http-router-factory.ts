@@ -83,6 +83,7 @@ export class ProjectV1HttpRouterFactory {
                 payload: {
                   id: params.id,
                   name: body.name,
+                  integration: body.integration,
                 },
               });
               if (result.isErr()) {
@@ -121,6 +122,7 @@ export class ProjectV1HttpRouterFactory {
       updatedAt: entity.updatedAt,
       tenant: entity.tenant,
       name: entity.props.name,
+      integration: entity.props.integration,
     } as const satisfies ProjectResponseDto;
   }
 }

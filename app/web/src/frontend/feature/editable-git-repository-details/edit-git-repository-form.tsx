@@ -1,3 +1,4 @@
+import { Separator } from "@base-ui/react/separator";
 import {
   Controller,
   type FieldErrors,
@@ -125,6 +126,9 @@ export function EditGitRepositoryForm({
           />
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <FieldSet>
         <FieldLegend>Configuration</FieldLegend>
         <FieldGroup>
@@ -201,6 +205,9 @@ export function EditGitRepositoryForm({
           />
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <FieldSet>
         <FieldLegend>Integration</FieldLegend>
         <FieldGroup>
@@ -273,6 +280,9 @@ export function EditGitRepositoryForm({
           />
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <FieldSet>
         <FieldLegend>Projects</FieldLegend>
         <FieldGroup>
@@ -287,8 +297,8 @@ export function EditGitRepositoryForm({
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Assigned projects</FieldLabel>
                   <FieldDescription>
-                    Select which projects this git repository belongs to. You can
-                    assign it to multiple projects.
+                    Select which projects this git repository belongs to. You
+                    can assign it to multiple projects.
                   </FieldDescription>
                   <Combobox
                     multiple
@@ -340,6 +350,9 @@ export function EditGitRepositoryForm({
           />
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <FieldSet>
         <FieldGroup>
           <Field>
@@ -360,6 +373,9 @@ export function EditGitRepositoryForm({
           </Field>
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <Field orientation="horizontal">
         <Button
           disabled={form.formState.isSubmitting}

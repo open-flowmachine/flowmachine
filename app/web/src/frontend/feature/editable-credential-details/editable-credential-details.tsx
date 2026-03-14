@@ -11,6 +11,7 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/frontend/component/ui/field";
+import { Separator } from "@/frontend/component/ui/separator";
 
 type EditableCredentialDetailsProps = {
   credential: CredentialDomain;
@@ -101,6 +102,9 @@ export function EditableCredentialDetails({
           </Field>
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <Field orientation="horizontal">
         <Button type="button" variant="outline" onClick={onEdit}>
           Edit

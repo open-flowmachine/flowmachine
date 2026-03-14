@@ -10,6 +10,7 @@ const projectResponseDtoSchema = z.object({
   updatedAt: z.date(),
   tenant: tenantSchema,
   name: projectEntityProps.shape.name,
+  integration: projectEntityProps.shape.integration,
 });
 type ProjectResponseDto = z.output<typeof projectResponseDtoSchema>;
 

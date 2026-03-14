@@ -1,3 +1,4 @@
+import { Separator } from "@base-ui/react/separator";
 import {
   Controller,
   type FieldErrors,
@@ -216,6 +217,9 @@ export function EditAiAgentForm({
           </Field>
         </FieldGroup>
       </FieldSet>
+
+      <Separator />
+
       <Field orientation="horizontal">
         <Button
           disabled={form.formState.isSubmitting}

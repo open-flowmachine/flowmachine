@@ -38,7 +38,15 @@ export function EditableProjectDetailsPage({
 
   const handleEdit = () => {
     if (data) {
-      form.reset({ name: data.name });
+      form.reset({
+        name: data.name,
+        integrationProvider: data.integration?.provider ?? "jira",
+        integrationDomain: data.integration?.domain ?? "",
+        integrationCredentialId: data.integration?.credentialId ?? "",
+        integrationExternalId: data.integration?.externalId ?? "",
+        integrationExternalKey: data.integration?.externalKey ?? "",
+        integrationWebhookSecret: data.integration?.webhookSecret ?? "",
+      });
     }
     setIsEditing(true);
   };
@@ -49,7 +57,20 @@ export function EditableProjectDetailsPage({
 
   const handleValidFormSubmit = async (formData: EditProjectFormValues) => {
     try {
-      await mutateAsync({ params: { id }, body: formData });
+      await mutateAsync({
+        params: { id },
+        body: {
+          name: formData.name,
+          integration: {
+            provider: formData.integrationProvider,
+            domain: formData.integrationDomain,
+            credentialId: formData.integrationCredentialId,
+            externalId: formData.integrationExternalId,
+            externalKey: formData.integrationExternalKey,
+            webhookSecret: formData.integrationWebhookSecret,
+          },
+        },
+      });
       await queryClient.invalidateQueries({
         queryKey: makeGetProjectQueryKey(id),
       });
