@@ -11,6 +11,7 @@ import { GitRepositoryMongoCrudRepository } from "@/infra/mongo/git-repository/c
 import { ProjectMongoCrudRepository } from "@/infra/mongo/project/crud-repository";
 import { ProjectIssueFieldDefinitionMongoCrudRepository } from "@/infra/mongo/project/issue/field/definition/crud-repository";
 import { WorkflowDefinitionMongoCrudRepository } from "@/infra/mongo/workflow/definition/crud-repository";
+import { logger } from "@/infra/pino/logger";
 import { ResendClientFactory } from "@/infra/resend/client-factory";
 import { ResendEmailService } from "@/infra/resend/service";
 
@@ -40,25 +41,34 @@ const inngestClient = inngestClientFactory.make();
 const projectMongoCrudRepository = new ProjectMongoCrudRepository(
   envConfigService,
   mongoClient,
+  logger,
 );
 const credentialMongoCrudRepository = new CredentialMongoCrudRepository(
   envConfigService,
   mongoClient,
+  logger,
 );
 const aiAgentMongoCrudRepository = new AiAgentMongoCrudRepository(
   envConfigService,
   mongoClient,
+  logger,
 );
 const gitRepositoryMongoCrudRepository = new GitRepositoryMongoCrudRepository(
   envConfigService,
   mongoClient,
+  logger,
 );
 const documentMongoCrudRepository = new DocumentMongoCrudRepository(
   envConfigService,
   mongoClient,
+  logger,
 );
 const workflowDefinitionMongoCrudRepository =
-  new WorkflowDefinitionMongoCrudRepository(envConfigService, mongoClient);
+  new WorkflowDefinitionMongoCrudRepository(
+    envConfigService,
+    mongoClient,
+    logger,
+  );
 const projectIssueFieldDefinitionMongoCrudRepository =
   new ProjectIssueFieldDefinitionMongoCrudRepository(
     envConfigService,

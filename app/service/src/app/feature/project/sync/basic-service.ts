@@ -131,7 +131,7 @@ export class ProjectSyncBasicService implements ProjectSyncService {
       }
       const { externalId, externalKey } = createExternalIssueFieldResult.value;
 
-      await this.#projectIssueFieldDefinitionCrudService.update({
+      const updateResult = await this.#projectIssueFieldDefinitionCrudService.update({
         ctx,
         payload: {
           id: issueFieldDefinition.id,
@@ -142,6 +142,10 @@ export class ProjectSyncBasicService implements ProjectSyncService {
           },
         },
       });
+
+      if (updateResult.isErr()) {
+        return err(updateResult.error);
+      }
       return ok();
     }
 
@@ -186,7 +190,7 @@ export class ProjectSyncBasicService implements ProjectSyncService {
     }
     const { externalId, externalKey } = createExternalIssueFieldResult.value;
 
-    await this.#projectIssueFieldDefinitionCrudService.update({
+    const finalUpdateResult = await this.#projectIssueFieldDefinitionCrudService.update({
       ctx,
       payload: {
         id: updatedIssueFieldDefinition.id,
@@ -197,6 +201,10 @@ export class ProjectSyncBasicService implements ProjectSyncService {
         },
       },
     });
+
+    if (finalUpdateResult.isErr()) {
+      return err(finalUpdateResult.error);
+    }
     return ok();
   }
 
@@ -275,7 +283,7 @@ export class ProjectSyncBasicService implements ProjectSyncService {
       }
       const { externalId, externalKey } = createExternalIssueFieldResult.value;
 
-      await this.#projectIssueFieldDefinitionCrudService.update({
+      const updateResult = await this.#projectIssueFieldDefinitionCrudService.update({
         ctx,
         payload: {
           id: issueFieldDefinition.id,
@@ -286,6 +294,10 @@ export class ProjectSyncBasicService implements ProjectSyncService {
           },
         },
       });
+
+      if (updateResult.isErr()) {
+        return err(updateResult.error);
+      }
       return ok();
     }
 
@@ -330,7 +342,7 @@ export class ProjectSyncBasicService implements ProjectSyncService {
     }
     const { externalId, externalKey } = createExternalIssueFieldResult.value;
 
-    await this.#projectIssueFieldDefinitionCrudService.update({
+    const finalUpdateResult = await this.#projectIssueFieldDefinitionCrudService.update({
       ctx,
       payload: {
         id: updatedIssueFieldDefinition.id,
@@ -341,6 +353,10 @@ export class ProjectSyncBasicService implements ProjectSyncService {
         },
       },
     });
+
+    if (finalUpdateResult.isErr()) {
+      return err(finalUpdateResult.error);
+    }
     return ok();
   }
 
@@ -420,7 +436,7 @@ export class ProjectSyncBasicService implements ProjectSyncService {
       }
       const { externalId, externalKey } = createExternalIssueFieldResult.value;
 
-      await this.#projectIssueFieldDefinitionCrudService.update({
+      const updateResult = await this.#projectIssueFieldDefinitionCrudService.update({
         ctx,
         payload: {
           id: issueFieldDefinition.id,
@@ -431,6 +447,10 @@ export class ProjectSyncBasicService implements ProjectSyncService {
           },
         },
       });
+
+      if (updateResult.isErr()) {
+        return err(updateResult.error);
+      }
       return ok();
     }
 
@@ -475,7 +495,7 @@ export class ProjectSyncBasicService implements ProjectSyncService {
     }
     const { externalId, externalKey } = createExternalIssueFieldResult.value;
 
-    await this.#projectIssueFieldDefinitionCrudService.update({
+    const finalUpdateResult = await this.#projectIssueFieldDefinitionCrudService.update({
       ctx,
       payload: {
         id: updatedIssueFieldDefinition.id,
@@ -486,6 +506,10 @@ export class ProjectSyncBasicService implements ProjectSyncService {
         },
       },
     });
+
+    if (finalUpdateResult.isErr()) {
+      return err(finalUpdateResult.error);
+    }
     return ok();
   }
 

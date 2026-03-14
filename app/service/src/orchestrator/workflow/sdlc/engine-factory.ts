@@ -4,6 +4,7 @@ import { entityIdSchema } from "@/core/domain/entity";
 import { tenantSchema } from "@/core/domain/tenant-aware-entity";
 import type { WorkflowActionDefinitionEntity } from "@/core/domain/workflow/definition/action/entity";
 import type { WorkflowDefinitionCrudService } from "@/core/domain/workflow/definition/crud-service";
+import type { LoggerService } from "@/core/infra/logger/service";
 
 const eventDataSchema = z.object({
   workflowDefinitionId: entityIdSchema,
@@ -12,9 +13,14 @@ const eventDataSchema = z.object({
 
 class WorkflowSdlcEngineFactory {
   #workflowDefinitionCrudService: WorkflowDefinitionCrudService;
+  #logger: LoggerService;
 
-  constructor(workflowDefinitionCrudService: WorkflowDefinitionCrudService) {
+  constructor(
+    workflowDefinitionCrudService: WorkflowDefinitionCrudService,
+    logger: LoggerService,
+  ) {
     this.#workflowDefinitionCrudService = workflowDefinitionCrudService;
+    this.#logger = logger;
   }
 
   async make(input: {
@@ -35,6 +41,10 @@ class WorkflowSdlcEngineFactory {
         });
 
         if (result.isErr()) {
+          this.#logger.error(
+            { error: result.error },
+            "Failed to load workflow definition",
+          );
           return null;
         }
         const workflow = result.value;

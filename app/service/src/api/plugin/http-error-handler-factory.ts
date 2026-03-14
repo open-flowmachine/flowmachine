@@ -13,9 +13,16 @@ class HttpErrorHandlerFactory {
   make() {
     return new Elysia({ name: HttpErrorHandlerFactory.name }).onError(
       { as: "global" },
-      ({ error }) => {
+      ({ error, code }) => {
         this.#logger.error({ error });
-        return errEnvelope(Err.from(error));
+
+        if (code === "VALIDATION") {
+          const domainErr = Err.code("badRequest", { cause: error });
+          return errEnvelope(domainErr);
+        }
+
+        const domainErr = Err.from(error);
+        return errEnvelope(domainErr);
       },
     );
   }

@@ -8,6 +8,7 @@ import type {
 } from "@/core/domain/project/crud-repository";
 import { ProjectEntity } from "@/core/domain/project/entity";
 import type { ConfigService } from "@/core/infra/config/service";
+import type { LoggerService } from "@/core/infra/logger/service";
 import { tenantAwareCollectionIndexes } from "@/infra/mongo/constant";
 import { tenantAwareEntityToMongoModel } from "@/infra/mongo/model";
 import type { ProjectMongoModel } from "@/infra/mongo/project/model";
@@ -15,10 +16,12 @@ import type { ProjectMongoModel } from "@/infra/mongo/project/model";
 class ProjectMongoCrudRepository implements ProjectCrudRepository {
   #configService: ConfigService;
   #mongoClient: MongoClient;
+  #logger: LoggerService;
 
-  constructor(configService: ConfigService, mongoClient: MongoClient) {
+  constructor(configService: ConfigService, mongoClient: MongoClient, logger: LoggerService) {
     this.#configService = configService;
     this.#mongoClient = mongoClient;
+    this.#logger = logger;
   }
 
   async findMany(
@@ -33,7 +36,7 @@ class ProjectMongoCrudRepository implements ProjectCrudRepository {
         .toArray();
       return ok(result.map(this.#toDomain));
     } catch (error) {
-      console.error(error);
+      this.#logger.error({ error });
       return err(Err.from(error));
     }
   }
