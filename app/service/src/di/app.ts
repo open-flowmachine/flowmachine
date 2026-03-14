@@ -3,6 +3,7 @@ import { CredentialBasicCrudService } from "@/app/domain/credential/basic-crud-s
 import { DocumentBasicCrudService } from "@/app/domain/document/basic-crud-service";
 import { GitRepositoryBasicCrudService } from "@/app/domain/git-repository/basic-crud-service";
 import { ProjectBasicCrudService } from "@/app/domain/project/basic-crud-service";
+import { ProjectIssueFieldDefinitionBasicCrudService } from "@/app/domain/project/issue/field/definition/basic-crud-service";
 import { WorkflowDefinitionBasicCrudService } from "@/app/domain/workflow/definition/basic-crud-service";
 import { ProjectSyncBasicService } from "@/app/feature/project/sync/basic-service";
 import {
@@ -12,6 +13,7 @@ import {
   gitRepositoryMongoCrudRepository,
   jiraExternalProjectService,
   projectMongoCrudRepository,
+  projectIssueFieldDefinitionMongoCrudRepository,
   workflowDefinitionMongoCrudRepository,
 } from "@/di/infra";
 import { WorkflowSdlcActionDefinitionCrudService } from "@/orchestrator/workflow/sdlc/action-definition-service";
@@ -36,6 +38,10 @@ const workflowDefinitionBasicCrudService =
   new WorkflowDefinitionBasicCrudService(workflowDefinitionMongoCrudRepository);
 const workflowActionDefinitionBasicCrudService =
   new WorkflowSdlcActionDefinitionCrudService();
+const projectIssueFieldDefinitionBasicCrudService =
+  new ProjectIssueFieldDefinitionBasicCrudService(
+    projectIssueFieldDefinitionMongoCrudRepository,
+  );
 
 // Feature services
 const projectSyncBasicService = new ProjectSyncBasicService(
@@ -44,6 +50,7 @@ const projectSyncBasicService = new ProjectSyncBasicService(
   aiAgentBasicCrudService,
   gitRepositoryBasicCrudService,
   workflowDefinitionBasicCrudService,
+  projectIssueFieldDefinitionBasicCrudService,
   jiraExternalProjectService,
 );
 

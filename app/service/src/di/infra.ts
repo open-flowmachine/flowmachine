@@ -9,6 +9,7 @@ import { CredentialMongoCrudRepository } from "@/infra/mongo/credential/crud-rep
 import { DocumentMongoCrudRepository } from "@/infra/mongo/document/crud-repository";
 import { GitRepositoryMongoCrudRepository } from "@/infra/mongo/git-repository/crud-repository";
 import { ProjectMongoCrudRepository } from "@/infra/mongo/project/crud-repository";
+import { ProjectIssueFieldDefinitionMongoCrudRepository } from "@/infra/mongo/project/issue/field/definition/crud-repository";
 import { WorkflowDefinitionMongoCrudRepository } from "@/infra/mongo/workflow/definition/crud-repository";
 import { ResendClientFactory } from "@/infra/resend/client-factory";
 import { ResendEmailService } from "@/infra/resend/service";
@@ -58,6 +59,11 @@ const documentMongoCrudRepository = new DocumentMongoCrudRepository(
 );
 const workflowDefinitionMongoCrudRepository =
   new WorkflowDefinitionMongoCrudRepository(envConfigService, mongoClient);
+const projectIssueFieldDefinitionMongoCrudRepository =
+  new ProjectIssueFieldDefinitionMongoCrudRepository(
+    envConfigService,
+    mongoClient,
+  );
 
 export {
   betterAuthClient,
@@ -72,4 +78,5 @@ export {
   gitRepositoryMongoCrudRepository,
   documentMongoCrudRepository,
   workflowDefinitionMongoCrudRepository,
+  projectIssueFieldDefinitionMongoCrudRepository,
 };

@@ -1,152 +1,128 @@
+import { isNil } from "es-toolkit";
 import { err, ok } from "neverthrow";
 import { Err } from "@/common/err/err";
-import type { CredentialEntity } from "@/core/domain/credential/entity";
-import type { ProjectEntity } from "@/core/domain/project/entity";
 import type { ExternalProjectService } from "@/core/infra/external/project/service";
-import { JiraApiClient } from "@/infra/jira/client";
+import { JiraHttpClient } from "@/infra/jira/http-client";
 
 class JiraExternalProjectService implements ExternalProjectService {
-  async syncAiAgentIssueField(
-    input: Parameters<ExternalProjectService["syncAiAgentIssueField"]>[0],
+  async createCustomIssueField(
+    input: Parameters<ExternalProjectService["createCustomIssueField"]>[0],
   ) {
-    const { credential, project, aiAgent } = input;
+    const { credential, project, projectIssueFieldDefinition } = input;
 
-    try {
-      const client = this.#buildClient(credential, project);
-      const optionValue = `${aiAgent.props.name} (${aiAgent.props.model})`;
-
-      await this.#syncCustomFieldOption(client, {
-        fieldName: "AI Agent",
-        projectId: project.props.integration!.externalId,
-        optionValue,
-      });
-
-      return ok();
-    } catch (error) {
-      return err(Err.from(error));
+    if (isNil(project.props.integration)) {
+      return err(Err.code("badRequest"));
     }
-  }
-
-  async syncGitRepositoryIssueField(
-    input: Parameters<ExternalProjectService["syncGitRepositoryIssueField"]>[0],
-  ) {
-    const { credential, project, gitRepository } = input;
-
-    try {
-      const client = this.#buildClient(credential, project);
-      const optionValue = `${gitRepository.props.name} (${gitRepository.props.url})`;
-
-      await this.#syncCustomFieldOption(client, {
-        fieldName: "Git Repository",
-        projectId: project.props.integration!.externalId,
-        optionValue,
-      });
-
-      return ok();
-    } catch (error) {
-      return err(Err.from(error));
-    }
-  }
-
-  async syncWorkflowDefinitionIssueField(
-    input: Parameters<
-      ExternalProjectService["syncWorkflowDefinitionIssueField"]
-    >[0],
-  ) {
-    const { credential, project, workflowDefinition } = input;
-
-    try {
-      const client = this.#buildClient(credential, project);
-      const optionValue = workflowDefinition.props.name;
-
-      await this.#syncCustomFieldOption(client, {
-        fieldName: "Workflow Definition",
-        projectId: project.props.integration!.externalId,
-        optionValue,
-      });
-
-      return ok();
-    } catch (error) {
-      return err(Err.from(error));
-    }
-  }
-
-  #buildClient(credential: CredentialEntity, project: ProjectEntity) {
-    const baseUrl = project.props.integration!.baseUrl;
-    return JiraApiClient.fromCredential(baseUrl, credential);
-  }
-
-  async #syncCustomFieldOption(
-    client: JiraApiClient,
-    input: { fieldName: string; projectId: string; optionValue: string },
-  ) {
-    const { fieldName, projectId, optionValue } = input;
-
-    const fieldId = await this.#findOrCreateField(client, fieldName);
-    const contextId = await this.#findOrCreateContext(
-      client,
-      fieldId,
-      projectId,
-    );
-    await this.#createOrUpdateOption(client, fieldId, contextId, optionValue);
-  }
-
-  async #findOrCreateField(client: JiraApiClient, fieldName: string) {
-    const fields = await client.listFields();
-    const existing = fields.find((f) => f.custom && f.name === fieldName);
-
-    if (existing) {
-      return existing.id;
+    if (credential.props.type !== "basic") {
+      return err(Err.code("badRequest"));
     }
 
-    const created = await client.createField({
-      name: fieldName,
-      type: "com.atlassian.jira.plugin.system.customfieldtypes:select",
-      searcherKey:
-        "com.atlassian.jira.plugin.system.customfieldtypes:multiselectsearcher",
+    const jiraHttpCient = JiraHttpClient.makeNew({
+      baseUrl: project.props.integration.baseUrl,
+      apiKey: btoa(`${credential.props.username}:${credential.props.password}`),
     });
 
-    return created.id;
-  }
-
-  async #findOrCreateContext(
-    client: JiraApiClient,
-    fieldId: string,
-    projectId: string,
-  ) {
-    const contexts = await client.getFieldContexts(fieldId);
-    const existing = contexts.find(
-      (c) => !c.isGlobalContext && c.projectIds?.includes(projectId),
-    );
-
-    if (existing) {
-      return existing.id;
-    }
-
-    const created = await client.createFieldContext(fieldId, {
-      name: `Context for project ${projectId}`,
-      projectIds: [projectId],
+    const createCustomFieldResult = await jiraHttpCient.createCustomField({
+      body: {
+        name: projectIssueFieldDefinition.props.name,
+        type: "com.atlassian.jira.plugin.system.customfieldtypes:select",
+        description: `Synced from FlowMachine`,
+      },
     });
 
-    return created.id;
+    if (createCustomFieldResult.isErr()) {
+      return err(createCustomFieldResult.error);
+    }
+    const customField = createCustomFieldResult.value;
+
+    const createCustomFieldAssociationsResult =
+      await jiraHttpCient.createCustomFieldAssociations({
+        body: {
+          associationContexts: [
+            {
+              identifier: project.props.integration.externalId,
+              type: "PROJECT_ID",
+            },
+          ],
+          fields: [
+            {
+              identifier: customField.id,
+              type: "FIELD_ID",
+            },
+          ],
+        },
+      });
+
+    if (createCustomFieldAssociationsResult.isErr()) {
+      return err(createCustomFieldAssociationsResult.error);
+    }
+    const getCustomFieldContextsResult =
+      await jiraHttpCient.getCustomFieldContexts({
+        params: { fieldId: customField.id },
+      });
+
+    if (getCustomFieldContextsResult.isErr()) {
+      return err(getCustomFieldContextsResult.error);
+    }
+    const customFieldContexts = getCustomFieldContextsResult.value;
+    const firstCustomFieldContextId = customFieldContexts.values[0]?.id;
+
+    if (isNil(firstCustomFieldContextId)) {
+      return err(Err.code("notFound"));
+    }
+    const createCustomFieldContextOptionsResult =
+      await jiraHttpCient.createCustomFieldContextOptions({
+        params: {
+          fieldId: customField.id,
+          contextId: firstCustomFieldContextId,
+        },
+        body: {
+          options:
+            projectIssueFieldDefinition.props.options?.map((o) => ({
+              value: o.value,
+            })) ?? [],
+        },
+      });
+
+    if (createCustomFieldContextOptionsResult.isErr()) {
+      return err(createCustomFieldContextOptionsResult.error);
+    }
+    return ok({
+      externalId: customField.id,
+      externalKey: customField.key,
+    });
   }
 
-  async #createOrUpdateOption(
-    client: JiraApiClient,
-    fieldId: string,
-    contextId: string,
-    optionValue: string,
+  async deleteCustomIssueField(
+    input: Parameters<ExternalProjectService["deleteCustomIssueField"]>[0],
   ) {
-    const options = await client.getContextOptions(fieldId, contextId);
-    const existing = options.find((o) => o.value === optionValue);
+    const { credential, project, projectIssueFieldDefinition } = input;
 
-    if (existing) {
-      return;
+    if (isNil(project.props.integration)) {
+      return err(Err.code("badRequest"));
+    }
+    if (credential.props.type !== "basic") {
+      return err(Err.code("badRequest"));
     }
 
-    await client.createContextOptions(fieldId, contextId, [
-      { value: optionValue },
-    ]);
+    const jiraHttpCient = JiraHttpClient.makeNew({
+      baseUrl: project.props.integration.baseUrl,
+      apiKey: btoa(`${credential.props.username}:${credential.props.password}`),
+    });
+
+    if (isNil(projectIssueFieldDefinition.props.integration)) {
+      return err(Err.code("badRequest"));
+    }
+    const deleteFieldResult = await jiraHttpCient.deleteField({
+      params: {
+        fieldId: projectIssueFieldDefinition.props.integration.externalId,
+      },
+    });
+
+    if (deleteFieldResult.isErr()) {
+      return err(deleteFieldResult.error);
+    }
+    return ok();
   }
 }
 
