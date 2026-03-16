@@ -38,8 +38,8 @@ bun run check-types --filter "./app/*"
 
 ## Monorepo Structure
 
-- `app/service` - Elysia backend API (port 8000). See [app/service/CLAUDE.md](app/service/CLAUDE.md)
-- `app/web` - Next.js frontend (port 3000). See [app/web/CLAUDE.md](app/web/CLAUDE.md)
+- `app/service` - Elysia backend API (port 8000). See [app/service/AGENT.md](app/service/AGENT.md)
+- `app/web` - Next.js frontend (port 3000). See [app/web/AGENT.md](app/web/AGENT.md)
 - `package/eslint-config` - Shared ESLint configuration (base + Next.js)
 - `package/typescript-config` - Shared TypeScript configuration (base + Next.js + react-library)
 
