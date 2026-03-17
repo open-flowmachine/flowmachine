@@ -6,14 +6,14 @@ import {
   WorkflowJsonEditor,
   type WorkflowJsonEditorData,
 } from "@/app/platform/workflow/_component/workflow-json-editor";
-import { PlatformPageTemplate } from "@/frontend/component/platform/platform-page-template";
+import { PlatformPageTemplate } from "@/presentation/component/platform/platform-page-template";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/frontend/component/ui/tabs";
-import { useCreateWorkflowDefinition } from "@/frontend/hook/workflow-definition/use-create-workflow-definition";
+} from "@/presentation/component/ui/tabs";
+import { useCreateWorkflowDefinition } from "@/presentation/hook/workflow-definition/use-create-workflow-definition";
 
 const INITIAL_WORKFLOW_JSON_VALUE = JSON.stringify(
   {

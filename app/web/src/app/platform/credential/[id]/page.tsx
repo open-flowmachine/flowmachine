@@ -1,4 +1,5 @@
-import { EditableCredentialDetailsPage } from "@/frontend/feature/editable-credential-details/editable-credential-details-page";
+import { getCredential } from "@/action/credential/get-credential";
+import { EditableCredentialDetailsPage } from "@/presentation/feature/editable-credential-details/editable-credential-details-page";
 
 export default async function Page({
   params,
@@ -6,5 +7,6 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <EditableCredentialDetailsPage id={id} />;
+  const initialData = await getCredential(id);
+  return <EditableCredentialDetailsPage id={id} initialData={initialData} />;
 }

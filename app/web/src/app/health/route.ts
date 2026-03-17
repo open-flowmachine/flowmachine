@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { config } from "@/lib/config";
+import { config } from "@/infra/config/config";
 
 export const GET = () => {
   return NextResponse.json({
