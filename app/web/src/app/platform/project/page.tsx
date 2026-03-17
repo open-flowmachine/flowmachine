@@ -1,5 +1,7 @@
-import ProjectsTablePage from "@/frontend/feature/projects-table/projects-table-page";
+import { listProjects } from "@/action/project/list-projects";
+import ProjectsTablePage from "@/presentation/feature/projects-table/projects-table-page";
 
-export default function Page() {
-  return <ProjectsTablePage />;
+export default async function Page() {
+  const initialData = await listProjects();
+  return <ProjectsTablePage initialData={initialData} />;
 }

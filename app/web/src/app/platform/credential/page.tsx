@@ -1,5 +1,7 @@
-import CredentialsTablePage from "@/frontend/feature/credentials-table/credentials-table-page";
+import { listCredentials } from "@/action/credential/list-credentials";
+import CredentialsTablePage from "@/presentation/feature/credentials-table/credentials-table-page";
 
-export default function Page() {
-  return <CredentialsTablePage />;
+export default async function Page() {
+  const initialData = await listCredentials();
+  return <CredentialsTablePage initialData={initialData} />;
 }

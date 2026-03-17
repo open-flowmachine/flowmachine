@@ -1,5 +1,7 @@
-import GitRepositoriesTablePage from "@/frontend/feature/git-repositories-table/git-repositories-table-page";
+import { listGitRepositories } from "@/action/git-repository/list-git-repositories";
+import GitRepositoriesTablePage from "@/presentation/feature/git-repositories-table/git-repositories-table-page";
 
-export default function Page() {
-  return <GitRepositoriesTablePage />;
+export default async function Page() {
+  const initialData = await listGitRepositories();
+  return <GitRepositoriesTablePage initialData={initialData} />;
 }

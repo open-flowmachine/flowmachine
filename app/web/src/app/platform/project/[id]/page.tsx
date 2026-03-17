@@ -1,4 +1,5 @@
-import { EditableProjectDetailsPage } from "@/frontend/feature/editable-project-details/editable-project-details-page";
+import { getProject } from "@/action/project/get-project";
+import { EditableProjectDetailsPage } from "@/presentation/feature/editable-project-details/editable-project-details-page";
 
 export default async function Page({
   params,
@@ -6,5 +7,6 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <EditableProjectDetailsPage id={id} />;
+  const initialData = await getProject(id);
+  return <EditableProjectDetailsPage id={id} initialData={initialData} />;
 }

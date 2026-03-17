@@ -7,24 +7,24 @@ import {
   type WorkflowJsonEditorData,
   workflowToEditorJson,
 } from "@/app/platform/workflow/_component/workflow-json-editor";
-import { Center } from "@/frontend/component/extended-ui/center";
-import { Pending } from "@/frontend/component/extended-ui/pending";
-import { PlatformPageTemplate } from "@/frontend/component/platform/platform-page-template";
+import { Center } from "@/presentation/component/extended-ui/center";
+import { Pending } from "@/presentation/component/extended-ui/pending";
+import { PlatformPageTemplate } from "@/presentation/component/platform/platform-page-template";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/frontend/component/ui/tabs";
-import { useGetWorkflowDefinition } from "@/frontend/hook/workflow-definition/use-get-workflow-definition";
-import { useUpdateWorkflowDefinition } from "@/frontend/hook/workflow-definition/use-update-workflow-definition";
+} from "@/presentation/component/ui/tabs";
+import { useGetWorkflowDefinition } from "@/presentation/hook/workflow-definition/use-get-workflow-definition";
+import { useUpdateWorkflowDefinition } from "@/presentation/hook/workflow-definition/use-update-workflow-definition";
 
 export default function Page() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { data: workflowEnvelope, isPending: isLoading } =
-    useGetWorkflowDefinition(params.id);
-  const workflow = workflowEnvelope?.data;
+  const { data: workflow, isPending: isLoading } = useGetWorkflowDefinition(
+    params.id,
+  );
   const updateWorkflow = useUpdateWorkflowDefinition({
     onSuccess: () => {
       toast.success("Workflow updated successfully");

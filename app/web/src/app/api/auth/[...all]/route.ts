@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { config } from "@/lib/config";
+import { config } from "@/infra/config/config";
 
 async function handler(request: NextRequest) {
   const url = new URL(request.url);
