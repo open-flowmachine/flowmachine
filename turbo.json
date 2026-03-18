@@ -43,6 +43,7 @@
     "MONGO_DB_URL",
     "MONGO_DB_NAME",
     "RESEND_API_KEY",
+    "RESEND_FROM_EMAIL",
     "EMAIL_FROM_ADDRESS"
   ]
 }
