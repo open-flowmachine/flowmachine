@@ -12,6 +12,39 @@
         "typescript": "catalog:",
       },
     },
+    "app/platform-service": {
+      "name": "@flow-machine/platform-service",
+      "dependencies": {
+        "@date-fns/utc": "catalog:",
+        "@daytonaio/sdk": "catalog:",
+        "@elysiajs/cors": "catalog:",
+        "@elysiajs/openapi": "catalog:",
+        "@inngest/workflow-kit": "catalog:",
+        "@openrouter/sdk": "catalog:",
+        "autumn-js": "catalog:",
+        "axios": "catalog:",
+        "better-auth": "catalog:",
+        "dotenv": "catalog:",
+        "elysia": "catalog:",
+        "es-toolkit": "catalog:",
+        "inngest": "catalog:",
+        "mongodb": "catalog:",
+        "neverthrow": "catalog:",
+        "pino": "catalog:",
+        "resend": "catalog:",
+        "ulid": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@flow-machine/eslint-config": "workspace:*",
+        "@flow-machine/typescript-config": "workspace:*",
+        "@total-typescript/ts-reset": "catalog:",
+        "@types/bun": "catalog:",
+        "@types/node": "catalog:",
+        "eslint": "catalog:",
+        "type-fest": "catalog:",
+      },
+    },
     "app/service": {
       "name": "@flow-machine/service",
       "dependencies": {
@@ -522,6 +555,8 @@
     "@floating-ui/utils": ["@floating-ui/utils@0.2.10", "", {}, "sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ=="],
 
     "@flow-machine/eslint-config": ["@flow-machine/eslint-config@workspace:package/eslint-config"],
+
+    "@flow-machine/platform-service": ["@flow-machine/platform-service@workspace:app/platform-service"],
 
     "@flow-machine/service": ["@flow-machine/service@workspace:app/service"],
 
