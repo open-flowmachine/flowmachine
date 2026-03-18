@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { Err } from "@/err/err";
 
 // --- Mock setup ---
 
@@ -55,12 +56,15 @@ describe("sendEmail", () => {
   });
 
   it("should return err on failure", async () => {
-    const error = new Error("Resend API error");
-    mockSend.mockRejectedValueOnce(error);
+    mockSend.mockRejectedValueOnce(new Error("Resend API error"));
 
     const result = await sendEmail({ payload: makePayload() });
 
     expect(result.isErr()).toBe(true);
-    expect(result._unsafeUnwrapErr()).toBe(error);
+    expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+    expect(result._unsafeUnwrapErr()).toHaveProperty(
+      "message",
+      "Resend email service error",
+    );
   });
 });

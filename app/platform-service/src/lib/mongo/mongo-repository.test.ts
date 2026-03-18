@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import type { Document } from "mongodb";
+import { Err } from "@/err/err";
 import type { Id } from "@/lib/model/model-id";
 import type { MongoModel } from "@/lib/model/model-mongo";
 import type { Tenant } from "@/lib/model/model-tenant";
@@ -98,6 +99,11 @@ describe("makeMongoRepository", () => {
       const result = await repo.findMany();
 
       expect(result.isErr()).toBe(true);
+      expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+      expect(result._unsafeUnwrapErr()).toHaveProperty(
+        "message",
+        "Mongo database error",
+      );
     });
   });
 
@@ -128,6 +134,11 @@ describe("makeMongoRepository", () => {
       const result = await repo.findById({ id: TEST_ID });
 
       expect(result.isErr()).toBe(true);
+      expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+      expect(result._unsafeUnwrapErr()).toHaveProperty(
+        "message",
+        "Mongo database error",
+      );
     });
   });
 
@@ -149,6 +160,11 @@ describe("makeMongoRepository", () => {
       const result = await repo.insert({ data: makeTestDoc() });
 
       expect(result.isErr()).toBe(true);
+      expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+      expect(result._unsafeUnwrapErr()).toHaveProperty(
+        "message",
+        "Mongo database error",
+      );
     });
   });
 
@@ -183,6 +199,11 @@ describe("makeMongoRepository", () => {
       });
 
       expect(result.isErr()).toBe(true);
+      expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+      expect(result._unsafeUnwrapErr()).toHaveProperty(
+        "message",
+        "Mongo database error",
+      );
     });
   });
 
@@ -200,6 +221,11 @@ describe("makeMongoRepository", () => {
       const result = await repo.deleteById({ id: TEST_ID });
 
       expect(result.isErr()).toBe(true);
+      expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+      expect(result._unsafeUnwrapErr()).toHaveProperty(
+        "message",
+        "Mongo database error",
+      );
     });
   });
 });
