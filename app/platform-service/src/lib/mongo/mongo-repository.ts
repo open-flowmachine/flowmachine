@@ -4,6 +4,7 @@ import type { Id } from "@/lib/model/model-id";
 import type { MongoModel } from "@/lib/model/model-mongo";
 import type { Tenant } from "@/lib/model/model-tenant";
 import { mongoClient } from "@/lib/mongo/mongo-client";
+import { mapMongoError } from "@/lib/mongo/mongo-err";
 
 const makeMongoRepository = <T extends MongoModel<Document>>(input: {
   collectionName: string;
@@ -27,7 +28,7 @@ const makeMongoRepository = <T extends MongoModel<Document>>(input: {
       const docs = await collection.find().toArray();
       return ok({ data: docs });
     } catch (error) {
-      return err(error);
+      return err(mapMongoError(error));
     }
   };
 
@@ -38,7 +39,7 @@ const makeMongoRepository = <T extends MongoModel<Document>>(input: {
       const data = await collection.findOne({ _id: id });
       return ok({ data: data });
     } catch (error) {
-      return err(error);
+      return err(mapMongoError(error));
     }
   };
 
@@ -49,7 +50,7 @@ const makeMongoRepository = <T extends MongoModel<Document>>(input: {
       await collection.insertOne(data);
       return ok();
     } catch (error) {
-      return err(error);
+      return err(mapMongoError(error));
     }
   };
 
@@ -64,7 +65,7 @@ const makeMongoRepository = <T extends MongoModel<Document>>(input: {
       );
       return ok({ data: updatedData });
     } catch (error) {
-      return err(error);
+      return err(mapMongoError(error));
     }
   };
 
@@ -75,7 +76,7 @@ const makeMongoRepository = <T extends MongoModel<Document>>(input: {
       await collection.deleteOne({ _id: id });
       return ok();
     } catch (error) {
-      return err(error);
+      return err(mapMongoError(error));
     }
   };
 
@@ -114,7 +115,7 @@ const makeTenantAwareMongoRepository = <
       const docs = await collection.find({ _tenant: ctx.tenant }).toArray();
       return ok({ data: docs });
     } catch (error) {
-      return err(error);
+      return err(mapMongoError(error));
     }
   };
 
@@ -125,7 +126,7 @@ const makeTenantAwareMongoRepository = <
       const data = await collection.findOne({ _id: id, _tenant: ctx.tenant });
       return ok({ data: data });
     } catch (error) {
-      return err(error);
+      return err(mapMongoError(error));
     }
   };
 
@@ -136,7 +137,7 @@ const makeTenantAwareMongoRepository = <
       await collection.insertOne({ ...data, _tenant: ctx.tenant });
       return ok();
     } catch (error) {
-      return err(error);
+      return err(mapMongoError(error));
     }
   };
 
@@ -155,7 +156,7 @@ const makeTenantAwareMongoRepository = <
       );
       return ok({ data: updatedData });
     } catch (error) {
-      return err(error);
+      return err(mapMongoError(error));
     }
   };
 
@@ -166,7 +167,7 @@ const makeTenantAwareMongoRepository = <
       await collection.deleteOne({ _id: id, _tenant: ctx.tenant });
       return ok();
     } catch (error) {
-      return err(error);
+      return err(mapMongoError(error));
     }
   };
 
