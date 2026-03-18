@@ -1,0 +1,4 @@
+interface:
+  display_name: "Code with TDD"
+  short_description: "Implement features via TDD"
+  default_prompt: "Use a red-green-refactor loop to implement the feature with tests-first and minimal, high-signal coverage."
