@@ -1,12 +1,27 @@
 import type { Document, IndexDescription } from "mongodb";
 import { err, ok } from "neverthrow";
+import { type Model, ModelBaseFields } from "@/lib/model/model";
 import type { Id } from "@/lib/model/model-id";
-import type { MongoModel } from "@/lib/model/model-mongo";
 import type { Tenant } from "@/lib/model/model-tenant";
 import { mongoClient } from "@/lib/mongo/mongo-client";
 import { mapMongoError } from "@/lib/mongo/mongo-err";
 
-const makeMongoRepository = <T extends MongoModel<Document>>(input: {
+type MongoModel<T extends Document> = T &
+  ModelBaseFields & {
+    _id: Id;
+  };
+
+const mapToMongoModel = <T extends Document>(model: Model<T>) => {
+  const { id, ...rest } = model;
+  return { _id: id, ...rest } as const;
+};
+
+const mapToModel = <T extends Document>(mongoModel: MongoModel<T>) => {
+  const { _id, ...rest } = mongoModel;
+  return { id: _id, ...rest } as const;
+};
+
+const makeMongoRepository = <T extends Model<Document>>(input: {
   collectionName: string;
   collectionIndexes?: IndexDescription[];
 }) => {
@@ -26,7 +41,7 @@ const makeMongoRepository = <T extends MongoModel<Document>>(input: {
     try {
       const collection = await getCollection();
       const docs = await collection.find().toArray();
-      return ok({ data: docs });
+      return ok({ data: docs.map(mapToModel) });
     } catch (error) {
       return err(mapMongoError(error));
     }
@@ -37,7 +52,7 @@ const makeMongoRepository = <T extends MongoModel<Document>>(input: {
       const { id } = input;
       const collection = await getCollection();
       const data = await collection.findOne({ _id: id });
-      return ok({ data: data });
+      return ok({ data: data ? mapToModel(data) : null });
     } catch (error) {
       return err(mapMongoError(error));
     }
@@ -47,7 +62,7 @@ const makeMongoRepository = <T extends MongoModel<Document>>(input: {
     try {
       const { data } = input;
       const collection = await getCollection();
-      await collection.insertOne(data);
+      await collection.insertOne(mapToMongoModel(data));
       return ok();
     } catch (error) {
       return err(mapMongoError(error));
@@ -57,13 +72,14 @@ const makeMongoRepository = <T extends MongoModel<Document>>(input: {
   const update = async (input: { id: Id; data: Partial<T> }) => {
     try {
       const { id, data } = input;
+      const { id: _, ...rest } = data;
       const collection = await getCollection();
       const updatedData = await collection.findOneAndUpdate(
         { _id: id, _version: data._version },
-        { $set: data, $inc: { _version: 1 } },
+        { $set: rest, $inc: { _version: 1 } },
         { returnDocument: "after" },
       );
-      return ok({ data: updatedData });
+      return ok({ data: updatedData ? mapToModel(updatedData) : null });
     } catch (error) {
       return err(mapMongoError(error));
     }
@@ -89,9 +105,7 @@ const makeMongoRepository = <T extends MongoModel<Document>>(input: {
   };
 };
 
-const makeTenantAwareMongoRepository = <
-  T extends MongoModel<Document> & { tenant: Tenant },
->(input: {
+const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
   collectionName: string;
   collectionIndexes?: IndexDescription[];
 }) => {
@@ -113,7 +127,7 @@ const makeTenantAwareMongoRepository = <
       const { ctx } = input;
       const collection = await getCollection();
       const docs = await collection.find({ _tenant: ctx.tenant }).toArray();
-      return ok({ data: docs });
+      return ok({ data: docs.map(mapToModel) });
     } catch (error) {
       return err(mapMongoError(error));
     }
@@ -124,7 +138,7 @@ const makeTenantAwareMongoRepository = <
       const { ctx, id } = input;
       const collection = await getCollection();
       const data = await collection.findOne({ _id: id, _tenant: ctx.tenant });
-      return ok({ data: data });
+      return ok({ data: data ? mapToModel(data) : null });
     } catch (error) {
       return err(mapMongoError(error));
     }
@@ -134,7 +148,10 @@ const makeTenantAwareMongoRepository = <
     try {
       const { ctx, data } = input;
       const collection = await getCollection();
-      await collection.insertOne({ ...data, _tenant: ctx.tenant });
+      await collection.insertOne({
+        ...mapToMongoModel(data),
+        _tenant: ctx.tenant,
+      });
       return ok();
     } catch (error) {
       return err(mapMongoError(error));
@@ -149,12 +166,13 @@ const makeTenantAwareMongoRepository = <
     try {
       const { ctx, id, data } = input;
       const collection = await getCollection();
+      const { id: _, ...rest } = data;
       const updatedData = await collection.findOneAndUpdate(
         { _id: id, _version: data._version, _tenant: ctx.tenant },
-        { $set: data, $inc: { _version: 1 } },
+        { $set: rest, $inc: { _version: 1 } },
         { returnDocument: "after" },
       );
-      return ok({ data: updatedData });
+      return ok({ data: updatedData ? mapToModel(updatedData) : null });
     } catch (error) {
       return err(mapMongoError(error));
     }

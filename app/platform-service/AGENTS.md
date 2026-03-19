@@ -13,15 +13,46 @@ bun run check-types      # Type check
 bun run lint             # Run ESLint
 ```
 
-## Key Libraries
+## Architecture
 
-- `elysia` - Web framework
-- `better-auth` - Authentication with email OTP and organizations
-- `mongodb` - MongoDB native driver (v7)
-- `zod/v4` - Schema validation (note the `/v4` import)
-- `neverthrow` - Result types for error handling (`ok`, `err`, `Result`, `ResultAsync`)
-- `inngest` + `@inngest/workflow-kit` - Background jobs and workflow engine
-- `resend` - Email service
-- `es-toolkit` - Utility functions
-- `pino` - Logging
-- `@date-fns/utc` - UTC date utilities
+### Dependency Rule
+
+`index → router → module → vendor / shared`
+
+- `shared` and `vendor` are leaf layers — they do not import from `module` or `router`
+- `shared` does not import from `vendor` (and vice versa)
+- `module` may import from `module`, `shared`, and `vendor`
+- `router` may import from `module`, `shared`, and `vendor`
+
+### Layer Responsibilities
+
+**Shared Layer** (`shared/`)
+
+- Pure types, constants, and utility functions
+- No SDK clients, no business logic, no side effects on import
+- Safe to import from any other layer
+- Contains: error types/codes, model types/factories, ID generation, tenant type, HTTP envelope
+
+**Vendor Layer** (`vendor/`)
+
+- 3rd-party SDK initialization, client singletons, and thin wrappers
+- Each subfolder wraps exactly one external dependency
+- Maps vendor-specific errors to the app's Err type
+- No business logic, no shared type definitions
+- Contains: better-auth, env, mongo, pino, resend
+
+**Module Layer** (`module/`)
+
+- Business logic organized by feature domain
+- Each module folder contains: model type, repository instance, service functions, and service tests
+- Services use `neverthrow` Result types and receive `{ ctx, payload/id }` inputs
+- No HTTP handling, no DTOs, no route definitions
+- May import from `module`, `shared`, and `vendor`
+
+**Router Layer** (`router/`)
+
+- Elysia route handlers and Zod request/response DTOs
+- Each subfolder mirrors a module
+- Responsible for: request validation, calling module services, mapping Results to HTTP responses
+- Never accesses repositories directly — always goes through module services
+- May import from `module`, `shared`, and `vendor`
