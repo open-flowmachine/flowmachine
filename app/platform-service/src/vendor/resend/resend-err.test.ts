@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { Err } from "@/err/err";
-import { mapResendError } from "@/lib/resend/resend-err";
+import { Err } from "@/shared/err/err";
+import { mapResendError } from "@/vendor/resend/resend-err";
 
 describe("mapResendError", () => {
   it("should map a plain Error to Err with resend message", () => {

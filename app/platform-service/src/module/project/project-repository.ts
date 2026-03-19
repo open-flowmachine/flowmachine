@@ -1,4 +1,4 @@
-import { makeTenantAwareMongoRepository } from "@/lib/mongo/mongo-repository";
+import { makeTenantAwareMongoRepository } from "@/vendor/mongo/mongo-repository";
 
 const projectRepository = makeTenantAwareMongoRepository({
   collectionName: "project",

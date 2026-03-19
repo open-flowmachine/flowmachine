@@ -13,6 +13,11 @@ bun run check-types      # Type check
 bun run lint             # Run ESLint
 ```
 
+## Naming Convention
+
+- **Directories** — use the bare domain name, no namespace prefix: `project/`, `mongo/`, `model/`
+- **Files** — prefix every file with its parent directory namespace: `project-model.ts`, `mongo-client.ts`, `model-id.ts`
+
 ## Architecture
 
 ### Dependency Rule

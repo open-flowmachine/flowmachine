@@ -1,10 +1,10 @@
 import type { Document, IndexDescription } from "mongodb";
 import { err, ok } from "neverthrow";
-import { type Model, ModelBaseFields } from "@/lib/model/model";
-import type { Id } from "@/lib/model/model-id";
-import type { Tenant } from "@/lib/model/model-tenant";
-import { mongoClient } from "@/lib/mongo/mongo-client";
-import { mapMongoError } from "@/lib/mongo/mongo-err";
+import { type Model, ModelBaseFields } from "@/shared/model/model";
+import type { Id } from "@/shared/model/model-id";
+import type { Tenant } from "@/shared/model/model-tenant";
+import { mongoClient } from "@/vendor/mongo/mongo-client";
+import { mapMongoError } from "@/vendor/mongo/mongo-err";
 
 type MongoModel<T extends Document> = T &
   ModelBaseFields & {

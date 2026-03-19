@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import type { Document } from "mongodb";
-import { Err } from "@/err/err";
-import type { Model } from "@/lib/model/model";
-import type { Id } from "@/lib/model/model-id";
-import type { Tenant } from "@/lib/model/model-tenant";
+import { Err } from "@/shared/err/err";
+import type { Model } from "@/shared/model/model";
+import type { Id } from "@/shared/model/model-id";
+import type { Tenant } from "@/shared/model/model-tenant";
 
 // --- Mock setup ---
 
@@ -20,7 +20,7 @@ mockCollection.find.mockReturnValue({
   toArray: mock(() => Promise.resolve([])),
 });
 
-mock.module("@/lib/mongo/mongo-client", () => ({
+mock.module("@/vendor/mongo/mongo-client", () => ({
   mongoClient: {
     db: () => ({
       collection: () => mockCollection,

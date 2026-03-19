@@ -1,5 +1,5 @@
 import { type EmailOTPOptions } from "better-auth/plugins";
-import { sendEmail } from "@/lib/resend/resend-util";
+import { sendEmail } from "@/vendor/resend/resend-util";
 
 const otpTypeToEmailSubject = {
   "sign-in": "Your sign-in code",

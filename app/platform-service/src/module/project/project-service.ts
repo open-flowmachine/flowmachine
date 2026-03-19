@@ -1,10 +1,10 @@
 import { err, ok } from "neverthrow";
-import { Err } from "@/err/err";
-import { type ExcludedUpdateModelFields, newModel } from "@/lib/model/model";
-import type { Id } from "@/lib/model/model-id";
-import type { Tenant } from "@/lib/model/model-tenant";
 import type { Project } from "@/module/project/project-model";
 import { projectRepository } from "@/module/project/project-repository";
+import { Err } from "@/shared/err/err";
+import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
+import type { Id } from "@/shared/model/model-id";
+import type { Tenant } from "@/shared/model/model-tenant";
 
 const createProject = async (input: {
   ctx: { tenant: Tenant };

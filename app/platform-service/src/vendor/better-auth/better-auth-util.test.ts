@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 const mockSend = mock(() => Promise.resolve());
 
-mock.module("@/lib/resend/resend-client", () => ({
+mock.module("@/vendor/resend/resend-client", () => ({
   resendClient: {
     emails: {
       send: mockSend,

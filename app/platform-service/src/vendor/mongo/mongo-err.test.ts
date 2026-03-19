@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { Err } from "@/err/err";
-import { mapMongoError } from "@/lib/mongo/mongo-err";
+import { Err } from "@/shared/err/err";
+import { mapMongoError } from "@/vendor/mongo/mongo-err";
 
 describe("mapMongoError", () => {
   it("should map a plain Error to Err with mongo message", () => {

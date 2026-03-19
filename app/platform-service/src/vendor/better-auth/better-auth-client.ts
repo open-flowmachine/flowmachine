@@ -1,12 +1,12 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { emailOTP, organization } from "better-auth/plugins";
+import { newId } from "@/shared/model/model-id";
 import {
   sendInvitationEmail,
   sendOtpEmail,
-} from "@/lib/better-auth/better-auth-util";
-import { newId } from "@/lib/model/model-id";
-import { mongoClient } from "@/lib/mongo/mongo-client";
+} from "@/vendor/better-auth/better-auth-util";
+import { mongoClient } from "@/vendor/mongo/mongo-client";
 
 const betterAuthClient = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,

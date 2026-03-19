@@ -1,5 +1,5 @@
-import type { Model } from "@/lib/model/model";
-import type { Id } from "@/lib/model/model-id";
+import type { Model } from "@/shared/model/model";
+import type { Id } from "@/shared/model/model-id";
 
 const projectProviders = ["jira", "linear"] as const;
 type ProjectProvider = (typeof projectProviders)[number];
