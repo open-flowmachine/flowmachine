@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import { Err } from "@/err/err";
+import { Err } from "@/shared/err/err";
 
 // --- Mock setup ---
 
 const mockSend = mock(() => Promise.resolve());
 
-mock.module("@/lib/resend/resend-client", () => ({
+mock.module("@/vendor/resend/resend-client", () => ({
   resendClient: {
     emails: {
       send: mockSend,

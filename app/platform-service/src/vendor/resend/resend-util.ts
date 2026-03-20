@@ -1,6 +1,6 @@
 import { err, ok } from "neverthrow";
-import { resendClient } from "@/lib/resend/resend-client";
-import { mapResendError } from "@/lib/resend/resend-err";
+import { resendClient } from "@/vendor/resend/resend-client";
+import { mapResendError } from "@/vendor/resend/resend-err";
 
 const sendEmail = async (input: {
   payload: { from: string; to: string; subject: string; bodyHtml: string };

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import type { Document } from "mongodb";
-import { Err } from "@/err/err";
-import type { Id } from "@/lib/model/model-id";
-import type { MongoModel } from "@/lib/model/model-mongo";
-import type { Tenant } from "@/lib/model/model-tenant";
+import { Err } from "@/shared/err/err";
+import type { Model } from "@/shared/model/model";
+import type { Id } from "@/shared/model/model-id";
+import type { Tenant } from "@/shared/model/model-tenant";
 
 // --- Mock setup ---
 
@@ -20,7 +20,7 @@ mockCollection.find.mockReturnValue({
   toArray: mock(() => Promise.resolve([])),
 });
 
-mock.module("@/lib/mongo/mongo-client", () => ({
+mock.module("@/vendor/mongo/mongo-client", () => ({
   mongoClient: {
     db: () => ({
       collection: () => mockCollection,
@@ -29,17 +29,28 @@ mock.module("@/lib/mongo/mongo-client", () => ({
 }));
 
 // Import after mocking
-const { makeMongoRepository, makeTenantAwareMongoRepository } = await import(
-  "./mongo-repository"
-);
+const { makeMongoRepository, makeTenantAwareMongoRepository } =
+  await import("./mongo-repository");
 
 // --- Helpers ---
 
-type TestDoc = MongoModel<Document> & { name: string };
+type TestDoc = Document & { name: string };
 
 const TEST_ID = "019606a0-0000-7000-8000-000000000001" as Id;
 
-const makeTestDoc = (overrides?: Partial<TestDoc>): TestDoc => ({
+const makeTestModel = (
+  overrides?: Partial<Model<TestDoc>>,
+): Model<TestDoc> => ({
+  id: TEST_ID,
+  _version: 1,
+  createdAt: new Date("2026-01-01"),
+  updatedAt: new Date("2026-01-01"),
+  name: "test",
+  ...overrides,
+});
+
+/** Simulates what MongoDB stores (_id instead of id) */
+const makeMongoDoc = (overrides?: Partial<TestDoc>) => ({
   _id: TEST_ID,
   _version: 1,
   createdAt: new Date("2026-01-01"),
@@ -63,7 +74,7 @@ const resetMocks = () => {
 // --- makeMongoRepository ---
 
 describe("makeMongoRepository", () => {
-  const repo = makeMongoRepository<TestDoc>({
+  const repo = makeMongoRepository<Model<TestDoc>>({
     collectionName: "test-collection",
     collectionIndexes: [{ key: { name: 1 } }],
   });
@@ -71,16 +82,20 @@ describe("makeMongoRepository", () => {
   beforeEach(resetMocks);
 
   describe("findMany", () => {
-    it("should return all documents", async () => {
-      const docs = [makeTestDoc(), makeTestDoc({ name: "second" })];
+    it("should return all documents mapped to models (with id instead of _id)", async () => {
+      const mongoDocs = [makeMongoDoc(), makeMongoDoc({ name: "second" })];
       mockCollection.find.mockReturnValue({
-        toArray: mock(() => Promise.resolve(docs)),
+        toArray: mock(() => Promise.resolve(mongoDocs)),
       });
 
       const result = await repo.findMany();
 
       expect(result.isOk()).toBe(true);
-      expect(result._unsafeUnwrap()).toEqual({ data: docs });
+      const { data } = result._unsafeUnwrap();
+      expect(data).toHaveLength(2);
+      expect(data[0]).toHaveProperty("id", TEST_ID);
+      expect(data[0]).not.toHaveProperty("_id");
+      expect(data[1]).toHaveProperty("name", "second");
     });
 
     it("should create indexes on the collection", async () => {
@@ -108,14 +123,16 @@ describe("makeMongoRepository", () => {
   });
 
   describe("findById", () => {
-    it("should query by _id and return the document", async () => {
-      const doc = makeTestDoc();
-      mockCollection.findOne.mockResolvedValue(doc);
+    it("should query by _id and return the document mapped to model", async () => {
+      const mongoDoc = makeMongoDoc();
+      mockCollection.findOne.mockResolvedValue(mongoDoc);
 
       const result = await repo.findById({ id: TEST_ID });
 
       expect(result.isOk()).toBe(true);
-      expect(result._unsafeUnwrap()).toEqual({ data: doc });
+      const { data } = result._unsafeUnwrap();
+      expect(data).toHaveProperty("id", TEST_ID);
+      expect(data).not.toHaveProperty("_id");
       expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: TEST_ID });
     });
 
@@ -143,13 +160,19 @@ describe("makeMongoRepository", () => {
   });
 
   describe("insert", () => {
-    it("should insert the document", async () => {
-      const doc = makeTestDoc();
+    it("should map model to mongo document before inserting", async () => {
+      const model = makeTestModel();
 
-      const result = await repo.insert({ data: doc });
+      const result = await repo.insert({ data: model });
 
       expect(result.isOk()).toBe(true);
-      expect(mockCollection.insertOne).toHaveBeenCalledWith(doc);
+      expect(mockCollection.insertOne).toHaveBeenCalledWith(
+        expect.objectContaining({
+          _id: TEST_ID,
+          name: "test",
+          _version: 1,
+        }),
+      );
     });
 
     it("should return err on failure", async () => {
@@ -157,7 +180,7 @@ describe("makeMongoRepository", () => {
         new Error("duplicate key"),
       );
 
-      const result = await repo.insert({ data: makeTestDoc() });
+      const result = await repo.insert({ data: makeTestModel() });
 
       expect(result.isErr()).toBe(true);
       expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
@@ -169,13 +192,19 @@ describe("makeMongoRepository", () => {
   });
 
   describe("update", () => {
-    it("should use optimistic concurrency with _version", async () => {
-      const updatedDoc = makeTestDoc({ name: "updated", _version: 2 });
-      mockCollection.findOneAndUpdate.mockResolvedValue(updatedDoc);
+    it("should use optimistic concurrency with _version and strip id from $set", async () => {
+      const updatedMongoDoc = {
+        ...makeMongoDoc(),
+        name: "updated",
+        _version: 2,
+      };
+      mockCollection.findOneAndUpdate.mockResolvedValue(updatedMongoDoc);
 
       const result = await repo.update({
         id: TEST_ID,
-        data: { name: "updated", _version: 1 } as Partial<TestDoc>,
+        data: { id: TEST_ID, name: "updated", _version: 1 } as Partial<
+          Model<TestDoc>
+        >,
       });
 
       expect(result.isOk()).toBe(true);
@@ -187,7 +216,22 @@ describe("makeMongoRepository", () => {
         },
         { returnDocument: "after" },
       );
-      expect(result._unsafeUnwrap()).toEqual({ data: updatedDoc });
+      // Result should be mapped back to model (id, not _id)
+      const { data } = result._unsafeUnwrap();
+      expect(data).toHaveProperty("id", TEST_ID);
+      expect(data).not.toHaveProperty("_id");
+    });
+
+    it("should return null data when document not found (version mismatch)", async () => {
+      mockCollection.findOneAndUpdate.mockResolvedValue(null);
+
+      const result = await repo.update({
+        id: TEST_ID,
+        data: { _version: 1 } as Partial<Model<TestDoc>>,
+      });
+
+      expect(result.isOk()).toBe(true);
+      expect(result._unsafeUnwrap()).toEqual({ data: null });
     });
 
     it("should return err on failure", async () => {
@@ -195,7 +239,7 @@ describe("makeMongoRepository", () => {
 
       const result = await repo.update({
         id: TEST_ID,
-        data: { _version: 1 } as Partial<TestDoc>,
+        data: { _version: 1 } as Partial<Model<TestDoc>>,
       });
 
       expect(result.isErr()).toBe(true);
@@ -238,23 +282,26 @@ describe("makeTenantAwareMongoRepository", () => {
   const tenant: Tenant = { id: TEST_ID, type: "organization" };
   const ctx = { tenant };
 
-  const repo = makeTenantAwareMongoRepository<TenantDoc>({
+  const repo = makeTenantAwareMongoRepository<Model<TenantDoc>>({
     collectionName: "tenant-collection",
   });
 
   beforeEach(resetMocks);
 
   describe("findMany", () => {
-    it("should filter by tenant", async () => {
-      const docs = [makeTestDoc()];
+    it("should filter by tenant and return mapped models", async () => {
+      const mongoDocs = [makeMongoDoc()];
       mockCollection.find.mockReturnValue({
-        toArray: mock(() => Promise.resolve(docs)),
+        toArray: mock(() => Promise.resolve(mongoDocs)),
       });
 
       const result = await repo.findMany({ ctx });
 
       expect(result.isOk()).toBe(true);
       expect(mockCollection.find).toHaveBeenCalledWith({ _tenant: tenant });
+      const { data } = result._unsafeUnwrap();
+      expect(data[0]).toHaveProperty("id", TEST_ID);
+      expect(data[0]).not.toHaveProperty("_id");
     });
 
     it("should create tenant index plus any custom indexes", async () => {
@@ -268,8 +315,8 @@ describe("makeTenantAwareMongoRepository", () => {
 
   describe("findById", () => {
     it("should filter by _id and tenant", async () => {
-      const doc = makeTestDoc();
-      mockCollection.findOne.mockResolvedValue(doc);
+      const mongoDoc = makeMongoDoc();
+      mockCollection.findOne.mockResolvedValue(mongoDoc);
 
       const result = await repo.findById({ ctx, id: TEST_ID });
 
@@ -282,28 +329,34 @@ describe("makeTenantAwareMongoRepository", () => {
   });
 
   describe("insert", () => {
-    it("should attach _tenant to the inserted document", async () => {
-      const doc = makeTestDoc() as unknown as TenantDoc;
+    it("should map model to mongo document and attach _tenant", async () => {
+      const model = makeTestModel() as unknown as Model<TenantDoc>;
 
-      const result = await repo.insert({ ctx, data: doc });
+      const result = await repo.insert({ ctx, data: model });
 
       expect(result.isOk()).toBe(true);
-      expect(mockCollection.insertOne).toHaveBeenCalledWith({
-        ...doc,
-        _tenant: tenant,
-      });
+      const insertedDoc = (
+        mockCollection.insertOne.mock.calls as unknown[][]
+      )[0]![0] as Record<string, unknown>;
+      expect(insertedDoc).toHaveProperty("_id", TEST_ID);
+      expect(insertedDoc).toHaveProperty("_tenant", tenant);
+      expect(insertedDoc).not.toHaveProperty("id");
     });
   });
 
   describe("update", () => {
     it("should include tenant in the filter for optimistic concurrency", async () => {
-      const updatedDoc = makeTestDoc({ name: "updated", _version: 2 });
-      mockCollection.findOneAndUpdate.mockResolvedValue(updatedDoc);
+      const updatedMongoDoc = {
+        ...makeMongoDoc(),
+        name: "updated",
+        _version: 2,
+      };
+      mockCollection.findOneAndUpdate.mockResolvedValue(updatedMongoDoc);
 
       const result = await repo.update({
         ctx,
         id: TEST_ID,
-        data: { name: "updated", _version: 1 } as Partial<TenantDoc>,
+        data: { name: "updated", _version: 1 } as Partial<Model<TenantDoc>>,
       });
 
       expect(result.isOk()).toBe(true);

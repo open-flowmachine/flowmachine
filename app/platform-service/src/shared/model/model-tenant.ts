@@ -1,5 +1,5 @@
 import z from "zod";
-import { idSchema } from "@/lib/model/model-id";
+import { idSchema } from "@/shared/model/model-id";
 
 export const tenantTypes = ["organization", "user"] as const;
 

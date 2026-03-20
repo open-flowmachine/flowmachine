@@ -1,4 +1,4 @@
-import { Err } from "@/err/err";
+import { Err } from "@/shared/err/err";
 
 const mapMongoError = (error: unknown) => {
   return Err.from(error, { message: "Mongo database error" });
