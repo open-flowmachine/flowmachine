@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { err, ok } from "neverthrow";
 import type { Project } from "@/module/project/project-model";
 import { Err } from "@/shared/err/err";
-import type { Id } from "@/shared/model/model-id";
+import { type Id, idSchema } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
 
 // --- Mock setup ---
@@ -26,6 +26,7 @@ mock.module("@/module/project/project-repository", () => ({
 }));
 
 mock.module("@/shared/model/model-id", () => ({
+  idSchema,
   newId: () => NEW_ID,
 }));
 
