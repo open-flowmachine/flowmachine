@@ -1,10 +1,12 @@
 import z from "zod";
 import { idSchema } from "@/shared/model/model-id";
 
-export const tenantTypes = ["organization", "user"] as const;
+const tenantTypes = ["organization", "user"] as const;
 
-export const tenantSchema = z.object({
+const tenantSchema = z.object({
   id: idSchema,
   type: z.enum(tenantTypes),
 });
-export type Tenant = z.infer<typeof tenantSchema>;
+type Tenant = z.infer<typeof tenantSchema>;
+
+export { tenantSchema, type Tenant };

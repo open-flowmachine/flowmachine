@@ -211,7 +211,7 @@ describe("makeMongoRepository", () => {
       expect(mockCollection.findOneAndUpdate).toHaveBeenCalledWith(
         { _id: TEST_ID, _version: 1 },
         {
-          $set: { name: "updated", _version: 1 },
+          $set: { name: "updated" },
           $inc: { _version: 1 },
         },
         { returnDocument: "after" },
@@ -381,7 +381,7 @@ describe("makeTenantAwareMongoRepository", () => {
       expect(mockCollection.findOneAndUpdate).toHaveBeenCalledWith(
         { _id: TEST_ID, _version: 1, _tenant: tenant },
         {
-          $set: { name: "updated", _version: 1 },
+          $set: { name: "updated" },
           $inc: { _version: 1 },
         },
         { returnDocument: "after" },
