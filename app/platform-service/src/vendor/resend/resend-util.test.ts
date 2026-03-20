@@ -14,12 +14,13 @@ mock.module("@/vendor/resend/resend-client", () => ({
 }));
 
 // Import after mocking
-const { sendEmail } = await import("./resend-util");
+const { makeResendService: makeResendService } = await import("./resend-util");
+const resendService = makeResendService();
 
 // --- Helpers ---
 
 const makePayload = (
-  overrides?: Partial<Parameters<typeof sendEmail>[0]["payload"]>,
+  overrides?: Partial<Parameters<typeof resendService.sendEmail>[0]["payload"]>,
 ) => ({
   from: "noreply@example.com",
   to: "user@example.com",
@@ -39,7 +40,7 @@ describe("sendEmail", () => {
   it("should call resend client with correct parameters", async () => {
     const payload = makePayload();
 
-    await sendEmail({ payload });
+    await resendService.sendEmail({ payload });
 
     expect(mockSend).toHaveBeenCalledWith({
       from: "noreply@example.com",
@@ -50,7 +51,7 @@ describe("sendEmail", () => {
   });
 
   it("should return ok on success", async () => {
-    const result = await sendEmail({ payload: makePayload() });
+    const result = await resendService.sendEmail({ payload: makePayload() });
 
     expect(result.isOk()).toBe(true);
   });
@@ -58,7 +59,7 @@ describe("sendEmail", () => {
   it("should return err on failure", async () => {
     mockSend.mockRejectedValueOnce(new Error("Resend API error"));
 
-    const result = await sendEmail({ payload: makePayload() });
+    const result = await resendService.sendEmail({ payload: makePayload() });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);

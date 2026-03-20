@@ -2,11 +2,10 @@ import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { emailOTP, organization } from "better-auth/plugins";
 import { newId } from "@/shared/model/model-id";
-import {
-  sendInvitationEmail,
-  sendOtpEmail,
-} from "@/vendor/better-auth/better-auth-util";
+import { makeBetterAuthUtil } from "@/vendor/better-auth/better-auth-util";
 import { mongoClient } from "@/vendor/mongo/mongo-client";
+
+const betterAuthUtil = makeBetterAuthUtil();
 
 const betterAuthClient = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
@@ -24,7 +23,7 @@ const betterAuthClient = betterAuth({
       otpLength: 6,
       expiresIn: 300,
       sendVerificationOTP: async (data) => {
-        const result = await sendOtpEmail(data);
+        const result = await betterAuthUtil.sendOtpEmail(data);
         if (result.isErr()) {
           throw result.error;
         }
@@ -33,7 +32,7 @@ const betterAuthClient = betterAuth({
 
     organization({
       sendInvitationEmail: async (data) => {
-        const result = await sendInvitationEmail({
+        const result = await betterAuthUtil.sendInvitationEmail({
           id: data.id,
           email: data.email,
           organizationName: data.organization.name,

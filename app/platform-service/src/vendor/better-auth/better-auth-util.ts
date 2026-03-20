@@ -1,5 +1,7 @@
 import { type EmailOTPOptions } from "better-auth/plugins";
-import { sendEmail } from "@/vendor/resend/resend-util";
+import { makeResendService } from "@/vendor/resend/resend-util";
+
+const resendService = makeResendService();
 
 const otpTypeToEmailSubject = {
   "sign-in": "Your sign-in code",
@@ -10,7 +12,7 @@ const otpTypeToEmailSubject = {
 const sendOtpEmail = async (
   body: Parameters<EmailOTPOptions["sendVerificationOTP"]>[0],
 ) => {
-  return await sendEmail({
+  return await resendService.sendEmail({
     payload: {
       from: process.env.RESEND_FROM_ADDRESS,
       to: body.email,
@@ -33,7 +35,7 @@ const sendInvitationEmail = (data: {
   organizationName: string;
   inviterName: string;
 }) => {
-  return sendEmail({
+  return resendService.sendEmail({
     payload: {
       from: process.env.RESEND_FROM_ADDRESS,
       to: data.email,
@@ -54,4 +56,6 @@ const sendInvitationEmail = (data: {
   });
 };
 
-export { sendOtpEmail, sendInvitationEmail };
+const makeBetterAuthUtil = () => ({ sendOtpEmail, sendInvitationEmail });
+
+export { makeBetterAuthUtil };

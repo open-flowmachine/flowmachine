@@ -21,4 +21,6 @@ const sendEmail = async (input: {
   }
 };
 
-export { sendEmail };
+const makeResendService = () => ({ sendEmail });
+
+export { makeResendService };

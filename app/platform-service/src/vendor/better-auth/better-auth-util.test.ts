@@ -13,8 +13,8 @@ mock.module("@/vendor/resend/resend-client", () => ({
 }));
 
 // Import after mocking
-const { sendOtpEmail, sendInvitationEmail } =
-  await import("./better-auth-util");
+const { makeBetterAuthUtil } = await import("./better-auth-util");
+const { sendOtpEmail, sendInvitationEmail } = makeBetterAuthUtil();
 
 // --- Helpers ---
 

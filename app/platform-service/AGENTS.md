@@ -62,23 +62,24 @@ bun run lint             # Run ESLint
 - Never accesses repositories directly — always goes through module services
 - May import from `module`, `shared`, and `vendor`
 
-### Export Namespace Pattern
+### Export Pattern
 
-All layers use a functional export pattern to namespace related functions:
+- **Multiple related functions** → bundle in a `make*` factory (the only named export); functions stay module-private
 
-- Individual functions are **module-private** — not exported directly
-- A single `make*` factory bundles them into a plain object and is the **only named export**
-- The return type is derived with `ReturnType<typeof make*>` and exported as a type
+  ```ts
+  const create = () => {
+    /* ... */
+  };
+  const remove = () => {
+    /* ... */
+  };
+  const makeFooService = () => ({ create, remove });
+  export { makeFooService };
+  ```
 
-```ts
-const doA = () => {
-  /* ... */
-};
-const doB = () => {
-  /* ... */
-};
+- **Single value** (singleton, schema, class, one function) → `export { name }` directly
 
-const makeFoo = () => ({ doA, doB });
-
-export { makeFoo };
-```
+  ```ts
+  const fooClient = new FooSDK({ apiKey });
+  export { fooClient };
+  ```
