@@ -1,12 +1,8 @@
 import Elysia from "elysia";
 import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-model";
-import {
-  createWorkflowDefinition,
-  deleteWorkflowDefinition,
-  getWorkflowDefinition,
-  listWorkflowDefinitions,
-  updateWorkflowDefinition,
-} from "@/module/workflow/workflow-definition-service";
+import { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";
+
+const workflowDefinitionService = makeWorkflowDefinitionService();
 import type { WorkflowDefinitionResponseDto } from "@/router/workflow/v1/router-workflow-definition-v1-dto";
 import {
   deleteWorkflowDefinitionRequestParamsDtoSchema,
@@ -39,7 +35,7 @@ const workflowDefinitionV1Router = new Elysia({
       .post(
         "",
         async ({ body, tenant }) => {
-          const result = await createWorkflowDefinition({
+          const result = await workflowDefinitionService.create({
             ctx: { tenant },
             payload: body,
           });
@@ -53,7 +49,7 @@ const workflowDefinitionV1Router = new Elysia({
         },
       )
       .get("", async ({ tenant }) => {
-        const result = await listWorkflowDefinitions({
+        const result = await workflowDefinitionService.list({
           ctx: { tenant },
         });
         if (result.isErr()) {
@@ -66,7 +62,7 @@ const workflowDefinitionV1Router = new Elysia({
       .get(
         "/:id",
         async ({ tenant, params }) => {
-          const result = await getWorkflowDefinition({
+          const result = await workflowDefinitionService.get({
             ctx: { tenant },
             id: params.id,
           });
@@ -82,7 +78,7 @@ const workflowDefinitionV1Router = new Elysia({
       .patch(
         "/:id",
         async ({ body, tenant, params }) => {
-          const result = await updateWorkflowDefinition({
+          const result = await workflowDefinitionService.update({
             ctx: { tenant },
             id: params.id,
             data: body,
@@ -100,7 +96,7 @@ const workflowDefinitionV1Router = new Elysia({
       .delete(
         "/:id",
         async ({ tenant, params }) => {
-          const result = await deleteWorkflowDefinition({
+          const result = await workflowDefinitionService.delete({
             ctx: { tenant },
             id: params.id,
           });

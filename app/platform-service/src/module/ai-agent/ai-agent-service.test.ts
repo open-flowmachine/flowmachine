@@ -30,13 +30,8 @@ mock.module("@/shared/model/model-id", () => ({
   newId: () => NEW_ID,
 }));
 
-const {
-  createAiAgent,
-  getAiAgent,
-  listAiAgents,
-  updateAiAgent,
-  deleteAiAgent,
-} = await import("./ai-agent-service");
+const { makeAiAgentService } = await import("./ai-agent-service");
+const aiAgentService = makeAiAgentService();
 
 // --- Helpers ---
 
@@ -69,7 +64,7 @@ describe("createAiAgent", () => {
   it("should insert a new ai agent with generated id and timestamps", async () => {
     mockRepository.insert.mockResolvedValue(ok());
 
-    const result = await createAiAgent({
+    const result = await aiAgentService.create({
       ctx,
       payload: {
         name: "New Agent",
@@ -97,7 +92,7 @@ describe("createAiAgent", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await createAiAgent({
+    const result = await aiAgentService.create({
       ctx,
       payload: {
         name: "New Agent",
@@ -118,7 +113,7 @@ describe("getAiAgent", () => {
     const aiAgent = makeAiAgent();
     mockRepository.findById.mockResolvedValue(ok({ data: aiAgent }));
 
-    const result = await getAiAgent({ ctx, id: TEST_ID });
+    const result = await aiAgentService.get({ ctx, id: TEST_ID });
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual({ data: aiAgent } as never);
@@ -128,7 +123,7 @@ describe("getAiAgent", () => {
   it("should return notFound err when ai agent does not exist", async () => {
     mockRepository.findById.mockResolvedValue(ok({ data: null }));
 
-    const result = await getAiAgent({ ctx, id: TEST_ID });
+    const result = await aiAgentService.get({ ctx, id: TEST_ID });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
@@ -140,7 +135,7 @@ describe("getAiAgent", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await getAiAgent({ ctx, id: TEST_ID });
+    const result = await aiAgentService.get({ ctx, id: TEST_ID });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
@@ -154,7 +149,7 @@ describe("listAiAgents", () => {
     const aiAgents = [makeAiAgent(), makeAiAgent({ name: "Second" })];
     mockRepository.findMany.mockResolvedValue(ok({ data: aiAgents }));
 
-    const result = await listAiAgents({ ctx });
+    const result = await aiAgentService.list({ ctx });
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual({ data: aiAgents } as never);
@@ -166,7 +161,7 @@ describe("listAiAgents", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await listAiAgents({ ctx });
+    const result = await aiAgentService.list({ ctx });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
@@ -182,7 +177,7 @@ describe("updateAiAgent", () => {
     mockRepository.findById.mockResolvedValue(ok({ data: existing }));
     mockRepository.update.mockResolvedValue(ok({ data: updated }));
 
-    const result = await updateAiAgent({
+    const result = await aiAgentService.update({
       ctx,
       id: TEST_ID,
       data: { name: "Updated", _version: 1 },
@@ -200,7 +195,7 @@ describe("updateAiAgent", () => {
   it("should return notFound err when ai agent does not exist", async () => {
     mockRepository.findById.mockResolvedValue(ok({ data: null }));
 
-    const result = await updateAiAgent({
+    const result = await aiAgentService.update({
       ctx,
       id: TEST_ID,
       data: { name: "Updated", _version: 1 },
@@ -218,7 +213,7 @@ describe("updateAiAgent", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await updateAiAgent({
+    const result = await aiAgentService.update({
       ctx,
       id: TEST_ID,
       data: { name: "Updated", _version: 1 },
@@ -235,7 +230,7 @@ describe("deleteAiAgent", () => {
   it("should delete the ai agent by id and tenant", async () => {
     mockRepository.deleteById.mockResolvedValue(ok());
 
-    const result = await deleteAiAgent({ ctx, id: TEST_ID });
+    const result = await aiAgentService.delete({ ctx, id: TEST_ID });
 
     expect(result.isOk()).toBe(true);
     expect(mockRepository.deleteById).toHaveBeenCalledWith({
@@ -249,7 +244,7 @@ describe("deleteAiAgent", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await deleteAiAgent({ ctx, id: TEST_ID });
+    const result = await aiAgentService.delete({ ctx, id: TEST_ID });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);

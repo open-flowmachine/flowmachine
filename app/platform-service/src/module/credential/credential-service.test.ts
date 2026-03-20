@@ -30,13 +30,8 @@ mock.module("@/shared/model/model-id", () => ({
   newId: () => NEW_ID,
 }));
 
-const {
-  createCredential,
-  getCredential,
-  listCredentials,
-  updateCredential,
-  deleteCredential,
-} = await import("./credential-service");
+const { makeCredentialService } = await import("./credential-service");
+const credentialService = makeCredentialService();
 
 // --- Helpers ---
 
@@ -87,7 +82,7 @@ describe("createCredential", () => {
   it("should insert a new apiKey credential with generated id and timestamps", async () => {
     mockRepository.insert.mockResolvedValue(ok());
 
-    const result = await createCredential({
+    const result = await credentialService.create({
       ctx,
       payload: {
         type: "apiKey",
@@ -114,7 +109,7 @@ describe("createCredential", () => {
   it("should insert a new basic credential with generated id and timestamps", async () => {
     mockRepository.insert.mockResolvedValue(ok());
 
-    const result = await createCredential({
+    const result = await credentialService.create({
       ctx,
       payload: {
         type: "basic",
@@ -145,7 +140,7 @@ describe("createCredential", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await createCredential({
+    const result = await credentialService.create({
       ctx,
       payload: {
         type: "apiKey",
@@ -167,7 +162,7 @@ describe("getCredential", () => {
     const credential = makeApiKeyCredential();
     mockRepository.findById.mockResolvedValue(ok({ data: credential }));
 
-    const result = await getCredential({ ctx, id: TEST_ID });
+    const result = await credentialService.get({ ctx, id: TEST_ID });
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual({ data: credential } as never);
@@ -177,7 +172,7 @@ describe("getCredential", () => {
   it("should return notFound err when credential does not exist", async () => {
     mockRepository.findById.mockResolvedValue(ok({ data: null }));
 
-    const result = await getCredential({ ctx, id: TEST_ID });
+    const result = await credentialService.get({ ctx, id: TEST_ID });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
@@ -189,7 +184,7 @@ describe("getCredential", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await getCredential({ ctx, id: TEST_ID });
+    const result = await credentialService.get({ ctx, id: TEST_ID });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
@@ -203,7 +198,7 @@ describe("listCredentials", () => {
     const credentials = [makeApiKeyCredential(), makeBasicCredential()];
     mockRepository.findMany.mockResolvedValue(ok({ data: credentials }));
 
-    const result = await listCredentials({ ctx });
+    const result = await credentialService.list({ ctx });
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual({ data: credentials } as never);
@@ -215,7 +210,7 @@ describe("listCredentials", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await listCredentials({ ctx });
+    const result = await credentialService.list({ ctx });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
@@ -234,7 +229,7 @@ describe("updateCredential", () => {
     mockRepository.findById.mockResolvedValue(ok({ data: existing }));
     mockRepository.update.mockResolvedValue(ok({ data: updated }));
 
-    const result = await updateCredential({
+    const result = await credentialService.update({
       ctx,
       id: TEST_ID,
       data: { type: "apiKey", name: "Updated Key" },
@@ -252,7 +247,7 @@ describe("updateCredential", () => {
   it("should return notFound err when credential does not exist", async () => {
     mockRepository.findById.mockResolvedValue(ok({ data: null }));
 
-    const result = await updateCredential({
+    const result = await credentialService.update({
       ctx,
       id: TEST_ID,
       data: { type: "apiKey", name: "Updated" },
@@ -270,7 +265,7 @@ describe("updateCredential", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await updateCredential({
+    const result = await credentialService.update({
       ctx,
       id: TEST_ID,
       data: { type: "apiKey", name: "Updated" },
@@ -287,7 +282,7 @@ describe("deleteCredential", () => {
   it("should delete the credential by id and tenant", async () => {
     mockRepository.deleteById.mockResolvedValue(ok());
 
-    const result = await deleteCredential({ ctx, id: TEST_ID });
+    const result = await credentialService.delete({ ctx, id: TEST_ID });
 
     expect(result.isOk()).toBe(true);
     expect(mockRepository.deleteById).toHaveBeenCalledWith({
@@ -301,7 +296,7 @@ describe("deleteCredential", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await deleteCredential({ ctx, id: TEST_ID });
+    const result = await credentialService.delete({ ctx, id: TEST_ID });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);

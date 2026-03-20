@@ -82,10 +82,12 @@ const deleteCredential = async (input: {
   return credentialRepository.deleteById({ ctx, id });
 };
 
-export {
-  createCredential,
-  getCredential,
-  listCredentials,
-  updateCredential,
-  deleteCredential,
-};
+const makeCredentialService = () => ({
+  create: createCredential,
+  get: getCredential,
+  list: listCredentials,
+  update: updateCredential,
+  delete: deleteCredential,
+});
+
+export { makeCredentialService };

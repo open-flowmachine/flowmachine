@@ -92,10 +92,12 @@ const deleteWorkflowDefinition = async (input: {
   return workflowDefinitionRepository.deleteById({ ctx, id });
 };
 
-export {
-  createWorkflowDefinition,
-  getWorkflowDefinition,
-  listWorkflowDefinitions,
-  updateWorkflowDefinition,
-  deleteWorkflowDefinition,
-};
+const makeWorkflowDefinitionService = () => ({
+  create: createWorkflowDefinition,
+  get: getWorkflowDefinition,
+  list: listWorkflowDefinitions,
+  update: updateWorkflowDefinition,
+  delete: deleteWorkflowDefinition,
+});
+
+export { makeWorkflowDefinitionService };

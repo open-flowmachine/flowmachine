@@ -1,12 +1,8 @@
 import Elysia from "elysia";
 import type { Project } from "@/module/project/project-model";
-import {
-  createProject,
-  deleteProject,
-  getProject,
-  listProjects,
-  updateProject,
-} from "@/module/project/project-service";
+import { makeProjectService } from "@/module/project/project-service";
+
+const projectService = makeProjectService();
 import type { ProjectResponseDto } from "@/router/project/v1/router-project-v1-dto";
 import {
   deleteProjectRequestParamsDtoSchema,
@@ -33,7 +29,7 @@ const projectV1Router = new Elysia({ name: "projectV1HttpRouter" })
       .post(
         "",
         async ({ body, tenant }) => {
-          const result = await createProject({
+          const result = await projectService.create({
             ctx: { tenant },
             payload: body,
           });
@@ -47,7 +43,7 @@ const projectV1Router = new Elysia({ name: "projectV1HttpRouter" })
         },
       )
       .get("", async ({ tenant }) => {
-        const result = await listProjects({
+        const result = await projectService.list({
           ctx: { tenant },
         });
         if (result.isErr()) {
@@ -60,7 +56,7 @@ const projectV1Router = new Elysia({ name: "projectV1HttpRouter" })
       .get(
         "/:id",
         async ({ tenant, params }) => {
-          const result = await getProject({
+          const result = await projectService.get({
             ctx: { tenant },
             id: params.id,
           });
@@ -76,7 +72,7 @@ const projectV1Router = new Elysia({ name: "projectV1HttpRouter" })
       .patch(
         "/:id",
         async ({ body, tenant, params }) => {
-          const result = await updateProject({
+          const result = await projectService.update({
             ctx: { tenant },
             id: params.id,
             data: body,
@@ -94,7 +90,7 @@ const projectV1Router = new Elysia({ name: "projectV1HttpRouter" })
       .delete(
         "/:id",
         async ({ tenant, params }) => {
-          const result = await deleteProject({
+          const result = await projectService.delete({
             ctx: { tenant },
             id: params.id,
           });

@@ -73,10 +73,12 @@ const deleteProject = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
   return projectRepository.deleteById({ ctx, id });
 };
 
-export {
-  createProject,
-  getProject,
-  listProjects,
-  updateProject,
-  deleteProject,
-};
+const makeProjectService = () => ({
+  create: createProject,
+  get: getProject,
+  list: listProjects,
+  update: updateProject,
+  delete: deleteProject,
+});
+
+export { makeProjectService };

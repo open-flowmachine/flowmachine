@@ -18,11 +18,13 @@ const mockUpdateAiAgent = mock();
 const mockDeleteAiAgent = mock();
 
 mock.module("@/module/ai-agent/ai-agent-service", () => ({
-  createAiAgent: mockCreateAiAgent,
-  getAiAgent: mockGetAiAgent,
-  listAiAgents: mockListAiAgents,
-  updateAiAgent: mockUpdateAiAgent,
-  deleteAiAgent: mockDeleteAiAgent,
+  makeAiAgentService: () => ({
+    create: mockCreateAiAgent,
+    get: mockGetAiAgent,
+    list: mockListAiAgents,
+    update: mockUpdateAiAgent,
+    delete: mockDeleteAiAgent,
+  }),
 }));
 
 mock.module("@/router/router-auth-guard", () => ({

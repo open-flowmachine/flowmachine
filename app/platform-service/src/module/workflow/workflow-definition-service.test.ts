@@ -30,13 +30,8 @@ mock.module("@/shared/model/model-id", () => ({
   newId: () => NEW_ID,
 }));
 
-const {
-  createWorkflowDefinition,
-  getWorkflowDefinition,
-  listWorkflowDefinitions,
-  updateWorkflowDefinition,
-  deleteWorkflowDefinition,
-} = await import("./workflow-definition-service");
+const { makeWorkflowDefinitionService } = await import("./workflow-definition-service");
+const workflowDefinitionService = makeWorkflowDefinitionService();
 
 // --- Helpers ---
 
@@ -74,7 +69,7 @@ describe("createWorkflowDefinition", () => {
   it("should insert a new workflow definition with generated id and timestamps", async () => {
     mockRepository.insert.mockResolvedValue(ok());
 
-    const result = await createWorkflowDefinition({
+    const result = await workflowDefinitionService.create({
       ctx,
       payload: {
         name: "New Workflow",
@@ -108,7 +103,7 @@ describe("createWorkflowDefinition", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await createWorkflowDefinition({
+    const result = await workflowDefinitionService.create({
       ctx,
       payload: {
         name: "New Workflow",
@@ -131,7 +126,7 @@ describe("getWorkflowDefinition", () => {
     const definition = makeWorkflowDefinition();
     mockRepository.findById.mockResolvedValue(ok({ data: definition }));
 
-    const result = await getWorkflowDefinition({ ctx, id: TEST_ID });
+    const result = await workflowDefinitionService.get({ ctx, id: TEST_ID });
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual({ data: definition } as never);
@@ -144,7 +139,7 @@ describe("getWorkflowDefinition", () => {
   it("should return notFound err when workflow definition does not exist", async () => {
     mockRepository.findById.mockResolvedValue(ok({ data: null }));
 
-    const result = await getWorkflowDefinition({ ctx, id: TEST_ID });
+    const result = await workflowDefinitionService.get({ ctx, id: TEST_ID });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
@@ -156,7 +151,7 @@ describe("getWorkflowDefinition", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await getWorkflowDefinition({ ctx, id: TEST_ID });
+    const result = await workflowDefinitionService.get({ ctx, id: TEST_ID });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
@@ -173,7 +168,7 @@ describe("listWorkflowDefinitions", () => {
     ];
     mockRepository.findMany.mockResolvedValue(ok({ data: definitions }));
 
-    const result = await listWorkflowDefinitions({ ctx });
+    const result = await workflowDefinitionService.list({ ctx });
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual({ data: definitions } as never);
@@ -185,7 +180,7 @@ describe("listWorkflowDefinitions", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await listWorkflowDefinitions({ ctx });
+    const result = await workflowDefinitionService.list({ ctx });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
@@ -201,7 +196,7 @@ describe("updateWorkflowDefinition", () => {
     mockRepository.findById.mockResolvedValue(ok({ data: existing }));
     mockRepository.update.mockResolvedValue(ok({ data: updated }));
 
-    const result = await updateWorkflowDefinition({
+    const result = await workflowDefinitionService.update({
       ctx,
       id: TEST_ID,
       data: { name: "Updated", _version: 1 },
@@ -219,7 +214,7 @@ describe("updateWorkflowDefinition", () => {
   it("should return notFound err when workflow definition does not exist", async () => {
     mockRepository.findById.mockResolvedValue(ok({ data: null }));
 
-    const result = await updateWorkflowDefinition({
+    const result = await workflowDefinitionService.update({
       ctx,
       id: TEST_ID,
       data: { name: "Updated", _version: 1 },
@@ -237,7 +232,7 @@ describe("updateWorkflowDefinition", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await updateWorkflowDefinition({
+    const result = await workflowDefinitionService.update({
       ctx,
       id: TEST_ID,
       data: { name: "Updated", _version: 1 },
@@ -254,7 +249,7 @@ describe("deleteWorkflowDefinition", () => {
   it("should delete the workflow definition by id and tenant", async () => {
     mockRepository.deleteById.mockResolvedValue(ok());
 
-    const result = await deleteWorkflowDefinition({ ctx, id: TEST_ID });
+    const result = await workflowDefinitionService.delete({ ctx, id: TEST_ID });
 
     expect(result.isOk()).toBe(true);
     expect(mockRepository.deleteById).toHaveBeenCalledWith({
@@ -268,7 +263,7 @@ describe("deleteWorkflowDefinition", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await deleteWorkflowDefinition({ ctx, id: TEST_ID });
+    const result = await workflowDefinitionService.delete({ ctx, id: TEST_ID });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);

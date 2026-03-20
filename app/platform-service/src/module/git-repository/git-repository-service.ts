@@ -96,10 +96,12 @@ const deleteGitRepository = async (input: {
   return gitRepositoryRepository.deleteById({ ctx, id });
 };
 
-export {
-  createGitRepository,
-  getGitRepository,
-  listGitRepositories,
-  updateGitRepository,
-  deleteGitRepository,
-};
+const makeGitRepositoryService = () => ({
+  create: createGitRepository,
+  get: getGitRepository,
+  list: listGitRepositories,
+  update: updateGitRepository,
+  delete: deleteGitRepository,
+});
+
+export { makeGitRepositoryService };

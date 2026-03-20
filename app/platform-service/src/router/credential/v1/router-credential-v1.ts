@@ -1,12 +1,8 @@
 import Elysia from "elysia";
 import type { Credential } from "@/module/credential/credential-model";
-import {
-  createCredential,
-  deleteCredential,
-  getCredential,
-  listCredentials,
-  updateCredential,
-} from "@/module/credential/credential-service";
+import { makeCredentialService } from "@/module/credential/credential-service";
+
+const credentialService = makeCredentialService();
 import type { CredentialResponseDto } from "@/router/credential/v1/router-credential-v1-dto";
 import {
   deleteCredentialRequestParamsDtoSchema,
@@ -45,7 +41,7 @@ const credentialV1Router = new Elysia({ name: "credentialV1HttpRouter" })
       .post(
         "",
         async ({ body, tenant }) => {
-          const result = await createCredential({
+          const result = await credentialService.create({
             ctx: { tenant },
             payload: body,
           });
@@ -59,7 +55,7 @@ const credentialV1Router = new Elysia({ name: "credentialV1HttpRouter" })
         },
       )
       .get("", async ({ tenant }) => {
-        const result = await listCredentials({
+        const result = await credentialService.list({
           ctx: { tenant },
         });
         if (result.isErr()) {
@@ -72,7 +68,7 @@ const credentialV1Router = new Elysia({ name: "credentialV1HttpRouter" })
       .get(
         "/:id",
         async ({ tenant, params }) => {
-          const result = await getCredential({
+          const result = await credentialService.get({
             ctx: { tenant },
             id: params.id,
           });
@@ -88,7 +84,7 @@ const credentialV1Router = new Elysia({ name: "credentialV1HttpRouter" })
       .patch(
         "/:id",
         async ({ body, tenant, params }) => {
-          const result = await updateCredential({
+          const result = await credentialService.update({
             ctx: { tenant },
             id: params.id,
             data: body,
@@ -106,7 +102,7 @@ const credentialV1Router = new Elysia({ name: "credentialV1HttpRouter" })
       .delete(
         "/:id",
         async ({ tenant, params }) => {
-          const result = await deleteCredential({
+          const result = await credentialService.delete({
             ctx: { tenant },
             id: params.id,
           });

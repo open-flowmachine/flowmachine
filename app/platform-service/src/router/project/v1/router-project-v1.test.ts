@@ -18,11 +18,13 @@ const mockUpdateProject = mock();
 const mockDeleteProject = mock();
 
 mock.module("@/module/project/project-service", () => ({
-  createProject: mockCreateProject,
-  getProject: mockGetProject,
-  listProjects: mockListProjects,
-  updateProject: mockUpdateProject,
-  deleteProject: mockDeleteProject,
+  makeProjectService: () => ({
+    create: mockCreateProject,
+    get: mockGetProject,
+    list: mockListProjects,
+    update: mockUpdateProject,
+    delete: mockDeleteProject,
+  }),
 }));
 
 mock.module("@/router/router-auth-guard", () => ({

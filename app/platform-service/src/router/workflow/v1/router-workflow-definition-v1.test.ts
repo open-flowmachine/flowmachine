@@ -18,11 +18,13 @@ const mockUpdateWorkflowDefinition = mock();
 const mockDeleteWorkflowDefinition = mock();
 
 mock.module("@/module/workflow/workflow-definition-service", () => ({
-  createWorkflowDefinition: mockCreateWorkflowDefinition,
-  getWorkflowDefinition: mockGetWorkflowDefinition,
-  listWorkflowDefinitions: mockListWorkflowDefinitions,
-  updateWorkflowDefinition: mockUpdateWorkflowDefinition,
-  deleteWorkflowDefinition: mockDeleteWorkflowDefinition,
+  makeWorkflowDefinitionService: () => ({
+    create: mockCreateWorkflowDefinition,
+    get: mockGetWorkflowDefinition,
+    list: mockListWorkflowDefinitions,
+    update: mockUpdateWorkflowDefinition,
+    delete: mockDeleteWorkflowDefinition,
+  }),
 }));
 
 mock.module("@/router/router-auth-guard", () => ({

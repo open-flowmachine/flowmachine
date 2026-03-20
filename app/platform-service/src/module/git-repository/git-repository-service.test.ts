@@ -31,13 +31,8 @@ mock.module("@/shared/model/model-id", () => ({
   newId: () => NEW_ID,
 }));
 
-const {
-  createGitRepository,
-  getGitRepository,
-  listGitRepositories,
-  updateGitRepository,
-  deleteGitRepository,
-} = await import("./git-repository-service");
+const { makeGitRepositoryService } = await import("./git-repository-service");
+const gitRepositoryService = makeGitRepositoryService();
 
 // --- Helpers ---
 
@@ -81,7 +76,7 @@ describe("createGitRepository", () => {
   it("should insert a new git repository with generated id and timestamps", async () => {
     mockRepository.insert.mockResolvedValue(ok());
 
-    const result = await createGitRepository({
+    const result = await gitRepositoryService.create({
       ctx,
       payload: {
         name: "New Repo",
@@ -117,7 +112,7 @@ describe("createGitRepository", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await createGitRepository({
+    const result = await gitRepositoryService.create({
       ctx,
       payload: {
         name: "New Repo",
@@ -147,7 +142,7 @@ describe("getGitRepository", () => {
     const gitRepo = makeGitRepository();
     mockRepository.findById.mockResolvedValue(ok({ data: gitRepo }));
 
-    const result = await getGitRepository({ ctx, id: TEST_ID });
+    const result = await gitRepositoryService.get({ ctx, id: TEST_ID });
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual({ data: gitRepo } as never);
@@ -160,7 +155,7 @@ describe("getGitRepository", () => {
   it("should return notFound err when git repository does not exist", async () => {
     mockRepository.findById.mockResolvedValue(ok({ data: null }));
 
-    const result = await getGitRepository({ ctx, id: TEST_ID });
+    const result = await gitRepositoryService.get({ ctx, id: TEST_ID });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
@@ -172,7 +167,7 @@ describe("getGitRepository", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await getGitRepository({ ctx, id: TEST_ID });
+    const result = await gitRepositoryService.get({ ctx, id: TEST_ID });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
@@ -189,7 +184,7 @@ describe("listGitRepositories", () => {
     ];
     mockRepository.findMany.mockResolvedValue(ok({ data: repos }));
 
-    const result = await listGitRepositories({ ctx });
+    const result = await gitRepositoryService.list({ ctx });
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual({ data: repos } as never);
@@ -203,7 +198,7 @@ describe("listGitRepositories", () => {
     const repos = [makeGitRepository()];
     mockRepository.findMany.mockResolvedValue(ok({ data: repos }));
 
-    const result = await listGitRepositories({
+    const result = await gitRepositoryService.list({
       ctx,
       filter: { projectId: PROJECT_ID },
     });
@@ -221,7 +216,7 @@ describe("listGitRepositories", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await listGitRepositories({ ctx });
+    const result = await gitRepositoryService.list({ ctx });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
@@ -237,7 +232,7 @@ describe("updateGitRepository", () => {
     mockRepository.findById.mockResolvedValue(ok({ data: existing }));
     mockRepository.update.mockResolvedValue(ok({ data: updated }));
 
-    const result = await updateGitRepository({
+    const result = await gitRepositoryService.update({
       ctx,
       id: TEST_ID,
       data: { name: "Updated", _version: 1 },
@@ -255,7 +250,7 @@ describe("updateGitRepository", () => {
   it("should return notFound err when git repository does not exist", async () => {
     mockRepository.findById.mockResolvedValue(ok({ data: null }));
 
-    const result = await updateGitRepository({
+    const result = await gitRepositoryService.update({
       ctx,
       id: TEST_ID,
       data: { name: "Updated", _version: 1 },
@@ -273,7 +268,7 @@ describe("updateGitRepository", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await updateGitRepository({
+    const result = await gitRepositoryService.update({
       ctx,
       id: TEST_ID,
       data: { name: "Updated", _version: 1 },
@@ -290,7 +285,7 @@ describe("deleteGitRepository", () => {
   it("should delete the git repository by id and tenant", async () => {
     mockRepository.deleteById.mockResolvedValue(ok());
 
-    const result = await deleteGitRepository({ ctx, id: TEST_ID });
+    const result = await gitRepositoryService.delete({ ctx, id: TEST_ID });
 
     expect(result.isOk()).toBe(true);
     expect(mockRepository.deleteById).toHaveBeenCalledWith({
@@ -304,7 +299,7 @@ describe("deleteGitRepository", () => {
       err(Err.code("unknown", { message: "Mongo database error" })),
     );
 
-    const result = await deleteGitRepository({ ctx, id: TEST_ID });
+    const result = await gitRepositoryService.delete({ ctx, id: TEST_ID });
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);

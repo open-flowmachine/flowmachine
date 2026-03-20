@@ -8,7 +8,11 @@ import type { Tenant } from "@/shared/model/model-tenant";
 
 const createAiAgent = async (input: {
   ctx: { tenant: Tenant };
-  payload: { name: string; model: AiAgent["model"]; projects: AiAgent["projects"] };
+  payload: {
+    name: string;
+    model: AiAgent["model"];
+    projects: AiAgent["projects"];
+  };
 }) => {
   const { ctx, payload } = input;
 
@@ -74,10 +78,12 @@ const deleteAiAgent = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
   return aiAgentRepository.deleteById({ ctx, id });
 };
 
-export {
-  createAiAgent,
-  getAiAgent,
-  listAiAgents,
-  updateAiAgent,
-  deleteAiAgent,
-};
+const makeAiAgentService = () => ({
+  create: createAiAgent,
+  get: getAiAgent,
+  list: listAiAgents,
+  update: updateAiAgent,
+  delete: deleteAiAgent,
+});
+
+export { makeAiAgentService };

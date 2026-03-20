@@ -18,11 +18,13 @@ const mockUpdateCredential = mock();
 const mockDeleteCredential = mock();
 
 mock.module("@/module/credential/credential-service", () => ({
-  createCredential: mockCreateCredential,
-  getCredential: mockGetCredential,
-  listCredentials: mockListCredentials,
-  updateCredential: mockUpdateCredential,
-  deleteCredential: mockDeleteCredential,
+  makeCredentialService: () => ({
+    create: mockCreateCredential,
+    get: mockGetCredential,
+    list: mockListCredentials,
+    update: mockUpdateCredential,
+    delete: mockDeleteCredential,
+  }),
 }));
 
 mock.module("@/router/router-auth-guard", () => ({

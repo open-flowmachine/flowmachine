@@ -1,12 +1,8 @@
 import Elysia from "elysia";
 import type { GitRepository } from "@/module/git-repository/git-repository-model";
-import {
-  createGitRepository,
-  deleteGitRepository,
-  getGitRepository,
-  listGitRepositories,
-  updateGitRepository,
-} from "@/module/git-repository/git-repository-service";
+import { makeGitRepositoryService } from "@/module/git-repository/git-repository-service";
+
+const gitRepositoryService = makeGitRepositoryService();
 import type { GitRepositoryResponseDto } from "@/router/git-repository/v1/router-git-repository-v1-dto";
 import {
   deleteGitRepositoryRequestParamsDtoSchema,
@@ -40,7 +36,7 @@ const gitRepositoryV1Router = new Elysia({
       .post(
         "",
         async ({ body, tenant }) => {
-          const result = await createGitRepository({
+          const result = await gitRepositoryService.create({
             ctx: { tenant },
             payload: body,
           });
@@ -56,7 +52,7 @@ const gitRepositoryV1Router = new Elysia({
       .get(
         "",
         async ({ tenant, query }) => {
-          const result = await listGitRepositories({
+          const result = await gitRepositoryService.list({
             ctx: { tenant },
             filter: query.projectId ? { projectId: query.projectId } : undefined,
           });
@@ -74,7 +70,7 @@ const gitRepositoryV1Router = new Elysia({
       .get(
         "/:id",
         async ({ tenant, params }) => {
-          const result = await getGitRepository({
+          const result = await gitRepositoryService.get({
             ctx: { tenant },
             id: params.id,
           });
@@ -90,7 +86,7 @@ const gitRepositoryV1Router = new Elysia({
       .patch(
         "/:id",
         async ({ body, tenant, params }) => {
-          const result = await updateGitRepository({
+          const result = await gitRepositoryService.update({
             ctx: { tenant },
             id: params.id,
             data: body,
@@ -108,7 +104,7 @@ const gitRepositoryV1Router = new Elysia({
       .delete(
         "/:id",
         async ({ tenant, params }) => {
-          const result = await deleteGitRepository({
+          const result = await gitRepositoryService.delete({
             ctx: { tenant },
             id: params.id,
           });

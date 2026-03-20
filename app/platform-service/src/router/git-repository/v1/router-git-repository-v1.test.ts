@@ -19,11 +19,13 @@ const mockUpdateGitRepository = mock();
 const mockDeleteGitRepository = mock();
 
 mock.module("@/module/git-repository/git-repository-service", () => ({
-  createGitRepository: mockCreateGitRepository,
-  getGitRepository: mockGetGitRepository,
-  listGitRepositories: mockListGitRepositories,
-  updateGitRepository: mockUpdateGitRepository,
-  deleteGitRepository: mockDeleteGitRepository,
+  makeGitRepositoryService: () => ({
+    create: mockCreateGitRepository,
+    get: mockGetGitRepository,
+    list: mockListGitRepositories,
+    update: mockUpdateGitRepository,
+    delete: mockDeleteGitRepository,
+  }),
 }));
 
 mock.module("@/router/router-auth-guard", () => ({
