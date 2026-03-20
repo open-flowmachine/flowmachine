@@ -305,12 +305,19 @@ describe("makeTenantAwareMongoRepository", () => {
     });
 
     it("should merge optional filter into tenant query", async () => {
+      const repoWithFilter = makeTenantAwareMongoRepository<
+        Model<TenantDoc>,
+        { "projects.id": string }
+      >({
+        collectionName: "tenant-collection",
+      });
+
       const mongoDocs = [makeMongoDoc()];
       mockCollection.find.mockReturnValue({
         toArray: mock(() => Promise.resolve(mongoDocs)),
       });
 
-      const result = await repo.findMany({
+      const result = await repoWithFilter.findMany({
         ctx,
         filter: { "projects.id": "some-project-id" },
       });

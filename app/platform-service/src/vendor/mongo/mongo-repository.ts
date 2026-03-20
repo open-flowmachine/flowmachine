@@ -117,7 +117,10 @@ const makeMongoRepository = <T extends Model<Document>>(input: {
   };
 };
 
-const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
+const makeTenantAwareMongoRepository = <
+  T extends Model<Document>,
+  F extends Document = Record<string, never>,
+>(input: {
   collectionName: string;
   collectionIndexes?: IndexDescription[];
 }) => {
@@ -131,7 +134,7 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
 
   const findMany = async (input: {
     ctx: { tenant: Tenant };
-    filter?: Document;
+    filter?: F;
   }) => {
     try {
       const { ctx, filter } = input;
