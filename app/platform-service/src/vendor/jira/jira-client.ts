@@ -2,129 +2,130 @@ import axios from "axios";
 import { err, ok } from "neverthrow";
 import { mapJiraError } from "@/vendor/jira/jira-err";
 
-type NewJiraClientInput = {
+type JiraClientConfig = {
   apiKey: string;
   domain: string;
 };
 
-class JiraClient {
-  #apiKey: string;
-  #domain: string;
+const makeHttpClient = (config: JiraClientConfig) =>
+  axios.create({
+    baseURL: `https://${config.domain}.atlassian.net/rest/api/3`,
+    headers: {
+      Authorization: `Basic ${config.apiKey}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
 
-  private constructor(domain: string, apiKey: string) {
-    this.#domain = domain;
-    this.#apiKey = apiKey;
-  }
-
-  static makeNew(input: NewJiraClientInput) {
-    const { domain, apiKey } = input;
-    return new JiraClient(domain, apiKey);
-  }
-
-  async createCustomField({
-    body,
-  }: {
+const createCustomField =
+  (config: JiraClientConfig) =>
+  async (input: {
     body: {
       name: string;
       type: string;
       searcherKey?: string;
       description?: string;
     };
-  }) {
+  }) => {
     try {
-      const { data } = await this.#httpClient().post<{
+      const { data } = await makeHttpClient(config).post<{
         id: string;
         key: string;
         name: string;
         custom: boolean;
         schema?: { type: string; custom?: string };
-      }>("/field", body);
+      }>("/field", input.body);
       return ok(data);
     } catch (error) {
       return err(mapJiraError(error));
     }
-  }
+  };
 
-  async createCustomFieldContextOptions({
-    params,
-    body,
-  }: {
+const createCustomFieldContextOptions =
+  (config: JiraClientConfig) =>
+  async (input: {
     params: { fieldId: string; contextId: string };
     body: { options: { value: string; disabled?: boolean }[] };
-  }) {
+  }) => {
     try {
-      const { data } = await this.#httpClient().post<{
+      const { data } = await makeHttpClient(config).post<{
         options: { id: string; value: string; disabled: boolean }[];
-      }>(`/field/${params.fieldId}/context/${params.contextId}/option`, body);
+      }>(
+        `/field/${input.params.fieldId}/context/${input.params.contextId}/option`,
+        input.body,
+      );
       return ok(data);
     } catch (error) {
       return err(mapJiraError(error));
     }
-  }
+  };
 
-  async createCustomFieldAssociations({
-    body,
-  }: {
+const createCustomFieldAssociations =
+  (config: JiraClientConfig) =>
+  async (input: {
     body: {
       associationContexts: { type: string; identifier: string }[];
       fields: { type: string; identifier: string }[];
     };
-  }) {
+  }) => {
     try {
-      await this.#httpClient().put("/field/association", body);
+      await makeHttpClient(config).put("/field/association", input.body);
       return ok(undefined);
     } catch (error) {
       return err(mapJiraError(error));
     }
-  }
+  };
 
-  async getCustomFieldContexts({
-    params,
-  }: {
-    params: { fieldId: string };
-  }) {
+const getCustomFieldContexts =
+  (config: JiraClientConfig) =>
+  async (input: { params: { fieldId: string } }) => {
     try {
-      const { data } = await this.#httpClient().get<{
+      const { data } = await makeHttpClient(config).get<{
         values: { id: string }[];
-      }>(`/field/${params.fieldId}/context`);
+      }>(`/field/${input.params.fieldId}/context`);
       return ok(data);
     } catch (error) {
       return err(mapJiraError(error));
     }
-  }
+  };
 
-  async getProject({ params }: { params: { projectId: string } }) {
+const getProject =
+  (config: JiraClientConfig) =>
+  async (input: { params: { projectId: string } }) => {
     try {
-      const { data } = await this.#httpClient().get<{
+      const { data } = await makeHttpClient(config).get<{
         id: string;
         key: string;
-      }>(`/project/${params.projectId}`);
+      }>(`/project/${input.params.projectId}`);
       return ok(data);
     } catch (error) {
       return err(mapJiraError(error));
     }
-  }
+  };
 
-  async deleteField({ params }: { params: { fieldId: string } }) {
+const deleteField =
+  (config: JiraClientConfig) =>
+  async (input: { params: { fieldId: string } }) => {
     try {
-      await this.#httpClient().delete(`/field/${params.fieldId}`);
+      await makeHttpClient(config).delete(
+        `/field/${input.params.fieldId}`,
+      );
       return ok(undefined);
     } catch (error) {
       return err(mapJiraError(error));
     }
-  }
+  };
 
-  #httpClient() {
-    return axios.create({
-      baseURL: `https://${this.#domain}.atlassian.net/rest/api/3`,
-      headers: {
-        Authorization: `Basic ${this.#apiKey}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-  }
-}
+const makeJiraClient = (config: JiraClientConfig) => ({
+  createCustomField: createCustomField(config),
+  createCustomFieldContextOptions: createCustomFieldContextOptions(config),
+  createCustomFieldAssociations: createCustomFieldAssociations(config),
+  getCustomFieldContexts: getCustomFieldContexts(config),
+  getProject: getProject(config),
+  deleteField: deleteField(config),
+});
 
-export { JiraClient };
-export type { NewJiraClientInput };
+type JiraClient = ReturnType<typeof makeJiraClient>;
+
+export { makeJiraClient };
+export type { JiraClient, JiraClientConfig };

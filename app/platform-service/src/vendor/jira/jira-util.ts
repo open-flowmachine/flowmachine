@@ -1,7 +1,7 @@
 import { isNil } from "es-toolkit";
 import { err, ok } from "neverthrow";
 import { Err } from "@/shared/err/err";
-import { JiraClient } from "@/vendor/jira/jira-client";
+import { makeJiraClient } from "@/vendor/jira/jira-client";
 
 type JiraCredential =
   | { type: "basic"; username: string; password: string }
@@ -32,7 +32,7 @@ const createCustomIssueField = async (input: {
     return err(Err.code("badRequest"));
   }
 
-  const jiraClient = JiraClient.makeNew({
+  const jiraClient = makeJiraClient({
     apiKey: btoa(`${credential.username}:${credential.password}`),
     domain: project.integration.domain,
   });
@@ -125,7 +125,7 @@ const deleteCustomIssueField = async (input: {
     return err(Err.code("badRequest"));
   }
 
-  const jiraClient = JiraClient.makeNew({
+  const jiraClient = makeJiraClient({
     apiKey: btoa(`${credential.username}:${credential.password}`),
     domain: project.integration.domain,
   });
