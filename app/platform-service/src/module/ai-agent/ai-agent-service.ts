@@ -47,10 +47,18 @@ const getAiAgent = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
   return ok({ data: result.value.data });
 };
 
-const listAiAgents = async (input: { ctx: { tenant: Tenant } }) => {
-  const { ctx } = input;
+const listAiAgents = async (input: {
+  ctx: { tenant: Tenant };
+  filter?: { projectId: Id };
+}) => {
+  const { ctx, filter } = input;
 
-  return aiAgentRepository.findMany({ ctx });
+  return aiAgentRepository.findMany({
+    ctx,
+    filter: filter?.projectId
+      ? { "projects.id": filter.projectId }
+      : undefined,
+  });
 };
 
 const updateAiAgent = async (input: {
