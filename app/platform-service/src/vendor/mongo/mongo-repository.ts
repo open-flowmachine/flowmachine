@@ -1,4 +1,4 @@
-import type { Document, IndexDescription, WithId } from "mongodb";
+import type { Document, Filter, IndexDescription, WithId } from "mongodb";
 import { err, ok } from "neverthrow";
 import { type Model } from "@/shared/model/model";
 import type { Id } from "@/shared/model/model-id";
@@ -129,11 +129,16 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
       ...(collectionIndexes ?? []),
     ]);
 
-  const findMany = async (input: { ctx: { tenant: Tenant } }) => {
+  const findMany = async (input: {
+    ctx: { tenant: Tenant };
+    filter?: Filter<T>;
+  }) => {
     try {
-      const { ctx } = input;
+      const { ctx, filter } = input;
       const col = await collection();
-      const docs = await col.find({ _tenant: ctx.tenant }).toArray();
+      const docs = await col
+        .find({ _tenant: ctx.tenant, ...filter } as Document)
+        .toArray();
       return ok({ data: docs.map((doc) => mapFromMongoDoc<T>(doc)) });
     } catch (error) {
       return err(mapMongoError(error));
