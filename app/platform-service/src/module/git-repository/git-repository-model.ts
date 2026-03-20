@@ -4,9 +4,6 @@ import type { Id } from "@/shared/model/model-id";
 const gitProviders = ["github", "gitlab"] as const;
 type GitProvider = (typeof gitProviders)[number];
 
-const gitRepositorySyncStatuses = ["idle", "pending", "success", "error"] as const;
-type GitRepositorySyncStatus = (typeof gitRepositorySyncStatuses)[number];
-
 type GitRepository = Model<{
   name: string;
   url: string;
@@ -21,10 +18,8 @@ type GitRepository = Model<{
   };
   projects: Array<{
     id: Id;
-    syncStatus: GitRepositorySyncStatus;
-    syncedAt: Date | null;
   }>;
 }>;
 
-export { gitProviders, gitRepositorySyncStatuses };
-export type { GitRepository, GitProvider, GitRepositorySyncStatus };
+export { gitProviders };
+export type { GitRepository, GitProvider };

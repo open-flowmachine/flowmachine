@@ -43,7 +43,7 @@ const makeAiAgent = (overrides?: Partial<AiAgent>): AiAgent => ({
   createdAt: now,
   updatedAt: now,
   name: "My Agent",
-  model: "anthropic/claude-sonnet-4.5",
+  model: "anthropic/claude-sonnet-4.6",
   projects: [],
   ...overrides,
 });
@@ -68,7 +68,7 @@ describe("createAiAgent", () => {
       ctx,
       payload: {
         name: "New Agent",
-        model: "anthropic/claude-sonnet-4.5",
+        model: "anthropic/claude-sonnet-4.6",
         projects: [],
       },
     });
@@ -81,7 +81,7 @@ describe("createAiAgent", () => {
         id: NEW_ID,
         _version: 1,
         name: "New Agent",
-        model: "anthropic/claude-sonnet-4.5",
+        model: "anthropic/claude-sonnet-4.6",
         projects: [],
       }),
     });
@@ -96,7 +96,7 @@ describe("createAiAgent", () => {
       ctx,
       payload: {
         name: "New Agent",
-        model: "anthropic/claude-sonnet-4.5",
+        model: "anthropic/claude-sonnet-4.6",
         projects: [],
       },
     });
