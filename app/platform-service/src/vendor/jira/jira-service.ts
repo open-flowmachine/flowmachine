@@ -3,9 +3,7 @@ import { err, ok } from "neverthrow";
 import { Err } from "@/shared/err/err";
 import { makeJiraClient } from "@/vendor/jira/jira-client";
 
-type JiraCredential =
-  | { type: "basic"; username: string; password: string }
-  | { type: "apiKey"; apiKey: string };
+type JiraCredential = { type: "basic"; username: string; password: string };
 
 type JiraProjectIntegration = {
   domain: string;
@@ -72,10 +70,9 @@ const createCustomIssueField = async (input: {
     return err(createCustomFieldAssociationsResult.error);
   }
 
-  const getCustomFieldContextsResult =
-    await jiraClient.getCustomFieldContexts({
-      params: { fieldId: customField.id },
-    });
+  const getCustomFieldContextsResult = await jiraClient.getCustomFieldContexts({
+    params: { fieldId: customField.id },
+  });
 
   if (getCustomFieldContextsResult.isErr()) {
     return err(getCustomFieldContextsResult.error);
@@ -147,5 +144,9 @@ const deleteCustomIssueField = async (input: {
   return ok();
 };
 
-export { createCustomIssueField, deleteCustomIssueField };
-export type { JiraCredential, JiraFieldDefinition, JiraProjectIntegration };
+const makeJiraService = () => ({
+  createCustomIssueField,
+  deleteCustomIssueField,
+});
+
+export { makeJiraService };

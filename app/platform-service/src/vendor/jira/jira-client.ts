@@ -107,9 +107,7 @@ const deleteField =
   (config: JiraClientConfig) =>
   async (input: { params: { fieldId: string } }) => {
     try {
-      await makeHttpClient(config).delete(
-        `/field/${input.params.fieldId}`,
-      );
+      await makeHttpClient(config).delete(`/field/${input.params.fieldId}`);
       return ok(undefined);
     } catch (error) {
       return err(mapJiraError(error));
