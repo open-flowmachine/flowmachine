@@ -22,11 +22,8 @@ const mockRepository = {
   deleteById: mock(),
 };
 
-const mockFindManyByFilter = mock();
-
 mock.module("@/module/git-repository/git-repository-repository", () => ({
   gitRepositoryRepository: mockRepository,
-  findManyByFilter: mockFindManyByFilter,
 }));
 
 mock.module("@/shared/model/model-id", () => ({
@@ -74,7 +71,6 @@ const resetMocks = () => {
   mockRepository.insert.mockClear();
   mockRepository.update.mockClear();
   mockRepository.deleteById.mockClear();
-  mockFindManyByFilter.mockClear();
 };
 
 // --- Tests ---
@@ -197,12 +193,15 @@ describe("listGitRepositories", () => {
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual({ data: repos } as never);
-    expect(mockRepository.findMany).toHaveBeenCalledWith({ ctx });
+    expect(mockRepository.findMany).toHaveBeenCalledWith({
+      ctx,
+      filter: undefined,
+    });
   });
 
-  it("should use findManyByFilter when projectId filter is provided", async () => {
+  it("should pass projectId filter as MongoDB query to findMany", async () => {
     const repos = [makeGitRepository()];
-    mockFindManyByFilter.mockResolvedValue(ok({ data: repos }));
+    mockRepository.findMany.mockResolvedValue(ok({ data: repos }));
 
     const result = await listGitRepositories({
       ctx,
@@ -211,11 +210,10 @@ describe("listGitRepositories", () => {
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual({ data: repos } as never);
-    expect(mockFindManyByFilter).toHaveBeenCalledWith({
+    expect(mockRepository.findMany).toHaveBeenCalledWith({
       ctx,
-      filter: { projectId: PROJECT_ID },
+      filter: { "projects.id": PROJECT_ID },
     });
-    expect(mockRepository.findMany).not.toHaveBeenCalled();
   });
 
   it("should return err when repository fails", async () => {

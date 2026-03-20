@@ -304,6 +304,24 @@ describe("makeTenantAwareMongoRepository", () => {
       expect(data[0]).not.toHaveProperty("_id");
     });
 
+    it("should merge optional filter into tenant query", async () => {
+      const mongoDocs = [makeMongoDoc()];
+      mockCollection.find.mockReturnValue({
+        toArray: mock(() => Promise.resolve(mongoDocs)),
+      });
+
+      const result = await repo.findMany({
+        ctx,
+        filter: { "projects.id": "some-project-id" },
+      });
+
+      expect(result.isOk()).toBe(true);
+      expect(mockCollection.find).toHaveBeenCalledWith({
+        _tenant: tenant,
+        "projects.id": "some-project-id",
+      });
+    });
+
     it("should create tenant index plus any custom indexes", async () => {
       await repo.findMany({ ctx });
 

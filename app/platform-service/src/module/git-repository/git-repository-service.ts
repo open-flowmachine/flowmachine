@@ -1,9 +1,6 @@
 import { err, ok } from "neverthrow";
 import type { GitRepository } from "@/module/git-repository/git-repository-model";
-import {
-  findManyByFilter,
-  gitRepositoryRepository,
-} from "@/module/git-repository/git-repository-repository";
+import { gitRepositoryRepository } from "@/module/git-repository/git-repository-repository";
 import { Err } from "@/shared/err/err";
 import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
 import type { Id } from "@/shared/model/model-id";
@@ -63,11 +60,12 @@ const listGitRepositories = async (input: {
 }) => {
   const { ctx, filter } = input;
 
-  if (filter?.projectId) {
-    return findManyByFilter({ ctx, filter });
-  }
-
-  return gitRepositoryRepository.findMany({ ctx });
+  return gitRepositoryRepository.findMany({
+    ctx,
+    filter: filter?.projectId
+      ? { "projects.id": filter.projectId }
+      : undefined,
+  });
 };
 
 const updateGitRepository = async (input: {

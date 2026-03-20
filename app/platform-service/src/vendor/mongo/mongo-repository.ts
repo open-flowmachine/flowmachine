@@ -129,11 +129,16 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
       ...(collectionIndexes ?? []),
     ]);
 
-  const findMany = async (input: { ctx: { tenant: Tenant } }) => {
+  const findMany = async (input: {
+    ctx: { tenant: Tenant };
+    filter?: Document;
+  }) => {
     try {
-      const { ctx } = input;
+      const { ctx, filter } = input;
       const col = await collection();
-      const docs = await col.find({ _tenant: ctx.tenant }).toArray();
+      const docs = await col
+        .find({ _tenant: ctx.tenant, ...filter })
+        .toArray();
       return ok({ data: docs.map((doc) => mapFromMongoDoc<T>(doc)) });
     } catch (error) {
       return err(mapMongoError(error));
