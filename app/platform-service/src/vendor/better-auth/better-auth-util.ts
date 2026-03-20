@@ -1,5 +1,5 @@
 import { type EmailOTPOptions } from "better-auth/plugins";
-import { makeResendService } from "@/vendor/resend/resend-util";
+import { makeResendService } from "@/vendor/resend/resend-service";
 
 const resendService = makeResendService();
 

@@ -14,7 +14,7 @@ mock.module("@/vendor/resend/resend-client", () => ({
 }));
 
 // Import after mocking
-const { makeResendService: makeResendService } = await import("./resend-util");
+const { makeResendService } = await import("./resend-service");
 const resendService = makeResendService();
 
 // --- Helpers ---
