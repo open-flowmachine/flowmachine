@@ -1,4 +1,4 @@
-import type { Document, IndexDescription, WithId } from "mongodb";
+import type { Document, Filter, IndexDescription, WithId } from "mongodb";
 import { err, ok } from "neverthrow";
 import { type Model } from "@/shared/model/model";
 import type { Id } from "@/shared/model/model-id";
@@ -117,10 +117,7 @@ const makeMongoRepository = <T extends Model<Document>>(input: {
   };
 };
 
-const makeTenantAwareMongoRepository = <
-  T extends Model<Document>,
-  F extends Document = Record<string, never>,
->(input: {
+const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
   collectionName: string;
   collectionIndexes?: IndexDescription[];
 }) => {
@@ -134,13 +131,13 @@ const makeTenantAwareMongoRepository = <
 
   const findMany = async (input: {
     ctx: { tenant: Tenant };
-    filter?: F;
+    filter?: Filter<T>;
   }) => {
     try {
       const { ctx, filter } = input;
       const col = await collection();
       const docs = await col
-        .find({ _tenant: ctx.tenant, ...filter })
+        .find({ _tenant: ctx.tenant, ...filter } as Document)
         .toArray();
       return ok({ data: docs.map((doc) => mapFromMongoDoc<T>(doc)) });
     } catch (error) {
