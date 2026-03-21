@@ -1,8 +1,5 @@
 import z from "zod";
-import {
-  gitProviders,
-  gitRepositorySyncStatuses,
-} from "@/module/git-repository/git-repository-model";
+import { gitProviders } from "@/module/git-repository/git-repository-model";
 import { idSchema } from "@/shared/model/model-id";
 
 const configSchema = z.object({
@@ -18,8 +15,6 @@ const integrationSchema = z.object({
 
 const projectSchema = z.object({
   id: idSchema,
-  syncStatus: z.enum(gitRepositorySyncStatuses),
-  syncedAt: z.date().nullable(),
 });
 
 const gitRepositoryResponseDtoSchema = z.object({

@@ -1,11 +1,9 @@
 import z from "zod";
-import { aiModels, syncStatuses } from "@/module/ai-agent/ai-agent-model";
+import { aiModels } from "@/module/ai-agent/ai-agent-model";
 import { idSchema } from "@/shared/model/model-id";
 
 const aiAgentProjectSchema = z.object({
   id: idSchema,
-  syncStatus: z.enum(syncStatuses),
-  syncedAt: z.date().nullable(),
 });
 
 const aiAgentResponseDtoSchema = z.object({

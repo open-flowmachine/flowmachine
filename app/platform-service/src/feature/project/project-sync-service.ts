@@ -1,7 +1,6 @@
 import { isNil } from "es-toolkit";
 import { err, ok } from "neverthrow";
 import type { Result } from "neverthrow";
-
 import type { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
 import type { Credential } from "@/module/credential/credential-model";
 import type { makeCredentialService } from "@/module/credential/credential-service";
@@ -117,22 +116,24 @@ const createAndSyncNewField = async (
     };
     credential: Credential;
   },
-  deps: Pick<Deps, "projectIssueFieldDefinitionService" | "externalProjectService">,
+  deps: Pick<
+    Deps,
+    "projectIssueFieldDefinitionService" | "externalProjectService"
+  >,
 ): Promise<Result<void, Err>> => {
   const { ctx, fieldName, fieldType, options, projectId, project, credential } =
     input;
 
-  const createResult =
-    await deps.projectIssueFieldDefinitionService.create({
-      ctx,
-      payload: {
-        type: fieldType,
-        name: fieldName,
-        options,
-        integration: null,
-        project: { id: projectId },
-      },
-    });
+  const createResult = await deps.projectIssueFieldDefinitionService.create({
+    ctx,
+    payload: {
+      type: fieldType,
+      name: fieldName,
+      options,
+      integration: null,
+      project: { id: projectId },
+    },
+  });
 
   if (createResult.isErr()) {
     return err(createResult.error);
@@ -160,18 +161,17 @@ const createAndSyncNewField = async (
   }
   const { externalId, externalKey } = externalResult.value;
 
-  const updateResult =
-    await deps.projectIssueFieldDefinitionService.update({
-      ctx,
-      id: createdDefinition.id,
-      data: {
-        integration: {
-          externalId,
-          externalKey,
-          provider: project.integration.provider,
-        },
+  const updateResult = await deps.projectIssueFieldDefinitionService.update({
+    ctx,
+    id: createdDefinition.id,
+    data: {
+      integration: {
+        externalId,
+        externalKey,
+        provider: project.integration.provider,
       },
-    });
+    },
+  });
 
   if (updateResult.isErr()) {
     return err(updateResult.error);
@@ -189,27 +189,30 @@ const updateAndSyncExistingField = async (
     };
     credential: Credential;
   },
-  deps: Pick<Deps, "projectIssueFieldDefinitionService" | "externalProjectService">,
+  deps: Pick<
+    Deps,
+    "projectIssueFieldDefinitionService" | "externalProjectService"
+  >,
 ): Promise<Result<void, Err>> => {
   const { ctx, issueFieldDefinition, options, project, credential } = input;
 
-  const deleteResult =
-    await deps.externalProjectService.deleteCustomIssueField({
+  const deleteResult = await deps.externalProjectService.deleteCustomIssueField(
+    {
       credential,
       project,
       projectIssueFieldDefinition: issueFieldDefinition,
-    });
+    },
+  );
 
   if (deleteResult.isErr()) {
     return err(deleteResult.error);
   }
 
-  const updateResult =
-    await deps.projectIssueFieldDefinitionService.update({
-      ctx,
-      id: issueFieldDefinition.id,
-      data: { options },
-    });
+  const updateResult = await deps.projectIssueFieldDefinitionService.update({
+    ctx,
+    id: issueFieldDefinition.id,
+    data: { options },
+  });
 
   if (updateResult.isErr()) {
     return err(updateResult.error);
@@ -278,11 +281,12 @@ const makeProjectSyncService = (deps: Deps) => {
     }
     const aiAgents = listResult.value.data;
 
-    const listFieldsResult =
-      await deps.projectIssueFieldDefinitionService.list({
+    const listFieldsResult = await deps.projectIssueFieldDefinitionService.list(
+      {
         ctx,
         filter: { projectId, name: entityTypeToFieldName.aiAgent },
-      });
+      },
+    );
 
     if (listFieldsResult.isErr()) {
       return err(listFieldsResult.error);
@@ -342,11 +346,12 @@ const makeProjectSyncService = (deps: Deps) => {
     }
     const gitRepositories = listResult.value.data;
 
-    const listFieldsResult =
-      await deps.projectIssueFieldDefinitionService.list({
+    const listFieldsResult = await deps.projectIssueFieldDefinitionService.list(
+      {
         ctx,
         filter: { projectId, name: entityTypeToFieldName.gitRepository },
-      });
+      },
+    );
 
     if (listFieldsResult.isErr()) {
       return err(listFieldsResult.error);
@@ -406,14 +411,15 @@ const makeProjectSyncService = (deps: Deps) => {
     }
     const workflowDefinitions = listResult.value.data;
 
-    const listFieldsResult =
-      await deps.projectIssueFieldDefinitionService.list({
+    const listFieldsResult = await deps.projectIssueFieldDefinitionService.list(
+      {
         ctx,
         filter: {
           projectId,
           name: entityTypeToFieldName.workflowDefinition,
         },
-      });
+      },
+    );
 
     if (listFieldsResult.isErr()) {
       return err(listFieldsResult.error);

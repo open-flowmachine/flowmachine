@@ -240,7 +240,16 @@ describe("syncAiAgentToExternal", () => {
         ok({ externalId: "ext-f-1", externalKey: "cf_10001" }),
       );
       mockFieldDefService.update.mockResolvedValue(
-        ok({ data: { ...createdDef, integration: { externalId: "ext-f-1", externalKey: "cf_10001", provider: "jira" } } }),
+        ok({
+          data: {
+            ...createdDef,
+            integration: {
+              externalId: "ext-f-1",
+              externalKey: "cf_10001",
+              provider: "jira",
+            },
+          },
+        }),
       );
 
       const syncService = makeProjectSyncService(makeDeps());
@@ -307,9 +316,7 @@ describe("syncAiAgentToExternal", () => {
       });
 
       mockAiAgentService.list.mockResolvedValue(ok({ data: agents }));
-      mockFieldDefService.list.mockResolvedValue(
-        ok({ data: [existingDef] }),
-      );
+      mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
       mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
         ok(undefined),
       );
@@ -403,12 +410,8 @@ describe("syncAiAgentToExternal", () => {
     });
 
     it("should return error when credential not found", async () => {
-      mockProjectService.get.mockResolvedValue(
-        ok({ data: makeProject() }),
-      );
-      mockCredentialService.get.mockResolvedValue(
-        err(Err.code("notFound")),
-      );
+      mockProjectService.get.mockResolvedValue(ok({ data: makeProject() }));
+      mockCredentialService.get.mockResolvedValue(err(Err.code("notFound")));
 
       const syncService = makeProjectSyncService(makeDeps());
       const result = await syncService.syncAiAgentToExternal({
@@ -422,9 +425,7 @@ describe("syncAiAgentToExternal", () => {
 
     it("should return error when listing ai agents fails", async () => {
       setupResolveSuccess();
-      mockAiAgentService.list.mockResolvedValue(
-        err(Err.code("unknown")),
-      );
+      mockAiAgentService.list.mockResolvedValue(err(Err.code("unknown")));
 
       const syncService = makeProjectSyncService(makeDeps());
       const result = await syncService.syncAiAgentToExternal({
@@ -463,9 +464,7 @@ describe("syncAiAgentToExternal", () => {
       const existingDef = makeFieldDefinitionFixture();
 
       mockAiAgentService.list.mockResolvedValue(ok({ data: agents }));
-      mockFieldDefService.list.mockResolvedValue(
-        ok({ data: [existingDef] }),
-      );
+      mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
       mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
         err(Err.code("unknown", { message: "External API error" })),
       );
@@ -485,9 +484,7 @@ describe("syncAiAgentToExternal", () => {
       const existingDef = makeFieldDefinitionFixture();
 
       mockAiAgentService.list.mockResolvedValue(ok({ data: agents }));
-      mockFieldDefService.list.mockResolvedValue(
-        ok({ data: [existingDef] }),
-      );
+      mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
       mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
         ok(undefined),
       );
