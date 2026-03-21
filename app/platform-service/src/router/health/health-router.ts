@@ -1,9 +1,10 @@
 import Elysia from "elysia";
+import { getEnv } from "@/vendor/env/env";
 
 const healthRouter = new Elysia().get("/health", () => ({
   status: "ok",
-  version: process.env.APP_VERSION,
-  environment: process.env.APP_ENV,
+  version: getEnv().APP_VERSION,
+  environment: getEnv().APP_ENV,
 }));
 
 export { healthRouter };

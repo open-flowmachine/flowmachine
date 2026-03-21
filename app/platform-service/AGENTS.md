@@ -22,12 +22,13 @@ bun run lint             # Run ESLint
 
 ### Dependency Rule
 
-`index → router → module → vendor / shared`
+`index → router → feature → module → vendor / shared`
 
-- `shared` and `vendor` are leaf layers — they do not import from `module` or `router`
+- `shared` and `vendor` are leaf layers — they do not import from `module`, `feature`, or `router`
 - `shared` does not import from `vendor` (and vice versa)
 - `module` may import from `module`, `shared`, and `vendor`
-- `router` may import from `module`, `shared`, and `vendor`
+- `feature` may import from `feature`, `module`, `shared`, and `vendor`
+- `router` may import from `feature`, `module`, `shared`, and `vendor`
 
 ### Layer Responsibilities
 
@@ -53,6 +54,15 @@ bun run lint             # Run ESLint
 - Services use `neverthrow` Result types and receive `{ ctx, payload/id }` inputs
 - No HTTP handling, no DTOs, no route definitions
 - May import from `module`, `shared`, and `vendor`
+
+**Feature Layer** (`feature/`)
+
+- Cross-module orchestration, background job definitions, and workflow engines
+- Each subfolder groups related orchestration logic by domain (e.g. workflow engine, Inngest functions, sync services)
+- Composes multiple module services to implement higher-level use cases
+- Contains: Inngest function definitions, workflow engine/action definitions, cross-module sync services
+- No HTTP handling, no route definitions
+- May import from `feature`, `module`, `shared`, and `vendor`
 
 **Router Layer** (`router/`)
 

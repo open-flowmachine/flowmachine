@@ -10,12 +10,11 @@ import { healthRouter } from "@/router/health/health-router";
 import { inngestRouter } from "@/router/inngest/router-inngest";
 import { projectSyncV1Router } from "@/router/project/v1/router-project-sync-v1";
 import { projectV1Router } from "@/router/project/v1/router-project-v1";
+import { routerErrorHandler } from "@/router/router-error-handler";
 import { workflowDefinitionV1Router } from "@/router/workflow/v1/router-workflow-definition-v1";
-import { initEnv } from "@/vendor/env/env-initializer";
-
-initEnv();
 
 const app = new Elysia()
+  .use(routerErrorHandler)
   .use(cors())
   .use(
     openapi({
