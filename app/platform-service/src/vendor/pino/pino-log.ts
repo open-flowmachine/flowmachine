@@ -1,5 +1,5 @@
 import pino from "pino";
 
-const log = pino();
+const baseLog = pino();
 
-export { log };
+export { baseLog };
