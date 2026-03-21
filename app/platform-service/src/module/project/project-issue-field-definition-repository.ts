@@ -3,7 +3,7 @@ import { makeTenantAwareMongoRepository } from "@/vendor/mongo/mongo-repository"
 
 const projectIssueFieldDefinitionRepository =
   makeTenantAwareMongoRepository<ProjectIssueFieldDefinition>({
-    collectionName: "projectIssueFieldDefinition",
+    collectionName: "project-issue-field-definition",
   });
 
 export { projectIssueFieldDefinitionRepository };
