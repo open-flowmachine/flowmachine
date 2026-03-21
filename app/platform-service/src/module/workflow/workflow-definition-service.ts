@@ -58,10 +58,16 @@ const getWorkflowDefinition = async (input: {
 
 const listWorkflowDefinitions = async (input: {
   ctx: { tenant: Tenant };
+  filter?: { projectId: Id };
 }) => {
-  const { ctx } = input;
+  const { ctx, filter } = input;
 
-  return workflowDefinitionRepository.findMany({ ctx });
+  return workflowDefinitionRepository.findMany({
+    ctx,
+    filter: filter?.projectId
+      ? { "projects.id": filter.projectId }
+      : undefined,
+  });
 };
 
 const updateWorkflowDefinition = async (input: {

@@ -43,7 +43,7 @@ const makeAiAgent = (overrides?: Partial<AiAgent>): AiAgent => ({
   createdAt: now,
   updatedAt: now,
   name: "My Agent",
-  model: "anthropic/claude-sonnet-4.5",
+  model: "anthropic/claude-sonnet-4.6",
   projects: [],
   ...overrides,
 });
@@ -68,7 +68,7 @@ describe("createAiAgent", () => {
       ctx,
       payload: {
         name: "New Agent",
-        model: "anthropic/claude-sonnet-4.5",
+        model: "anthropic/claude-sonnet-4.6",
         projects: [],
       },
     });
@@ -81,7 +81,7 @@ describe("createAiAgent", () => {
         id: NEW_ID,
         _version: 1,
         name: "New Agent",
-        model: "anthropic/claude-sonnet-4.5",
+        model: "anthropic/claude-sonnet-4.6",
         projects: [],
       }),
     });
@@ -96,7 +96,7 @@ describe("createAiAgent", () => {
       ctx,
       payload: {
         name: "New Agent",
-        model: "anthropic/claude-sonnet-4.5",
+        model: "anthropic/claude-sonnet-4.6",
         projects: [],
       },
     });
@@ -165,6 +165,35 @@ describe("listAiAgents", () => {
 
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  });
+
+  it("should pass projectId filter to repository as projects.id", async () => {
+    const PROJECT_ID = "019606a0-0000-7000-8000-000000000099" as Id;
+    const aiAgents = [makeAiAgent()];
+    mockRepository.findMany.mockResolvedValue(ok({ data: aiAgents }));
+
+    const result = await aiAgentService.list({
+      ctx,
+      filter: { projectId: PROJECT_ID },
+    });
+
+    expect(result.isOk()).toBe(true);
+    expect(mockRepository.findMany).toHaveBeenCalledWith({
+      ctx,
+      filter: { "projects.id": PROJECT_ID },
+    });
+  });
+
+  it("should pass no filter when filter is omitted", async () => {
+    mockRepository.findMany.mockResolvedValue(ok({ data: [] }));
+
+    const result = await aiAgentService.list({ ctx });
+
+    expect(result.isOk()).toBe(true);
+    expect(mockRepository.findMany).toHaveBeenCalledWith({
+      ctx,
+      filter: undefined,
+    });
   });
 });
 

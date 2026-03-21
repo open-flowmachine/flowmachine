@@ -1,11 +1,8 @@
 import z from "zod";
-import { workflowDefinitionProjectSyncStatuses } from "@/module/workflow/workflow-definition-model";
 import { idSchema } from "@/shared/model/model-id";
 
 const workflowDefinitionProjectSchema = z.object({
   id: idSchema,
-  syncStatus: z.enum(workflowDefinitionProjectSyncStatuses),
-  syncedAt: z.date().nullable(),
 });
 
 const workflowActionSchema = z.object({

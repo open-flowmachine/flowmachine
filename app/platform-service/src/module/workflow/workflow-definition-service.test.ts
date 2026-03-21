@@ -185,6 +185,34 @@ describe("listWorkflowDefinitions", () => {
     expect(result.isErr()).toBe(true);
     expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
   });
+
+  it("should pass projectId filter to repository as projects.id", async () => {
+    const PROJECT_ID = "019606a0-0000-7000-8000-000000000099" as Id;
+    mockRepository.findMany.mockResolvedValue(ok({ data: [] }));
+
+    const result = await workflowDefinitionService.list({
+      ctx,
+      filter: { projectId: PROJECT_ID },
+    });
+
+    expect(result.isOk()).toBe(true);
+    expect(mockRepository.findMany).toHaveBeenCalledWith({
+      ctx,
+      filter: { "projects.id": PROJECT_ID },
+    });
+  });
+
+  it("should pass no filter when filter is omitted", async () => {
+    mockRepository.findMany.mockResolvedValue(ok({ data: [] }));
+
+    const result = await workflowDefinitionService.list({ ctx });
+
+    expect(result.isOk()).toBe(true);
+    expect(mockRepository.findMany).toHaveBeenCalledWith({
+      ctx,
+      filter: undefined,
+    });
+  });
 });
 
 describe("updateWorkflowDefinition", () => {

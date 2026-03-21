@@ -36,9 +36,8 @@ mock.module("@/router/router-auth-guard", () => ({
   ),
 }));
 
-const { aiAgentV1Router } = await import(
-  "@/router/ai-agent/v1/router-ai-agent-v1"
-);
+const { aiAgentV1Router } =
+  await import("@/router/ai-agent/v1/router-ai-agent-v1");
 
 // --- Helpers ---
 
@@ -50,7 +49,7 @@ const makeAiAgent = (overrides?: Partial<AiAgent>): AiAgent => ({
   createdAt: now,
   updatedAt: now,
   name: "My Agent",
-  model: "anthropic/claude-sonnet-4.5",
+  model: "anthropic/claude-sonnet-4.6",
   projects: [],
   ...overrides,
 });
@@ -87,7 +86,7 @@ describe("POST /api/v1/ai-agent", () => {
 
     const response = await request("POST", "/api/v1/ai-agent", {
       name: "New Agent",
-      model: "anthropic/claude-sonnet-4.5",
+      model: "anthropic/claude-sonnet-4.6",
       projects: [],
     });
     const json = await response.json();
@@ -99,7 +98,7 @@ describe("POST /api/v1/ai-agent", () => {
       ctx: { tenant: TENANT },
       payload: {
         name: "New Agent",
-        model: "anthropic/claude-sonnet-4.5",
+        model: "anthropic/claude-sonnet-4.6",
         projects: [],
       },
     });
@@ -110,7 +109,7 @@ describe("POST /api/v1/ai-agent", () => {
 
     const response = await request("POST", "/api/v1/ai-agent", {
       name: "New Agent",
-      model: "anthropic/claude-sonnet-4.5",
+      model: "anthropic/claude-sonnet-4.6",
       projects: [],
     });
     const json = await response.json();
