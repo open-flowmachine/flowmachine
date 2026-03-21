@@ -60,6 +60,7 @@
     "@flow-machine/typescript-config": "workspace:*",
     "eslint": "catalog:",
     "eslint-config-next": "catalog:",
+    "msw": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   },
