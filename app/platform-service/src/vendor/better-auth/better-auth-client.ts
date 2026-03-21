@@ -3,16 +3,17 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { emailOTP, organization } from "better-auth/plugins";
 import { newId } from "@/shared/model/model-id";
 import { makeBetterAuthUtil } from "@/vendor/better-auth/better-auth-util";
+import { getEnv } from "@/vendor/env/env";
 import { mongoClient } from "@/vendor/mongo/mongo-client";
 
 const betterAuthUtil = makeBetterAuthUtil();
 
 const betterAuthClient = betterAuth({
-  secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL,
-  trustedOrigins: process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",") ?? [],
+  secret: getEnv().BETTER_AUTH_SECRET,
+  baseURL: getEnv().BETTER_AUTH_URL,
+  trustedOrigins: getEnv().BETTER_AUTH_TRUSTED_ORIGINS?.split(",") ?? [],
 
-  database: mongodbAdapter(mongoClient.db(process.env.DATABASE_NAME), {
+  database: mongodbAdapter(mongoClient.db(getEnv().MONGO_DB_NAME), {
     client: mongoClient,
   }),
 

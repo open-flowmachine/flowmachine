@@ -1,4 +1,5 @@
 import { type EmailOTPOptions } from "better-auth/plugins";
+import { getEnv } from "@/vendor/env/env";
 import { makeResendService } from "@/vendor/resend/resend-service";
 
 const resendService = makeResendService();
@@ -14,7 +15,7 @@ const sendOtpEmail = async (
 ) => {
   return await resendService.sendEmail({
     payload: {
-      from: process.env.RESEND_FROM_ADDRESS,
+      from: getEnv().RESEND_FROM_ADDRESS,
       to: body.email,
       subject: otpTypeToEmailSubject[body.type],
       bodyHtml: `
@@ -37,14 +38,14 @@ const sendInvitationEmail = (data: {
 }) => {
   return resendService.sendEmail({
     payload: {
-      from: process.env.RESEND_FROM_ADDRESS,
+      from: getEnv().RESEND_FROM_ADDRESS,
       to: data.email,
       subject: `You've been invited to ${data.organizationName}`,
       bodyHtml: `
           <div>
             <h1>You've been invited!</h1>
             <p>${data.inviterName} invited you to join <strong>${data.organizationName}</strong>.</p>
-            <a href="${process.env.BETTER_AUTH_URL}/accept-invitation/${data.id}"
+            <a href="${getEnv().BETTER_AUTH_URL}/accept-invitation/${data.id}"
                style="display: inline-block; padding: 12px 24px;
                       background: #000; color: #fff; text-decoration: none;
                       border-radius: 6px; margin-top: 16px;">

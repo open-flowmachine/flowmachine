@@ -3,6 +3,7 @@ import { err, ok } from "neverthrow";
 import { type Model } from "@/shared/model/model";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
+import { getEnv } from "@/vendor/env/env";
 import { mongoClient } from "@/vendor/mongo/mongo-client";
 import { mapMongoError } from "@/vendor/mongo/mongo-err";
 
@@ -25,7 +26,7 @@ const getCollection = async (
   collectionIndexes?: IndexDescription[],
 ) => {
   const collection = mongoClient
-    .db(process.env.MONGO_DB_NAME)
+    .db(getEnv().MONGO_DB_NAME)
     .collection<MongoDoc>(collectionName);
   if (collectionIndexes?.length) {
     await collection.createIndexes(collectionIndexes);

@@ -1,0 +1,16 @@
+import { z } from "zod/v4";
+import { idSchema } from "@/lib/schema";
+import { projectProviders } from "@/module/project/project-type";
+
+export const newProjectFormValuesSchema = z.object({
+  name: z.string(),
+
+  integrationCredentialId: idSchema,
+  integrationDomain: z.string(),
+  integrationExternalId: z.string(),
+  integrationExternalKey: z.string(),
+  integrationProvider: z.enum(projectProviders),
+  integrationWebhookSecret: z.string(),
+});
+
+export type NewProjectFormValues = z.infer<typeof newProjectFormValuesSchema>;

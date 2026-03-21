@@ -1,5 +1,6 @@
 import { Resend } from "resend";
+import { getEnv } from "@/vendor/env/env";
 
-const resendClient = new Resend(process.env.RESEND_API_KEY);
+const resendClient = new Resend(getEnv().RESEND_API_KEY);
 
 export { resendClient };

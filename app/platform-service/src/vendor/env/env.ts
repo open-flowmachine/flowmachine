@@ -22,16 +22,8 @@ const envSchema = z.object({
     .default("Flow Machine <root@email.flowmachine.io>"),
 });
 
-const initEnv = () => {
-  envSchema.parse(process.env);
+const getEnv = () => {
+  return envSchema.parse(process.env);
 };
 
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace NodeJS {
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-    interface ProcessEnv extends z.infer<typeof envSchema> {}
-  }
-}
-
-export { initEnv };
+export { getEnv };
