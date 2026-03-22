@@ -30,6 +30,14 @@ const makeProjectMswHandler = () => ({
       HttpResponse.json(makeOkEnvelope(project)),
     ),
 
+  getByIdError: (status = 500) =>
+    http.get(`${BASE_URL}/:id`, () =>
+      HttpResponse.json(
+        { status, code: "error", message: "Not found", data: null },
+        { status },
+      ),
+    ),
+
   deleteById: () =>
     http.delete(`${BASE_URL}/:id`, () =>
       HttpResponse.json(makeOkEnvelope(undefined)),
