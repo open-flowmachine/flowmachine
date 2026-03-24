@@ -27,8 +27,8 @@ import {
   DropdownMenuTrigger,
 } from "@/component/ui/dropdown-menu";
 import { Spinner } from "@/component/ui/spinner";
-import type { Project } from "@/module/project/project-type";
 import { makeProjectService } from "@/module/project/project-service";
+import type { Project } from "@/module/project/project-type";
 
 type MakeProjectsTableColumnDefInput = {
   isDeleteConfirmationAlertOpen: boolean;

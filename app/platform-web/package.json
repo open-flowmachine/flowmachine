@@ -9,8 +9,8 @@
     "lint": "eslint",
     "shadcn:add": "bunx --bun shadcn@latest add",
     "start": "next start",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "DEBUG_PRINT_LIMIT=50000 vitest run",
+    "test:watch": "DEBUG_PRINT_LIMIT=50000 vitest"
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
@@ -49,6 +49,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@flow-machine/eslint-config": "workspace:*",
+    "@flow-machine/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "catalog:",
     "@tanstack/react-query-devtools": "catalog:",
     "@testing-library/dom": "catalog:",
@@ -58,14 +60,12 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@flow-machine/eslint-config": "workspace:*",
-    "@flow-machine/typescript-config": "workspace:*",
+    "@vitejs/plugin-react": "catalog:",
     "eslint": "catalog:",
     "eslint-config-next": "catalog:",
     "msw": "catalog:",
     "vitest": "catalog:",
     "jsdom": "catalog:",
-    "@vitejs/plugin-react": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   },
