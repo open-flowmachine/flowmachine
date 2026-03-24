@@ -14,7 +14,6 @@ type ProjectIntegration = {
 type Project = Model<{
   name: string;
   integration?: ProjectIntegration;
-  tenant: { id: Id; type: "organization" | "user" };
 }>;
 
 type HttpClientCreateProjectInput = {
