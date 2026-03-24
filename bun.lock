@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@flow-machine/root",
+      "name": "@flowmachine/root",
       "devDependencies": {
         "@trivago/prettier-plugin-sort-imports": "catalog:",
         "prettier": "catalog:",
@@ -13,7 +13,7 @@
       },
     },
     "app/platform-service": {
-      "name": "@flow-machine/platform-service",
+      "name": "@flowmachine/platform-service",
       "dependencies": {
         "@date-fns/utc": "catalog:",
         "@daytonaio/sdk": "catalog:",
@@ -36,8 +36,8 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@flow-machine/eslint-config": "workspace:*",
-        "@flow-machine/typescript-config": "workspace:*",
+        "@flowmachine/eslint-config": "workspace:*",
+        "@flowmachine/typescript-config": "workspace:*",
         "@total-typescript/ts-reset": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
@@ -46,7 +46,7 @@
       },
     },
     "app/platform-web": {
-      "name": "@flow-machine/platform-web",
+      "name": "@flowmachine/platform-web",
       "version": "0.1.0",
       "dependencies": {
         "@base-ui/react": "catalog:",
@@ -85,8 +85,8 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@flow-machine/eslint-config": "workspace:*",
-        "@flow-machine/typescript-config": "workspace:*",
+        "@flowmachine/eslint-config": "workspace:*",
+        "@flowmachine/typescript-config": "workspace:*",
         "@tailwindcss/postcss": "catalog:",
         "@tanstack/react-query-devtools": "catalog:",
         "@testing-library/dom": "catalog:",
@@ -107,7 +107,7 @@
       },
     },
     "app/service": {
-      "name": "@flow-machine/service",
+      "name": "@flowmachine/service",
       "dependencies": {
         "@date-fns/utc": "catalog:",
         "@daytonaio/sdk": "catalog:",
@@ -130,8 +130,8 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@flow-machine/eslint-config": "workspace:*",
-        "@flow-machine/typescript-config": "workspace:*",
+        "@flowmachine/eslint-config": "workspace:*",
+        "@flowmachine/typescript-config": "workspace:*",
         "@total-typescript/ts-reset": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
@@ -140,7 +140,7 @@
       },
     },
     "app/web": {
-      "name": "@flow-machine/web",
+      "name": "@flowmachine/web",
       "version": "0.1.0",
       "dependencies": {
         "@base-ui/react": "catalog:",
@@ -179,8 +179,8 @@
         "zod": "catalog:",
       },
       "devDependencies": {
-        "@flow-machine/eslint-config": "workspace:*",
-        "@flow-machine/typescript-config": "workspace:*",
+        "@flowmachine/eslint-config": "workspace:*",
+        "@flowmachine/typescript-config": "workspace:*",
         "@tailwindcss/postcss": "catalog:",
         "@tanstack/react-query-devtools": "catalog:",
         "@total-typescript/ts-reset": "catalog:",
@@ -194,7 +194,7 @@
       },
     },
     "package/eslint-config": {
-      "name": "@flow-machine/eslint-config",
+      "name": "@flowmachine/eslint-config",
       "version": "0.0.0",
       "devDependencies": {
         "@eslint/js": "catalog:",
@@ -211,7 +211,7 @@
       },
     },
     "package/typescript-config": {
-      "name": "@flow-machine/typescript-config",
+      "name": "@flowmachine/typescript-config",
       "version": "0.0.0",
     },
   },
@@ -602,17 +602,17 @@
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.11", "", {}, "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="],
 
-    "@flow-machine/eslint-config": ["@flow-machine/eslint-config@workspace:package/eslint-config"],
+    "@flowmachine/eslint-config": ["@flowmachine/eslint-config@workspace:package/eslint-config"],
 
-    "@flow-machine/platform-service": ["@flow-machine/platform-service@workspace:app/platform-service"],
+    "@flowmachine/platform-service": ["@flowmachine/platform-service@workspace:app/platform-service"],
 
-    "@flow-machine/platform-web": ["@flow-machine/platform-web@workspace:app/platform-web"],
+    "@flowmachine/platform-web": ["@flowmachine/platform-web@workspace:app/platform-web"],
 
-    "@flow-machine/service": ["@flow-machine/service@workspace:app/service"],
+    "@flowmachine/service": ["@flowmachine/service@workspace:app/service"],
 
-    "@flow-machine/typescript-config": ["@flow-machine/typescript-config@workspace:package/typescript-config"],
+    "@flowmachine/typescript-config": ["@flowmachine/typescript-config@workspace:package/typescript-config"],
 
-    "@flow-machine/web": ["@flow-machine/web@workspace:app/web"],
+    "@flowmachine/web": ["@flowmachine/web@workspace:app/web"],
 
     "@grpc/grpc-js": ["@grpc/grpc-js@1.14.3", "", { "dependencies": { "@grpc/proto-loader": "^0.8.0", "@js-sdsl/ordered-map": "^4.4.2" } }, "sha512-Iq8QQQ/7X3Sac15oB6p0FmUg/klxQvXLeileoqrTRGJYLV+/9tubbr9ipz0GKHjmXVsgFPo/+W+2cA8eNcR+XA=="],
 

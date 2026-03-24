@@ -1,5 +1,5 @@
 {
-  "name": "@flow-machine/root",
+  "name": "@flowmachine/root",
   "private": true,
   "scripts": {
     "build": "turbo run build",

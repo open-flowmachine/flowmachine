@@ -1,5 +1,5 @@
 {
-  "name": "@flow-machine/eslint-config",
+  "name": "@flowmachine/eslint-config",
   "version": "0.0.0",
   "type": "module",
   "private": true,

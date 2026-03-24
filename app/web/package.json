@@ -1,5 +1,5 @@
 {
-  "name": "@flow-machine/web",
+  "name": "@flowmachine/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -54,8 +54,8 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@flow-machine/eslint-config": "workspace:*",
-    "@flow-machine/typescript-config": "workspace:*",
+    "@flowmachine/eslint-config": "workspace:*",
+    "@flowmachine/typescript-config": "workspace:*",
     "eslint": "catalog:",
     "eslint-config-next": "catalog:",
     "tailwindcss": "catalog:",

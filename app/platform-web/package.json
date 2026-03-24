@@ -1,5 +1,5 @@
 {
-  "name": "@flow-machine/platform-web",
+  "name": "@flowmachine/platform-web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -49,8 +49,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@flow-machine/eslint-config": "workspace:*",
-    "@flow-machine/typescript-config": "workspace:*",
+    "@flowmachine/eslint-config": "workspace:*",
+    "@flowmachine/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "catalog:",
     "@tanstack/react-query-devtools": "catalog:",
     "@testing-library/dom": "catalog:",

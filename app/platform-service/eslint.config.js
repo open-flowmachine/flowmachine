@@ -1,4 +1,4 @@
-import { config } from "@flow-machine/eslint-config/base";
+import { config } from "@flowmachine/eslint-config/base";
 
 /** @type {import("eslint").Linter.Config} */
 export default config;

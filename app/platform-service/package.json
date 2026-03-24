@@ -1,5 +1,5 @@
 {
-  "name": "@flow-machine/platform-service",
+  "name": "@flowmachine/platform-service",
   "type": "module",
   "scripts": {
     "build": "bun build src/index.ts --outdir ./dist --target bun",
@@ -32,8 +32,8 @@
   },
   "devDependencies": {
     "@total-typescript/ts-reset": "catalog:",
-    "@flow-machine/eslint-config": "workspace:*",
-    "@flow-machine/typescript-config": "workspace:*",
+    "@flowmachine/eslint-config": "workspace:*",
+    "@flowmachine/typescript-config": "workspace:*",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "type-fest": "catalog:",
