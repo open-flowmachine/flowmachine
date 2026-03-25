@@ -32,8 +32,7 @@ export function NewProjectPage() {
       form.reset();
       toast.success("Project created successfully");
       router.push("/platform/project");
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error("Failed to create project");
     }
   };
