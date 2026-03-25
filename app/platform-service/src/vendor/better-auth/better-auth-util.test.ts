@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import { getEnv } from "@/vendor/env/env";
 
 // --- Mock setup ---
 
 const mockSend = mock(() => Promise.resolve());
+const mockEnv: Record<string, string> = {};
+
+mock.module("@/vendor/env/env", () => ({
+  getEnv: () => mockEnv,
+}));
 
 mock.module("@/vendor/resend/resend-client", () => ({
   resendClient: {
@@ -28,7 +32,7 @@ describe("sendOtpEmail", () => {
   beforeEach(() => {
     mockSend.mockClear();
     mockSend.mockResolvedValue(undefined);
-    getEnv().RESEND_FROM_ADDRESS = RESEND_FROM_ADDRESS;
+    mockEnv.RESEND_FROM_ADDRESS = RESEND_FROM_ADDRESS;
   });
 
   it("should send sign-in OTP email with correct subject", async () => {
@@ -131,8 +135,8 @@ describe("sendInvitationEmail", () => {
   beforeEach(() => {
     mockSend.mockClear();
     mockSend.mockResolvedValue(undefined);
-    getEnv().RESEND_FROM_ADDRESS = RESEND_FROM_ADDRESS;
-    getEnv().BETTER_AUTH_URL = BETTER_AUTH_URL;
+    mockEnv.RESEND_FROM_ADDRESS = RESEND_FROM_ADDRESS;
+    mockEnv.BETTER_AUTH_URL = BETTER_AUTH_URL;
   });
 
   it("should send invitation email with correct recipient and subject", async () => {

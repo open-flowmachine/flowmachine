@@ -32,6 +32,7 @@
     "@daveyplate/better-auth-ui": "3.3.15",
     "@daytonaio/sdk": "0.132.0",
     "@eslint/js": "9.39.1",
+    "@sinclair/typebox": "0.34.3",
     "@elysiajs/cors": "1.4.1",
     "@elysiajs/openapi": "1.4.13",
     "@hookform/resolvers": "5.2.2",

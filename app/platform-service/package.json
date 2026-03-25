@@ -12,6 +12,7 @@
   "dependencies": {
     "@date-fns/utc": "catalog:",
     "@daytonaio/sdk": "catalog:",
+    "@sinclair/typebox": "catalog:",
     "@elysiajs/cors": "catalog:",
     "@elysiajs/openapi": "catalog:",
     "@inngest/workflow-kit": "catalog:",
