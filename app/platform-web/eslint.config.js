@@ -1,4 +1,4 @@
-import { config } from "@flow-machine/eslint-config/next";
+import { config } from "@flowmachine/eslint-config/next";
 
 /** @type {import("eslint").Linter.Config} */
 export default config;

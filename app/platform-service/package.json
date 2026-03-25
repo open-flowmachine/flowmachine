@@ -1,5 +1,5 @@
 {
-  "name": "@flow-machine/platform-service",
+  "name": "@flowmachine/platform-service",
   "type": "module",
   "scripts": {
     "build": "bun build src/index.ts --outdir ./dist --target bun",
@@ -12,6 +12,7 @@
   "dependencies": {
     "@date-fns/utc": "catalog:",
     "@daytonaio/sdk": "catalog:",
+    "@sinclair/typebox": "catalog:",
     "@elysiajs/cors": "catalog:",
     "@elysiajs/openapi": "catalog:",
     "@inngest/workflow-kit": "catalog:",
@@ -32,8 +33,8 @@
   },
   "devDependencies": {
     "@total-typescript/ts-reset": "catalog:",
-    "@flow-machine/eslint-config": "workspace:*",
-    "@flow-machine/typescript-config": "workspace:*",
+    "@flowmachine/eslint-config": "workspace:*",
+    "@flowmachine/typescript-config": "workspace:*",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "type-fest": "catalog:",

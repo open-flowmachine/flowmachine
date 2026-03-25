@@ -36,9 +36,8 @@ mock.module("@/router/router-auth-guard", () => ({
   ),
 }));
 
-const { workflowDefinitionV1Router } = await import(
-  "@/router/workflow/v1/router-workflow-definition-v1"
-);
+const { workflowDefinitionV1Router } =
+  await import("@/router/workflow/v1/router-workflow-definition-v1");
 
 // --- Helpers ---
 

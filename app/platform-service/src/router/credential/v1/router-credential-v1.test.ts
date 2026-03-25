@@ -36,18 +36,15 @@ mock.module("@/router/router-auth-guard", () => ({
   ),
 }));
 
-const { credentialV1Router } = await import(
-  "@/router/credential/v1/router-credential-v1"
-);
+const { credentialV1Router } =
+  await import("@/router/credential/v1/router-credential-v1");
 
 // --- Helpers ---
 
 const now = new Date("2026-01-01");
 const expiredAt = new Date("2027-01-01");
 
-const makeApiKeyCredential = (
-  overrides?: Partial<Credential>,
-): Credential => ({
+const makeApiKeyCredential = (overrides?: Partial<Credential>): Credential => ({
   id: TEST_ID,
   _version: 1,
   createdAt: now,
@@ -59,9 +56,7 @@ const makeApiKeyCredential = (
   ...overrides,
 });
 
-const makeBasicCredential = (
-  overrides?: Partial<Credential>,
-): Credential => ({
+const makeBasicCredential = (overrides?: Partial<Credential>): Credential => ({
   id: TEST_ID,
   _version: 1,
   createdAt: now,
