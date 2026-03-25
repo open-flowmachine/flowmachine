@@ -76,8 +76,7 @@ export function EditableProjectDetailsPage({
       });
       toast.success("Project updated successfully");
       setIsEditing(false);
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error("Failed to update project");
     }
   };

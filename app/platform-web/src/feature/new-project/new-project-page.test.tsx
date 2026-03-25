@@ -1,6 +1,5 @@
 import { screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { HttpResponse, http } from "msw";
 import { describe, expect, it, vi } from "vitest";
 import { makeProjectMswHandler } from "@/test/msw/msw-project-handler";
 import { mswServer } from "@/test/msw/msw-server";

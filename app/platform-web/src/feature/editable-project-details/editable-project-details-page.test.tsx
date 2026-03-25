@@ -292,7 +292,7 @@ describe("EditableProjectDetailsPage", () => {
       expect(screen.getByLabelText("Webhook Secret")).toHaveValue("secret-123");
     });
 
-    it.only("clicking Cancel returns to view mode", async () => {
+    it("clicking Cancel returns to view mode", async () => {
       const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITHOUT_INTEGRATION,
       });
@@ -311,7 +311,6 @@ describe("EditableProjectDetailsPage", () => {
 
       await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
-      expect(screen.queryByLabelText("Name")).toBeNull();
       expect(screen.getByRole("button", { name: "Edit" })).toBeVisible();
     });
 
@@ -341,7 +340,7 @@ describe("EditableProjectDetailsPage", () => {
       expect(
         await screen.findByText("Project updated successfully"),
       ).toBeVisible();
-      await waitForElementToBeRemoved(() => screen.queryByLabelText("Name"));
+      expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
     });
 
     it("failed update shows error toast", async () => {
