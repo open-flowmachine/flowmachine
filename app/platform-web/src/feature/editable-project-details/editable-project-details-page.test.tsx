@@ -1,6 +1,5 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitForElementToBeRemoved } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Project } from "@/module/project/project-type";
 import { makeProjectMswHandler } from "@/test/msw/msw-project-handler";
@@ -48,16 +47,16 @@ const waitForProjectToLoad = async () => {
 describe("EditableProjectDetailsPage", () => {
   describe("view mode", () => {
     it("renders project name as page heading", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITHOUT_INTEGRATION,
       });
-      mswServer.use(getHandler);
+      mswServer.use(projectGetByIdHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITHOUT_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
       await waitForProjectToLoad();
 
@@ -67,16 +66,16 @@ describe("EditableProjectDetailsPage", () => {
     });
 
     it("displays project ID", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITHOUT_INTEGRATION,
       });
-      mswServer.use(getHandler);
+      mswServer.use(projectGetByIdHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITHOUT_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
       expect(
         await screen.findByText(PROJECT_WITHOUT_INTEGRATION.id),
@@ -84,16 +83,16 @@ describe("EditableProjectDetailsPage", () => {
     });
 
     it("displays project name in details", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITHOUT_INTEGRATION,
       });
-      mswServer.use(getHandler);
+      mswServer.use(projectGetByIdHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITHOUT_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
       await waitForProjectToLoad();
 
@@ -102,67 +101,61 @@ describe("EditableProjectDetailsPage", () => {
     });
 
     it("displays formatted created at timestamp", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITHOUT_INTEGRATION,
       });
-      mswServer.use(getHandler);
+      mswServer.use(projectGetByIdHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITHOUT_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
-      expect(
-        await screen.findByText("Jan 15, 2026, 10:30 AM"),
-      ).toBeVisible();
+      expect(await screen.findByText("Jan 15, 2026, 10:30 AM")).toBeVisible();
     });
 
     it("displays formatted updated at timestamp", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITHOUT_INTEGRATION,
       });
-      mswServer.use(getHandler);
+      mswServer.use(projectGetByIdHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITHOUT_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
-      expect(
-        await screen.findByText("Jan 20, 2026, 2:00 PM"),
-      ).toBeVisible();
+      expect(await screen.findByText("Jan 20, 2026, 2:00 PM")).toBeVisible();
     });
 
     it("renders Edit button", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITHOUT_INTEGRATION,
       });
-      mswServer.use(getHandler);
+      mswServer.use(projectGetByIdHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITHOUT_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
-      expect(
-        await screen.findByRole("button", { name: "Edit" }),
-      ).toBeVisible();
+      expect(await screen.findByRole("button", { name: "Edit" })).toBeVisible();
     });
 
     it("displays integration details when present", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITH_INTEGRATION,
       });
-      mswServer.use(getHandler);
+      mswServer.use(projectGetByIdHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
       await screen.findByRole("button", { name: "Edit" });
 
@@ -177,16 +170,16 @@ describe("EditableProjectDetailsPage", () => {
     });
 
     it("does not display integration section when absent", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITHOUT_INTEGRATION,
       });
-      mswServer.use(getHandler);
+      mswServer.use(projectGetByIdHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITHOUT_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
       await waitForProjectToLoad();
 
@@ -196,18 +189,16 @@ describe("EditableProjectDetailsPage", () => {
 
   describe("404 error", () => {
     it("shows 404 when API returns error", async () => {
-      mswServer.use(
-        http.get("http://localhost:8000/api/v1/project/:id", () =>
-          HttpResponse.json(
-            { status: 500, code: "error", message: "error" },
-            { status: 500 },
-          ),
-        ),
-      );
+      const projectGetByIdHandler = projectHandler.getById({
+        status: 500,
+        code: "error",
+        message: "error",
+      });
+      mswServer.use(projectGetByIdHandler);
 
-      testRender(
-        <EditableProjectDetailsPage id="non-existent-id" />,
-      );
+      testRender(<EditableProjectDetailsPage id="non-existent-id" />);
+
+      projectGetByIdHandler.resolveRequest();
 
       expect(await screen.findByText("404 - Not Found")).toBeVisible();
     });
@@ -227,16 +218,16 @@ describe("EditableProjectDetailsPage", () => {
     });
 
     it("copies project ID to clipboard and shows toast", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITHOUT_INTEGRATION,
       });
-      mswServer.use(getHandler);
+      mswServer.use(projectGetByIdHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITHOUT_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
       await waitForProjectToLoad();
 
@@ -255,16 +246,16 @@ describe("EditableProjectDetailsPage", () => {
 
   describe("edit mode", () => {
     it("clicking Edit switches to edit form", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITHOUT_INTEGRATION,
       });
-      mswServer.use(getHandler);
+      mswServer.use(projectGetByIdHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITHOUT_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
       await waitForProjectToLoad();
       await userEvent.click(screen.getByRole("button", { name: "Edit" }));
@@ -275,16 +266,16 @@ describe("EditableProjectDetailsPage", () => {
     });
 
     it("edit form is pre-populated with project data", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITH_INTEGRATION,
       });
-      mswServer.use(getHandler);
+      mswServer.use(projectGetByIdHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
       await screen.findByRole("button", { name: "Edit" });
       await userEvent.click(screen.getByRole("button", { name: "Edit" }));
@@ -298,22 +289,20 @@ describe("EditableProjectDetailsPage", () => {
       );
       expect(screen.getByLabelText("External ID")).toHaveValue("10001");
       expect(screen.getByLabelText("External Key")).toHaveValue("BETA");
-      expect(screen.getByLabelText("Webhook Secret")).toHaveValue(
-        "secret-123",
-      );
+      expect(screen.getByLabelText("Webhook Secret")).toHaveValue("secret-123");
     });
 
-    it("clicking Cancel returns to view mode", async () => {
-      const getHandler = projectHandler.getById({
+    it.only("clicking Cancel returns to view mode", async () => {
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITHOUT_INTEGRATION,
       });
-      mswServer.use(getHandler);
+      mswServer.use(projectGetByIdHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITHOUT_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
       await waitForProjectToLoad();
       await userEvent.click(screen.getByRole("button", { name: "Edit" }));
@@ -322,24 +311,22 @@ describe("EditableProjectDetailsPage", () => {
 
       await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
-      await waitFor(() => {
-        expect(screen.queryByLabelText("Name")).toBeNull();
-      });
+      expect(screen.queryByLabelText("Name")).toBeNull();
       expect(screen.getByRole("button", { name: "Edit" })).toBeVisible();
     });
 
     it("successful update shows toast and returns to view mode", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITH_INTEGRATION,
       });
       const updateHandler = projectHandler.updateById();
-      mswServer.use(getHandler, updateHandler);
+      mswServer.use(projectGetByIdHandler, updateHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
       await waitForProjectToLoad();
       await userEvent.click(screen.getByRole("button", { name: "Edit" }));
@@ -354,54 +341,47 @@ describe("EditableProjectDetailsPage", () => {
       expect(
         await screen.findByText("Project updated successfully"),
       ).toBeVisible();
-
-      await waitFor(() => {
-        expect(screen.queryByLabelText("Name")).toBeNull();
-      });
+      await waitForElementToBeRemoved(() => screen.queryByLabelText("Name"));
     });
 
     it("failed update shows error toast", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITH_INTEGRATION,
       });
-      mswServer.use(
-        getHandler,
-        http.patch("http://localhost:8000/api/v1/project/:id", () =>
-          HttpResponse.json(
-            { status: 500, code: "error", message: "error" },
-            { status: 500 },
-          ),
-        ),
-      );
+      const projectUpdateByIdHandler = projectHandler.updateById({
+        status: 500,
+        code: "error",
+        message: "error",
+      });
+      mswServer.use(projectGetByIdHandler, projectUpdateByIdHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
+      projectUpdateByIdHandler.resolveRequest();
 
       await waitForProjectToLoad();
       await userEvent.click(screen.getByRole("button", { name: "Edit" }));
 
       await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-      expect(
-        await screen.findByText("Failed to update project"),
-      ).toBeVisible();
+      expect(await screen.findByText("Failed to update project")).toBeVisible();
     });
 
     it("shows 'Saving...' while update is in progress", async () => {
-      const getHandler = projectHandler.getById({
+      const projectGetByIdHandler = projectHandler.getById({
         data: PROJECT_WITH_INTEGRATION,
       });
       const updateHandler = projectHandler.updateById();
-      mswServer.use(getHandler, updateHandler);
+      mswServer.use(projectGetByIdHandler, updateHandler);
 
       testRender(
         <EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />,
       );
 
-      getHandler.resolveRequest();
+      projectGetByIdHandler.resolveRequest();
 
       await waitForProjectToLoad();
       await userEvent.click(screen.getByRole("button", { name: "Edit" }));

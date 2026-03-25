@@ -22,12 +22,13 @@ const makeBaseMswHandler =
       resolveRequest = resolve;
     });
 
+    const envelope = {
+      ...defaultHttpResponse,
+      ...input2,
+    };
     const handler = http[method](url, async () => {
       await promise;
-      return HttpResponse.json({
-        ...defaultHttpResponse,
-        ...input2,
-      });
+      return HttpResponse.json(envelope, { status: envelope.status });
     });
 
     return Object.assign(handler, { resolveRequest });

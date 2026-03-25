@@ -32,26 +32,17 @@ const fillForm = async () => {
   );
   await userEvent.type(screen.getByLabelText("External ID"), "10001");
   await userEvent.type(screen.getByLabelText("External Key"), "PROJ");
-  await userEvent.type(
-    screen.getByLabelText("Webhook Secret"),
-    "secret-abc",
-  );
+  await userEvent.type(screen.getByLabelText("Webhook Secret"), "secret-abc");
 };
 
 describe("NewProjectPage", () => {
   it("renders the page heading", async () => {
-    const createHandler = projectHandler.create();
-    mswServer.use(createHandler);
-
     testRender(<NewProjectPage />);
 
     expect(await screen.findByText("New Project")).toBeVisible();
   });
 
   it("renders form field labels", async () => {
-    const createHandler = projectHandler.create();
-    mswServer.use(createHandler);
-
     testRender(<NewProjectPage />);
 
     expect(screen.getByLabelText("Name")).toBeVisible();
@@ -64,9 +55,6 @@ describe("NewProjectPage", () => {
   });
 
   it("renders Reset and Save buttons", async () => {
-    const createHandler = projectHandler.create();
-    mswServer.use(createHandler);
-
     testRender(<NewProjectPage />);
 
     expect(screen.getByRole("button", { name: "Reset" })).toBeVisible();
@@ -74,15 +62,15 @@ describe("NewProjectPage", () => {
   });
 
   it("submits form and shows success toast", async () => {
-    const createHandler = projectHandler.create();
-    mswServer.use(createHandler);
+    const projectCreateHandler = projectHandler.create();
+    mswServer.use(projectCreateHandler);
 
     testRender(<NewProjectPage />);
 
     await fillForm();
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    createHandler.resolveRequest();
+    projectCreateHandler.resolveRequest();
 
     expect(
       await screen.findByText("Project created successfully"),
@@ -90,15 +78,15 @@ describe("NewProjectPage", () => {
   });
 
   it("redirects to /platform/project on successful creation", async () => {
-    const createHandler = projectHandler.create();
-    mswServer.use(createHandler);
+    const projectCreateHandler = projectHandler.create();
+    mswServer.use(projectCreateHandler);
 
     testRender(<NewProjectPage />);
 
     await fillForm();
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    createHandler.resolveRequest();
+    projectCreateHandler.resolveRequest();
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/platform/project");
@@ -106,28 +94,26 @@ describe("NewProjectPage", () => {
   });
 
   it("shows error toast on creation failure", async () => {
-    mswServer.use(
-      http.post("http://localhost:8000/api/v1/project", () =>
-        HttpResponse.json(
-          { status: 500, code: "error", message: "error" },
-          { status: 500 },
-        ),
-      ),
-    );
+    const projectCreateHandler = projectHandler.create({
+      status: 500,
+      code: "error",
+      message: "error",
+    });
+    mswServer.use(projectCreateHandler);
 
     testRender(<NewProjectPage />);
+
+    projectCreateHandler.resolveRequest();
 
     await fillForm();
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    expect(
-      await screen.findByText("Failed to create project"),
-    ).toBeVisible();
+    expect(await screen.findByText("Failed to create project")).toBeVisible();
   });
 
   it("shows 'Saving...' while submission is in progress", async () => {
-    const createHandler = projectHandler.create();
-    mswServer.use(createHandler);
+    const projectCreateHandler = projectHandler.create();
+    mswServer.use(projectCreateHandler);
 
     testRender(<NewProjectPage />);
 
@@ -136,12 +122,12 @@ describe("NewProjectPage", () => {
 
     expect(await screen.findByText("Saving...")).toBeVisible();
 
-    createHandler.resolveRequest();
+    projectCreateHandler.resolveRequest();
   });
 
   it("disables form fields while submitting", async () => {
-    const createHandler = projectHandler.create();
-    mswServer.use(createHandler);
+    const projectCreateHandler = projectHandler.create();
+    mswServer.use(projectCreateHandler);
 
     testRender(<NewProjectPage />);
 
@@ -158,13 +144,10 @@ describe("NewProjectPage", () => {
     expect(screen.getByLabelText("Webhook Secret")).toBeDisabled();
     expect(screen.getByRole("button", { name: /Reset/ })).toBeDisabled();
 
-    createHandler.resolveRequest();
+    projectCreateHandler.resolveRequest();
   });
 
   it("resets form when Reset is clicked", async () => {
-    const createHandler = projectHandler.create();
-    mswServer.use(createHandler);
-
     testRender(<NewProjectPage />);
 
     await userEvent.type(screen.getByLabelText("Name"), "Some Project");
