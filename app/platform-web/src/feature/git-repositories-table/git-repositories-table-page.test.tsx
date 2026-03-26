@@ -1,6 +1,5 @@
 import {
   screen,
-  waitFor,
   waitForElementToBeRemoved,
 } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
@@ -81,9 +80,7 @@ describe("GitRepositoriesTablePage", () => {
 
     listHandler.resolveRequest();
 
-    await waitFor(() => {
-      expect(screen.getByText("Git Repository")).toBeVisible();
-    });
+    expect(await screen.findByText("Git Repository")).toBeVisible();
   });
 
   it("renders the Add Repository button", async () => {

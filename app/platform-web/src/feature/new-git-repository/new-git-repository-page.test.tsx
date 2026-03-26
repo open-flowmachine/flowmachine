@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { makeGitRepositoryMswHandler } from "@/test/msw/msw-git-repository-handler";
@@ -100,9 +100,9 @@ describe("NewGitRepositoryPage", () => {
 
     createHandler.resolveRequest();
 
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/platform/git-repository");
-    });
+    await screen.findByText("Git Repository created successfully");
+
+    expect(mockPush).toHaveBeenCalledWith("/platform/git-repository");
   });
 
   it("shows error toast on creation failure", async () => {
