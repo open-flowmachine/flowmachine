@@ -1,13 +1,12 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
+import {
+  MOCK_BETTER_AUTH_URL,
+  MOCK_RESEND_FROM_ADDRESS,
+} from "@/test/test-env-mock";
 
 // --- Mock setup ---
 
 const mockSend = mock(() => Promise.resolve());
-const mockEnv: Record<string, string> = {};
-
-mock.module("@/vendor/env/env", () => ({
-  getEnv: () => mockEnv,
-}));
 
 mock.module("@/vendor/resend/resend-client", () => ({
   resendClient: {
@@ -21,18 +20,12 @@ mock.module("@/vendor/resend/resend-client", () => ({
 const { makeBetterAuthUtil } = await import("./better-auth-util");
 const { sendOtpEmail, sendInvitationEmail } = makeBetterAuthUtil();
 
-// --- Helpers ---
-
-const RESEND_FROM_ADDRESS = "noreply@test.com";
-const BETTER_AUTH_URL = "http://localhost:8000";
-
 // --- Tests ---
 
 describe("sendOtpEmail", () => {
   beforeEach(() => {
     mockSend.mockClear();
     mockSend.mockResolvedValue(undefined);
-    mockEnv.RESEND_FROM_ADDRESS = RESEND_FROM_ADDRESS;
   });
 
   it("should send sign-in OTP email with correct subject", async () => {
@@ -46,7 +39,7 @@ describe("sendOtpEmail", () => {
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "user@test.com",
-        from: RESEND_FROM_ADDRESS,
+        from: MOCK_RESEND_FROM_ADDRESS,
         subject: "Your sign-in code",
       }),
     );
@@ -135,8 +128,6 @@ describe("sendInvitationEmail", () => {
   beforeEach(() => {
     mockSend.mockClear();
     mockSend.mockResolvedValue(undefined);
-    mockEnv.RESEND_FROM_ADDRESS = RESEND_FROM_ADDRESS;
-    mockEnv.BETTER_AUTH_URL = BETTER_AUTH_URL;
   });
 
   it("should send invitation email with correct recipient and subject", async () => {
@@ -151,7 +142,7 @@ describe("sendInvitationEmail", () => {
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "invitee@test.com",
-        from: RESEND_FROM_ADDRESS,
+        from: MOCK_RESEND_FROM_ADDRESS,
         subject: "You've been invited to Acme Corp",
       }),
     );
@@ -188,7 +179,7 @@ describe("sendInvitationEmail", () => {
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
         html: expect.stringContaining(
-          `${BETTER_AUTH_URL}/accept-invitation/inv-456`,
+          `${MOCK_BETTER_AUTH_URL}/accept-invitation/inv-456`,
         ),
       }),
     );
