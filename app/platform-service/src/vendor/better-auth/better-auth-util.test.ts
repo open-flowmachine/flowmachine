@@ -3,11 +3,6 @@ import { beforeEach, describe, expect, it, mock } from "bun:test";
 // --- Mock setup ---
 
 const mockSend = mock(() => Promise.resolve());
-const mockEnv: Record<string, string> = {};
-
-mock.module("@/vendor/env/env", () => ({
-  getEnv: () => mockEnv,
-}));
 
 mock.module("@/vendor/resend/resend-client", () => ({
   resendClient: {
