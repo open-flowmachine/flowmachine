@@ -1,6 +1,5 @@
 import {
   screen,
-  waitFor,
   waitForElementToBeRemoved,
 } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
@@ -63,9 +62,7 @@ describe("AiAgentsTablePage", () => {
 
     listHandler.resolveRequest();
 
-    await waitFor(() => {
-      expect(screen.getByText("AI Agent")).toBeVisible();
-    });
+    expect(await screen.findByText("AI Agent")).toBeVisible();
   });
 
   it("renders the New AI Agent button", async () => {
