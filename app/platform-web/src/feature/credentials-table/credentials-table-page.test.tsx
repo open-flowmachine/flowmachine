@@ -1,6 +1,5 @@
 import {
   screen,
-  waitFor,
   waitForElementToBeRemoved,
 } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
@@ -66,9 +65,7 @@ describe("CredentialsTablePage", () => {
 
     listHandler.resolveRequest();
 
-    await waitFor(() => {
-      expect(screen.getByText("Credential")).toBeVisible();
-    });
+    expect(await screen.findByText("Credential")).toBeVisible();
   });
 
   it("renders the New Credential button", async () => {
