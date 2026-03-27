@@ -2,7 +2,10 @@ import Elysia from "elysia";
 import { WORKFLOW_EXECUTION_TRIGGERED_EVENT } from "@/feature/workflow/workflow-constant";
 import { makeProjectService } from "@/module/project/project-service";
 import { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";
-import { webhookJiraQueryDtoSchema } from "@/router/webhook/v1/router-webhook-v1-dto";
+import {
+  jiraIssueUpdatedEventDtoSchema,
+  webhookJiraQueryDtoSchema,
+} from "@/router/webhook/v1/router-webhook-v1-dto";
 import { Err } from "@/shared/err/err";
 import { okEnvelope } from "@/shared/http/http-envelope";
 import { tenantSchema } from "@/shared/model/model-tenant";
@@ -65,7 +68,20 @@ const webhookV1Router = new Elysia({ name: "webhookV1Router" }).group(
           });
         }
 
-        // 3. Find active workflow definitions for this project
+        // 3. Parse Jira issue updated event body
+        const parsedBody = typeof body === "string" ? JSON.parse(body) : body;
+        const bodyResult = validate(jiraIssueUpdatedEventDtoSchema, parsedBody);
+        if (bodyResult.isErr()) {
+          throw Err.code("badRequest", {
+            message: "Invalid Jira issue updated event payload",
+          });
+        }
+
+        const { issue } = bodyResult.value;
+        const title = issue.fields.summary;
+        const summary = issue.fields.description ?? "";
+
+        // 4. Find active workflow definitions for this project
         const workflowsResult = await workflowDefinitionService.list({
           ctx: { tenant },
           filter: { projectId: project.id },
@@ -78,7 +94,7 @@ const webhookV1Router = new Elysia({ name: "webhookV1Router" }).group(
           (w) => w.isActive,
         );
 
-        // 4. Trigger workflow executions via Inngest
+        // 5. Trigger workflow executions via Inngest
         if (activeWorkflows.length > 0) {
           await inngestClient.send(
             activeWorkflows.map((w) => ({
@@ -86,6 +102,8 @@ const webhookV1Router = new Elysia({ name: "webhookV1Router" }).group(
               data: {
                 tenant,
                 workflowDefinitionId: w.id,
+                title,
+                summary,
               },
             })),
           );
