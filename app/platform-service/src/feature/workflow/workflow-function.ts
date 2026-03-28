@@ -17,6 +17,8 @@ const workflowExecutionService = makeWorkflowExecutionService();
 const initializeWorkflowExecutionEventDataSchema = z.object({
   tenant: tenantSchema,
   workflowDefinitionId: idSchema,
+  title: z.string().optional(),
+  summary: z.string().optional(),
 });
 
 const initializeWorkflowExecution = inngestClient.createFunction(
@@ -34,13 +36,16 @@ const initializeWorkflowExecution = inngestClient.createFunction(
       console.error("Invalid event data:", validationResult.error);
       return;
     }
-    const { tenant, workflowDefinitionId } = validationResult.value;
+    const { tenant, workflowDefinitionId, title, summary } =
+      validationResult.value;
 
     await step.sendEvent(`send-${WORKFLOW_EXECUTION_INITIALIZED_EVENT}`, {
       name: WORKFLOW_EXECUTION_INITIALIZED_EVENT,
       data: {
         tenant,
         workflowDefinitionId,
+        title,
+        summary,
       },
     });
   },
