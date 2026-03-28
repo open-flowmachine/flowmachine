@@ -20,8 +20,7 @@ export function NewCredentialPage() {
       form.reset();
       toast.success("Credential created successfully");
       router.push("/platform/credential");
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error("Failed to create credential");
     }
   };

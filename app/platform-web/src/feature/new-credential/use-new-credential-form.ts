@@ -1,4 +1,5 @@
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
+import { addDays } from "date-fns";
 import { type UseFormProps, useForm } from "react-hook-form";
 import {
   type NewCredentialFormValues,
@@ -13,7 +14,7 @@ export const useNewCredentialForm = (
       type: "apiKey",
       name: "",
       apiKey: "",
-      expiredAt: "",
+      expiredAt: addDays(new Date(), 1).toISOString(),
     },
     resolver: standardSchemaResolver(newCredentialFormValuesSchema),
     ...props,

@@ -396,12 +396,6 @@ describe("EditableCredentialDetailsPage", () => {
       await userEvent.clear(screen.getByLabelText("Name"));
       await userEvent.type(screen.getByLabelText("Name"), "Updated Token");
 
-      // Re-select date to produce valid ISO string for form validation
-      await userEvent.click(screen.getByText("January 15th, 2027"));
-      await userEvent.click(
-        await screen.findByRole("button", { name: /28th/ }),
-      );
-
       await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
       updateHandler.resolveRequest();
@@ -433,11 +427,8 @@ describe("EditableCredentialDetailsPage", () => {
       await waitForCredentialToLoad();
       await userEvent.click(screen.getByRole("button", { name: "Edit" }));
 
-      // Re-select date to produce valid ISO string for form validation
-      await userEvent.click(screen.getByText("January 15th, 2027"));
-      await userEvent.click(
-        await screen.findByRole("button", { name: /28th/ }),
-      );
+      await userEvent.clear(screen.getByLabelText("Name"));
+      await userEvent.type(screen.getByLabelText("Name"), "Updated Token");
 
       await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
@@ -462,11 +453,8 @@ describe("EditableCredentialDetailsPage", () => {
       await waitForCredentialToLoad();
       await userEvent.click(screen.getByRole("button", { name: "Edit" }));
 
-      // Re-select date to produce valid ISO string for form validation
-      await userEvent.click(screen.getByText("January 15th, 2027"));
-      await userEvent.click(
-        await screen.findByRole("button", { name: /28th/ }),
-      );
+      await userEvent.clear(screen.getByLabelText("Name"));
+      await userEvent.type(screen.getByLabelText("Name"), "Updated Token");
 
       await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
