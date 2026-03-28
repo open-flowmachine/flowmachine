@@ -19,14 +19,7 @@ vi.mock("next/navigation", () => ({
 
 const credentialHandler = makeCredentialMswHandler();
 
-const selectFutureDate = async () => {
-  await userEvent.click(screen.getByText("Pick a date"));
-  const dayButton = await screen.findByRole("button", { name: /28th/ });
-  await userEvent.click(dayButton);
-};
-
 const fillApiKeyForm = async () => {
-  await selectFutureDate();
   await userEvent.type(screen.getByLabelText("Name"), "Production API Token");
   await userEvent.type(screen.getByLabelText("API Key"), "sk-1234567890abcdef");
 };

@@ -43,7 +43,7 @@ export function EditableCredentialDetailsPage({
           type: "apiKey",
           name: data.name,
           apiKey: data.apiKey,
-          expiredAt: data.expiredAt.slice(0, 16),
+          expiredAt: data.expiredAt,
         });
       } else {
         form.reset({
@@ -51,7 +51,7 @@ export function EditableCredentialDetailsPage({
           name: data.name,
           username: data.username,
           password: data.password,
-          expiredAt: data.expiredAt.slice(0, 16),
+          expiredAt: data.expiredAt,
         });
       }
     }
@@ -70,8 +70,7 @@ export function EditableCredentialDetailsPage({
       });
       toast.success("Credential updated successfully");
       setIsEditing(false);
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error("Failed to update credential");
     }
   };
