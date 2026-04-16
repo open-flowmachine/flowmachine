@@ -32,12 +32,10 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@total-typescript/ts-reset": "catalog:",
-    "@flowmachine/eslint-config": "workspace:*",
     "@flowmachine/typescript-config": "workspace:*",
+    "@total-typescript/ts-reset": "catalog:",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
-    "type-fest": "catalog:",
-    "eslint": "catalog:"
+    "type-fest": "catalog:"
   }
 }

@@ -49,7 +49,6 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@flowmachine/eslint-config": "workspace:*",
     "@flowmachine/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "catalog:",
     "@tanstack/react-query-devtools": "catalog:",
@@ -62,8 +61,6 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
-    "eslint": "catalog:",
-    "eslint-config-next": "catalog:",
     "msw": "catalog:",
     "vitest": "catalog:",
     "jsdom": "catalog:",
