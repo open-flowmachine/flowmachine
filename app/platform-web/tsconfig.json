@@ -2,6 +2,7 @@
   "exclude": ["node_modules"],
   "extends": "@flowmachine/typescript-config/nextjs.json",
   "compilerOptions": {
+    "rootDir": ".",
     "outDir": "dist",
     "plugins": [{ "name": "next" }],
     "paths": {

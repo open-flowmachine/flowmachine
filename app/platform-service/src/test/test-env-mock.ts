@@ -12,6 +12,7 @@ const MOCK_MONGO_DB_NAME = "test-db";
 const MOCK_RESEND_API_KEY = "test-resend-api-key";
 const MOCK_RESEND_FROM_ADDRESS = "Flow Machine <test@email.flowmachine.io>";
 
+// oxlint-disable-next-line typescript/no-floating-promises
 mock.module("@/vendor/env/env", () => ({
   getEnv: () => ({
     APP_ENV: MOCK_APP_ENV,

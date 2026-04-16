@@ -222,7 +222,7 @@ describe("syncAiAgentToExternal", () => {
 
   describe("new field (no existing definition)", () => {
     it("should create issue field definition and sync to external", async () => {
-      const { project, credential } = setupResolveSuccess();
+      const { credential } = setupResolveSuccess();
       const agents = [
         makeAiAgentFixture({ id: AGENT_ID_1, name: "Agent Alpha" }),
         makeAiAgentFixture({ id: AGENT_ID_2, name: "Agent Beta" }),
@@ -304,7 +304,7 @@ describe("syncAiAgentToExternal", () => {
 
   describe("existing field", () => {
     it("should delete external field, update options, and re-sync", async () => {
-      const { project, credential } = setupResolveSuccess();
+      const { credential } = setupResolveSuccess();
       const agents = [
         makeAiAgentFixture({ id: AGENT_ID_1, name: "Agent Alpha" }),
         makeAiAgentFixture({ id: AGENT_ID_2, name: "Agent Beta" }),
@@ -509,7 +509,6 @@ describe("syncGitRepositoryToExternal", () => {
   beforeEach(resetMocks);
 
   it("should create new field definition with field name 'Git Repository'", async () => {
-    const { credential } = setupResolveSuccess();
     const repos = [
       makeGitRepositoryFixture({ id: REPO_ID_1, name: "frontend-repo" }),
       makeGitRepositoryFixture({ id: REPO_ID_2, name: "backend-repo" }),

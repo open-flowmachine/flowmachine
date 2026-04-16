@@ -12,6 +12,38 @@
         "typescript": "catalog:",
       },
     },
+    "app/core-service": {
+      "name": "@flowmachine/core-service",
+      "dependencies": {
+        "@date-fns/utc": "catalog:",
+        "@daytonaio/sdk": "catalog:",
+        "@elysiajs/cors": "catalog:",
+        "@elysiajs/openapi": "catalog:",
+        "@inngest/workflow-kit": "catalog:",
+        "@openrouter/sdk": "catalog:",
+        "@sinclair/typebox": "catalog:",
+        "autumn-js": "catalog:",
+        "axios": "catalog:",
+        "better-auth": "catalog:",
+        "dotenv": "catalog:",
+        "elysia": "catalog:",
+        "es-toolkit": "catalog:",
+        "inngest": "catalog:",
+        "mongodb": "catalog:",
+        "neverthrow": "catalog:",
+        "pino": "catalog:",
+        "resend": "catalog:",
+        "ulid": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@flowmachine/typescript-config": "workspace:*",
+        "@total-typescript/ts-reset": "catalog:",
+        "@types/bun": "catalog:",
+        "@types/node": "catalog:",
+        "type-fest": "catalog:",
+      },
+    },
     "app/platform-service": {
       "name": "@flowmachine/platform-service",
       "dependencies": {
@@ -463,6 +495,8 @@
     "@floating-ui/react-dom": ["@floating-ui/react-dom@2.1.8", "", { "dependencies": { "@floating-ui/dom": "^1.7.6" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-cC52bHwM/n/CxS87FH0yWdngEZrjdtLW/qVruo68qg+prK7ZQ4YGdut2GyDVpoGeAYe/h899rVeOVm6Oi40k2A=="],
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.11", "", {}, "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="],
+
+    "@flowmachine/core-service": ["@flowmachine/core-service@workspace:app/core-service"],
 
     "@flowmachine/platform-service": ["@flowmachine/platform-service@workspace:app/platform-service"],
 

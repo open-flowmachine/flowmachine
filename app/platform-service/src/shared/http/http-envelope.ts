@@ -13,7 +13,7 @@ const okEnvelope = <T = undefined>({
   status = 200,
   code = "ok",
   message = "ok",
-  data = undefined,
+  data,
 }: Partial<HttpEnvelope<T>> = {}) => {
   return omitBy({ status, code, message, data }, isNil) as HttpEnvelope<T>;
 };

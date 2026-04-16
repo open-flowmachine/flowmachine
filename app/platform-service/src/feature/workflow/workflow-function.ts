@@ -7,13 +7,10 @@ import {
   WORKFLOW_EXECUTION_TRIGGERED_EVENT,
 } from "@/feature/workflow/workflow-constant";
 import { workflowEngine } from "@/feature/workflow/workflow-engine";
-import { makeWorkflowExecutionService } from "@/module/workflow/workflow-execution-service";
 import { idSchema } from "@/shared/model/model-id";
 import { tenantSchema } from "@/shared/model/model-tenant";
 import { validate } from "@/shared/schema/schema-validation";
 import { inngestClient } from "@/vendor/inngest/inngest-client";
-
-const workflowExecutionService = makeWorkflowExecutionService();
 
 const initializeWorkflowExecutionEventDataSchema = z.object({
   tenant: tenantSchema,
