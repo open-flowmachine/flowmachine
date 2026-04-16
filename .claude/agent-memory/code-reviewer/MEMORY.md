@@ -1,0 +1,3 @@
+- [Core Service Architecture Conventions](project_core_service_architecture.md) — Clean/DDD/Hex layout under app/core-service; dep rule, naming, error layering
+- [Branded ID Pattern Weakness](feedback_branded_id_pattern.md) — Branded IDs in this repo are decorative `as` casts with no validation; flag wherever they originate from untrusted input
+- [Untyped Payload Boundaries](feedback_untyped_payloads.md) — `Record<string, unknown>` recurs in webhooks, integration events, workflow snapshots; recommend zod or generics
