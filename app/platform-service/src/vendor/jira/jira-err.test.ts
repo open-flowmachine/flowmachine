@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+
 import { Err } from "@/shared/err/err";
 import { mapJiraError } from "@/vendor/jira/jira-err";
 

@@ -1,7 +1,9 @@
 import Elysia from "elysia";
 import { isNil } from "es-toolkit";
-import { Err } from "@/shared/err/err";
+
 import type { Tenant } from "@/shared/model/model-tenant";
+
+import { Err } from "@/shared/err/err";
 import { betterAuthClient } from "@/vendor/better-auth/better-auth-client";
 
 const routerAuthGuard = new Elysia({ name: "httpAuthGuard" }).resolve(

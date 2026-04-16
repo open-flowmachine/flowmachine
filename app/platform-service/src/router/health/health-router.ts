@@ -1,4 +1,5 @@
 import Elysia from "elysia";
+
 import { getEnv } from "@/vendor/env/env";
 
 const healthRouter = new Elysia().get("/health", () => ({

@@ -1,5 +1,6 @@
-import { getEnv } from "@/lib/env/env";
 import type { GitRepository } from "@/module/git-repository/git-repository-type";
+
+import { getEnv } from "@/lib/env/env";
 import { makeBaseMswHandler } from "@/test/msw/msw-util";
 
 const BASE_URL = `${getEnv().NEXT_PUBLIC_SERVICE_BASE_URL}/api/v1/git-repository`;

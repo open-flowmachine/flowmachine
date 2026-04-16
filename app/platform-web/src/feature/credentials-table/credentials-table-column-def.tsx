@@ -1,4 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
+
 import {
   CopyIcon,
   MoreHorizontalIcon,
@@ -6,6 +7,9 @@ import {
   TrashIcon,
 } from "lucide-react";
 import Link from "next/link";
+
+import type { Credential } from "@/module/credential/credential-type";
+
 import { DataTableColumnHeader } from "@/component/extended-ui/data-table";
 import {
   AlertDialog,
@@ -27,7 +31,6 @@ import {
   DropdownMenuTrigger,
 } from "@/component/ui/dropdown-menu";
 import { Spinner } from "@/component/ui/spinner";
-import type { Credential } from "@/module/credential/credential-type";
 import { makeCredentialService } from "@/module/credential/credential-service";
 
 type MakeCredentialsTableColumnDefInput = {

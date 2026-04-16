@@ -1,4 +1,7 @@
 import { CopyIcon } from "lucide-react";
+
+import type { Project } from "@/module/project/project-type";
+
 import { Badge } from "@/component/ui/badge";
 import { Button } from "@/component/ui/button";
 import {
@@ -10,7 +13,6 @@ import {
   FieldSet,
 } from "@/component/ui/field";
 import { Separator } from "@/component/ui/separator";
-import type { Project } from "@/module/project/project-type";
 import {
   makeProjectService,
   projectProviderToDisplayName,

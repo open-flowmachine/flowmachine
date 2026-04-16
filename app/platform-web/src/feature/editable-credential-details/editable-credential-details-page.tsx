@@ -4,10 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isNil } from "es-toolkit";
 import { useState } from "react";
 import { toast } from "sonner";
+
+import type { EditCredentialFormValues } from "@/feature/editable-credential-details/edit-credential-form-schema";
+
 import { PlatformPageNotFoundError } from "@/component/platform/platform-page-not-found-error";
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { EditCredentialForm } from "@/feature/editable-credential-details/edit-credential-form";
-import type { EditCredentialFormValues } from "@/feature/editable-credential-details/edit-credential-form-schema";
 import { EditableCredentialDetails } from "@/feature/editable-credential-details/editable-credential-details";
 import { useEditCredentialForm } from "@/feature/editable-credential-details/use-edit-credential-form";
 import { useCopyToClipboard } from "@/hook/use-copy-to-clipboard";

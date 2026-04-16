@@ -1,12 +1,15 @@
 import { screen, waitForElementToBeRemoved } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { GitRepository } from "@/module/git-repository/git-repository-type";
 import type { Project } from "@/module/project/project-type";
+
 import { makeGitRepositoryMswHandler } from "@/test/msw/msw-git-repository-handler";
 import { makeProjectMswHandler } from "@/test/msw/msw-project-handler";
 import { mswServer } from "@/test/msw/msw-server";
 import { testRender } from "@/test/test-render";
+
 import { EditableGitRepositoryDetailsPage } from "./editable-git-repository-details-page";
 
 vi.mock("next/navigation", () => ({
@@ -66,9 +69,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -86,15 +87,11 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
-      expect(
-        await screen.findByText(GIT_REPOSITORY.id),
-      ).toBeVisible();
+      expect(await screen.findByText(GIT_REPOSITORY.id)).toBeVisible();
     });
 
     it("displays repository name in details", async () => {
@@ -104,9 +101,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -123,9 +118,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -139,9 +132,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -155,15 +146,11 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
-      expect(
-        await screen.findByRole("button", { name: "Edit" }),
-      ).toBeVisible();
+      expect(await screen.findByRole("button", { name: "Edit" })).toBeVisible();
     });
 
     it("displays configuration details", async () => {
@@ -173,9 +160,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -193,9 +178,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -214,9 +197,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -258,9 +239,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id="non-existent-id" />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id="non-existent-id" />);
 
       getByIdHandler.resolveRequest();
 
@@ -288,9 +267,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -317,9 +294,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -338,9 +313,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -366,9 +339,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -390,9 +361,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       const updateHandler = gitRepositoryHandler.updateById();
       mswServer.use(getByIdHandler, updateHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -424,9 +393,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       });
       mswServer.use(getByIdHandler, updateHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
       updateHandler.resolveRequest();
@@ -449,9 +416,7 @@ describe("EditableGitRepositoryDetailsPage", () => {
       const updateHandler = gitRepositoryHandler.updateById();
       mswServer.use(getByIdHandler, updateHandler);
 
-      testRender(
-        <EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />,
-      );
+      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
 
       getByIdHandler.resolveRequest();
 

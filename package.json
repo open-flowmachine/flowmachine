@@ -1,6 +1,10 @@
 {
   "name": "@flowmachine/root",
   "private": true,
+  "workspaces": [
+    "app/*",
+    "package/*"
+  ],
   "scripts": {
     "build": "turbo run build",
     "check-types": "turbo run check-types",
@@ -23,10 +27,6 @@
     "node": ">=18"
   },
   "packageManager": "bun@1.3.5",
-  "workspaces": [
-    "app/*",
-    "package/*"
-  ],
   "catalog": {
     "@base-ui/react": "1.0.0",
     "@date-fns/utc": "2.1.1",
@@ -102,6 +102,5 @@
     "vitest": "3.2.3",
     "jsdom": "26.1.0",
     "zod": "4.2.1"
-  },
-  "dependencies": {}
+  }
 }

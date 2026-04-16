@@ -4,10 +4,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isNil } from "es-toolkit";
 import { useState } from "react";
 import { toast } from "sonner";
+
+import type { EditWorkflowDefinitionFormValues } from "@/feature/editable-workflow-definition-details/edit-workflow-definition-form-schema";
+import type {
+  WorkflowAction,
+  WorkflowEdge,
+} from "@/module/workflow/workflow-definition-type";
+
 import { PlatformPageNotFoundError } from "@/component/platform/platform-page-not-found-error";
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { EditWorkflowDefinitionForm } from "@/feature/editable-workflow-definition-details/edit-workflow-definition-form";
-import type { EditWorkflowDefinitionFormValues } from "@/feature/editable-workflow-definition-details/edit-workflow-definition-form-schema";
 import { EditableWorkflowDefinitionDetails } from "@/feature/editable-workflow-definition-details/editable-workflow-definition-details";
 import { useEditWorkflowDefinitionForm } from "@/feature/editable-workflow-definition-details/use-edit-workflow-definition-form";
 import { useCopyToClipboard } from "@/hook/use-copy-to-clipboard";
@@ -15,10 +21,6 @@ import { makeGetWorkflowDefinitionQueryKey } from "@/lib/query/query-key";
 import { useListProjects } from "@/module/project/use-list-projects";
 import { useGetWorkflowDefinition } from "@/module/workflow/use-get-workflow-definition";
 import { useUpdateWorkflowDefinition } from "@/module/workflow/use-update-workflow-definition";
-import type {
-  WorkflowAction,
-  WorkflowEdge,
-} from "@/module/workflow/workflow-definition-type";
 
 type EditableWorkflowDefinitionDetailsPageProps = {
   id: string;

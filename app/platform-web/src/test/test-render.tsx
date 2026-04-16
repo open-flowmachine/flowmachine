@@ -1,11 +1,13 @@
+import type { PropsWithChildren, ReactElement } from "react";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   type RenderOptions,
   type RenderResult,
   render,
 } from "@testing-library/react";
-import type { PropsWithChildren, ReactElement } from "react";
 import { Toaster } from "sonner";
+
 import { SidebarProvider } from "@/component/ui/sidebar";
 
 const makeTestQueryClient = () =>

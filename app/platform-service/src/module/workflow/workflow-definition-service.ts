@@ -1,10 +1,12 @@
 import { err, ok } from "neverthrow";
+
 import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-model";
+import type { Id } from "@/shared/model/model-id";
+import type { Tenant } from "@/shared/model/model-tenant";
+
 import { workflowDefinitionRepository } from "@/module/workflow/workflow-definition-repository";
 import { Err } from "@/shared/err/err";
 import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
-import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
 
 const createWorkflowDefinition = async (input: {
   ctx: { tenant: Tenant };
@@ -64,9 +66,7 @@ const listWorkflowDefinitions = async (input: {
 
   return workflowDefinitionRepository.findMany({
     ctx,
-    filter: filter?.projectId
-      ? { "projects.id": filter.projectId }
-      : undefined,
+    filter: filter?.projectId ? { "projects.id": filter.projectId } : undefined,
   });
 };
 

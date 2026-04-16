@@ -1,6 +1,8 @@
 import type { InternalAxiosRequestConfig } from "axios";
+
 import axios from "axios";
 import { useMemo } from "react";
+
 import { getEnv } from "@/lib/env/env";
 
 export const useUnprotectedHttpClient = () => {

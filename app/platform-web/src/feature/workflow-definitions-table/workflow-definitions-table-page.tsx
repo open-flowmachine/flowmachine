@@ -2,6 +2,9 @@
 
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
+
+import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-type";
+
 import { DataTable } from "@/component/extended-ui/data-table";
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { Button } from "@/component/ui/button";
@@ -9,7 +12,6 @@ import { makeWorkflowDefinitionsTableColumnDef } from "@/feature/workflow-defini
 import { useConfirmableAction } from "@/hook/use-confirmable-action";
 import { useDeleteWorkflowDefinition } from "@/module/workflow/use-delete-workflow-definition";
 import { useListWorkflowDefinitions } from "@/module/workflow/use-list-workflow-definitions";
-import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-type";
 
 export default function WorkflowDefinitionsTablePage() {
   const deleteAction = useConfirmableAction();

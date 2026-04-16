@@ -4,10 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isNil } from "es-toolkit";
 import { useState } from "react";
 import { toast } from "sonner";
+
+import type { EditAiAgentFormValues } from "@/feature/editable-ai-agent-details/edit-ai-agent-form-schema";
+
 import { PlatformPageNotFoundError } from "@/component/platform/platform-page-not-found-error";
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { EditAiAgentForm } from "@/feature/editable-ai-agent-details/edit-ai-agent-form";
-import type { EditAiAgentFormValues } from "@/feature/editable-ai-agent-details/edit-ai-agent-form-schema";
 import { EditableAiAgentDetails } from "@/feature/editable-ai-agent-details/editable-ai-agent-details";
 import { useEditAiAgentForm } from "@/feature/editable-ai-agent-details/use-edit-ai-agent-form";
 import { useCopyToClipboard } from "@/hook/use-copy-to-clipboard";

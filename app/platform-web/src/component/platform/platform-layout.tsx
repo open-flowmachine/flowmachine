@@ -1,5 +1,7 @@
-import { SignedIn } from "@daveyplate/better-auth-ui";
 import type { CSSProperties, PropsWithChildren } from "react";
+
+import { SignedIn } from "@daveyplate/better-auth-ui";
+
 import { PlatformSidebar } from "@/component/platform/platform-sidebar";
 import { SidebarInset, SidebarProvider } from "@/component/ui/sidebar";
 

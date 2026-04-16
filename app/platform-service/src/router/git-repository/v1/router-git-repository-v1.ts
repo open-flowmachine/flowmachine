@@ -1,9 +1,12 @@
 import Elysia from "elysia";
+
 import type { GitRepository } from "@/module/git-repository/git-repository-model";
+
 import { makeGitRepositoryService } from "@/module/git-repository/git-repository-service";
 
 const gitRepositoryService = makeGitRepositoryService();
 import type { GitRepositoryResponseDto } from "@/router/git-repository/v1/router-git-repository-v1-dto";
+
 import {
   deleteGitRepositoryRequestParamsDtoSchema,
   getGitRepositoryListRequestQueryDtoSchema,
@@ -54,7 +57,9 @@ const gitRepositoryV1Router = new Elysia({
         async ({ tenant, query }) => {
           const result = await gitRepositoryService.list({
             ctx: { tenant },
-            filter: query.projectId ? { projectId: query.projectId } : undefined,
+            filter: query.projectId
+              ? { projectId: query.projectId }
+              : undefined,
           });
           if (result.isErr()) {
             return errEnvelope(result.error);

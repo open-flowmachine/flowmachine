@@ -1,13 +1,13 @@
-import {
-  screen,
-  waitForElementToBeRemoved,
-} from "@testing-library/react";
+import { screen, waitForElementToBeRemoved } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { Credential } from "@/module/credential/credential-type";
+
 import { makeCredentialMswHandler } from "@/test/msw/msw-credential-handler";
 import { mswServer } from "@/test/msw/msw-server";
 import { testRender } from "@/test/test-render";
+
 import CredentialsTablePage from "./credentials-table-page";
 
 vi.mock("next/navigation", () => ({
@@ -290,9 +290,7 @@ describe("CredentialsTablePage", () => {
       await userEvent.click(screen.getByText("Delete"));
 
       await screen.findByText("Delete credential");
-      expect(
-        screen.getByText(/Are you sure you want to delete/),
-      ).toBeVisible();
+      expect(screen.getByText(/Are you sure you want to delete/)).toBeVisible();
     });
 
     it("confirming deletion calls API and closes dialog", async () => {

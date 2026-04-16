@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { err, ok } from "neverthrow";
+
 import type { ProjectIssueFieldDefinition } from "@/module/project/project-issue-field-definition-model";
+import type { Tenant } from "@/shared/model/model-tenant";
+
 import { Err } from "@/shared/err/err";
 import { type Id, idSchema } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
 
 // --- Mock setup ---
 
@@ -34,9 +36,8 @@ mock.module("@/shared/model/model-id", () => ({
   newId: () => NEW_ID,
 }));
 
-const { makeProjectIssueFieldDefinitionService } = await import(
-  "./project-issue-field-definition-service"
-);
+const { makeProjectIssueFieldDefinitionService } =
+  await import("./project-issue-field-definition-service");
 const service = makeProjectIssueFieldDefinitionService();
 
 // --- Helpers ---

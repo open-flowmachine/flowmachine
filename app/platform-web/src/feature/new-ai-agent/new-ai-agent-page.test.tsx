@@ -1,10 +1,12 @@
 import { screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+
 import { makeAiAgentMswHandler } from "@/test/msw/msw-ai-agent-handler";
 import { makeProjectMswHandler } from "@/test/msw/msw-project-handler";
 import { mswServer } from "@/test/msw/msw-server";
 import { testRender } from "@/test/test-render";
+
 import { NewAiAgentPage } from "./new-ai-agent-page";
 
 const mockPush = vi.fn();
@@ -106,9 +108,7 @@ describe("NewAiAgentPage", () => {
     await fillForm();
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    expect(
-      await screen.findByText("Failed to create AI Agent"),
-    ).toBeVisible();
+    expect(await screen.findByText("Failed to create AI Agent")).toBeVisible();
   });
 
   it("shows 'Saving...' while submission is in progress", async () => {

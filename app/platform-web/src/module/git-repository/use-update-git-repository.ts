@@ -3,13 +3,15 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+
+import type { HttpClientUpdateGitRepositoryInput } from "@/module/git-repository/git-repository-type";
+
 import { useProtectedHttpClient } from "@/hook/use-protected-http-client";
 import {
   makeGetGitRepositoryQueryKey,
   makeListGitRepositoriesQueryKey,
 } from "@/lib/query/query-key";
 import { makeGitRepositoryHttpClient } from "@/module/git-repository/git-repository-http-client";
-import type { HttpClientUpdateGitRepositoryInput } from "@/module/git-repository/git-repository-type";
 
 type UseUpdateGitRepositoryOptions = Omit<
   UseMutationOptions<void, Error, HttpClientUpdateGitRepositoryInput, unknown>,

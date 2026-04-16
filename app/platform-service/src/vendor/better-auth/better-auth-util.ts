@@ -1,4 +1,5 @@
 import { type EmailOTPOptions } from "better-auth/plugins";
+
 import { getEnv } from "@/vendor/env/env";
 import { makeResendService } from "@/vendor/resend/resend-service";
 

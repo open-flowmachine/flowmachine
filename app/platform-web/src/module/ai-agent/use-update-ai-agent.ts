@@ -3,10 +3,12 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+
+import type { HttpClientAiAgentInput } from "@/module/ai-agent/ai-agent-type";
+
 import { useProtectedHttpClient } from "@/hook/use-protected-http-client";
 import { makeListAiAgentsQueryKey } from "@/lib/query/query-key";
 import { makeAiAgentHttpClient } from "@/module/ai-agent/ai-agent-http-client";
-import type { HttpClientAiAgentInput } from "@/module/ai-agent/ai-agent-type";
 
 type UseUpdateAiAgentOptions = Omit<
   UseMutationOptions<void, Error, HttpClientAiAgentInput, unknown>,

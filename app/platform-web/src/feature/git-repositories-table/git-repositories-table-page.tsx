@@ -3,13 +3,15 @@
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+
+import type { GitRepository } from "@/module/git-repository/git-repository-type";
+
 import { DataTable } from "@/component/extended-ui/data-table";
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { Button } from "@/component/ui/button";
 import { makeGitRepositoriesTableColumnDef } from "@/feature/git-repositories-table/git-repositories-table-column-def";
 import { useConfirmableAction } from "@/hook/use-confirmable-action";
 import { useCopyToClipboard } from "@/hook/use-copy-to-clipboard";
-import type { GitRepository } from "@/module/git-repository/git-repository-type";
 import { useDeleteGitRepository } from "@/module/git-repository/use-delete-git-repository";
 import { useListGitRepositories } from "@/module/git-repository/use-list-git-repositories";
 

@@ -1,4 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
+
 import {
   CopyIcon,
   MoreHorizontalIcon,
@@ -6,6 +7,9 @@ import {
   TrashIcon,
 } from "lucide-react";
 import Link from "next/link";
+
+import type { AiAgent } from "@/module/ai-agent/ai-agent-type";
+
 import { DataTableColumnHeader } from "@/component/extended-ui/data-table";
 import {
   AlertDialog,
@@ -28,7 +32,6 @@ import {
 } from "@/component/ui/dropdown-menu";
 import { Spinner } from "@/component/ui/spinner";
 import { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
-import type { AiAgent } from "@/module/ai-agent/ai-agent-type";
 
 type MakeAiAgentsTableColumnDefInput = {
   isDeleteConfirmationAlertOpen: boolean;

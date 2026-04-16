@@ -1,9 +1,11 @@
 import { screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+
 import { makeProjectMswHandler } from "@/test/msw/msw-project-handler";
 import { mswServer } from "@/test/msw/msw-server";
 import { testRender } from "@/test/test-render";
+
 import { NewProjectPage } from "./new-project-page";
 
 const mockPush = vi.fn();

@@ -3,6 +3,9 @@ import {
   type FieldErrors,
   type UseFormReturn,
 } from "react-hook-form";
+
+import type { EditProjectFormValues } from "@/feature/editable-project-details/edit-project-form-schema";
+
 import { Button } from "@/component/ui/button";
 import {
   Field,
@@ -24,15 +27,11 @@ import {
 } from "@/component/ui/select";
 import { Separator } from "@/component/ui/separator";
 import { Spinner } from "@/component/ui/spinner";
-import type { EditProjectFormValues } from "@/feature/editable-project-details/edit-project-form-schema";
-import {
-  type Project,
-  projectProviders,
-} from "@/module/project/project-type";
 import {
   makeProjectService,
   projectProviderToDisplayName,
 } from "@/module/project/project-service";
+import { type Project, projectProviders } from "@/module/project/project-type";
 
 type EditProjectFormProps = {
   project: Project;

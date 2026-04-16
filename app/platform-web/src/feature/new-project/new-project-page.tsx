@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
+import type { NewProjectFormValues } from "@/feature/new-project/new-project-form-schema";
+
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { NewProjectForm } from "@/feature/new-project/new-project-form";
-import type { NewProjectFormValues } from "@/feature/new-project/new-project-form-schema";
 import { useNewProjectForm } from "@/feature/new-project/use-new-project-form";
 import { useCreateProject } from "@/module/project/use-create-project";
 

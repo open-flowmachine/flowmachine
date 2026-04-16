@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+
 import type { Credential } from "@/module/credential/credential-type";
 
 const typeToDisplayName = {

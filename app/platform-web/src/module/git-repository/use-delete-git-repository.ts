@@ -3,13 +3,15 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+
+import type { HttpClientDeleteGitRepositoryInput } from "@/module/git-repository/git-repository-type";
+
 import { useProtectedHttpClient } from "@/hook/use-protected-http-client";
 import {
   makeGetGitRepositoryQueryKey,
   makeListGitRepositoriesQueryKey,
 } from "@/lib/query/query-key";
 import { makeGitRepositoryHttpClient } from "@/module/git-repository/git-repository-http-client";
-import type { HttpClientDeleteGitRepositoryInput } from "@/module/git-repository/git-repository-type";
 
 type UseDeleteGitRepositoryOptions = Omit<
   UseMutationOptions<void, Error, HttpClientDeleteGitRepositoryInput, unknown>,

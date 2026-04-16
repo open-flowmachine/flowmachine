@@ -3,10 +3,12 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+
+import type { HttpClientUpdateCredentialInput } from "@/module/credential/credential-type";
+
 import { useProtectedHttpClient } from "@/hook/use-protected-http-client";
 import { makeListCredentialsQueryKey } from "@/lib/query/query-key";
 import { makeCredentialHttpClient } from "@/module/credential/credential-http-client";
-import type { HttpClientUpdateCredentialInput } from "@/module/credential/credential-type";
 
 type UseUpdateCredentialOptions = Omit<
   UseMutationOptions<void, Error, HttpClientUpdateCredentialInput, unknown>,

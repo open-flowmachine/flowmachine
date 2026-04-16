@@ -1,5 +1,9 @@
 import { CopyIcon } from "lucide-react";
 import Link from "next/link";
+
+import type { Project } from "@/module/project/project-type";
+import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-type";
+
 import { Badge } from "@/component/ui/badge";
 import { Button } from "@/component/ui/button";
 import {
@@ -11,9 +15,7 @@ import {
   FieldSet,
 } from "@/component/ui/field";
 import { Separator } from "@/component/ui/separator";
-import type { Project } from "@/module/project/project-type";
 import { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";
-import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-type";
 
 type EditableWorkflowDefinitionDetailsProps = {
   workflowDefinition: WorkflowDefinition;
@@ -70,9 +72,7 @@ export function EditableWorkflowDefinitionDetails({
             <FieldLabel>Status</FieldLabel>
             <FieldContent>
               <Badge
-                variant={
-                  workflowDefinition.isActive ? "default" : "secondary"
-                }
+                variant={workflowDefinition.isActive ? "default" : "secondary"}
                 className="w-fit"
               >
                 {workflowDefinitionDomainService.getStatusLabel()}
@@ -118,9 +118,7 @@ export function EditableWorkflowDefinitionDetails({
           <Field>
             <FieldLabel>Edges</FieldLabel>
             <FieldContent>
-              <span className="text-sm">
-                {workflowDefinition.edges.length}
-              </span>
+              <span className="text-sm">{workflowDefinition.edges.length}</span>
             </FieldContent>
           </Field>
           <Field>

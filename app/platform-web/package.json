@@ -6,7 +6,8 @@
     "build": "next build",
     "check-types": "tsc --noEmit --skipLibCheck",
     "dev": "next dev",
-    "lint": "eslint",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
     "shadcn:add": "bunx --bun shadcn@latest add",
     "start": "next start",
     "test": "DEBUG_PRINT_LIMIT=50000 vitest run",
@@ -61,11 +62,11 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
-    "msw": "catalog:",
-    "vitest": "catalog:",
     "jsdom": "catalog:",
+    "msw": "catalog:",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "ignoreScripts": [
     "sharp",

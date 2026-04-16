@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { err, ok } from "neverthrow";
+
 import type { Credential } from "@/module/credential/credential-model";
+import type { Tenant } from "@/shared/model/model-tenant";
+
 import { Err } from "@/shared/err/err";
 import { type Id, idSchema } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
 
 // --- Mock setup ---
 
@@ -37,9 +39,7 @@ const credentialService = makeCredentialService();
 
 const now = new Date("2026-01-01");
 
-const makeApiKeyCredential = (
-  overrides?: Partial<Credential>,
-): Credential => ({
+const makeApiKeyCredential = (overrides?: Partial<Credential>): Credential => ({
   id: TEST_ID,
   _version: 1,
   createdAt: now,
@@ -51,9 +51,7 @@ const makeApiKeyCredential = (
   ...overrides,
 });
 
-const makeBasicCredential = (
-  overrides?: Partial<Credential>,
-): Credential => ({
+const makeBasicCredential = (overrides?: Partial<Credential>): Credential => ({
   id: TEST_ID,
   _version: 1,
   createdAt: now,

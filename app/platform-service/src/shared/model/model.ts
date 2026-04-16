@@ -1,5 +1,7 @@
-import { UTCDate } from "@date-fns/utc";
 import type { Document } from "mongodb";
+
+import { UTCDate } from "@date-fns/utc";
+
 import { type Id, newId } from "@/shared/model/model-id";
 
 type ModelBaseFields = {

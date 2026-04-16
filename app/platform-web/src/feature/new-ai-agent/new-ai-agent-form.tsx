@@ -4,6 +4,10 @@ import {
   type SubmitHandler,
   type UseFormReturn,
 } from "react-hook-form";
+
+import type { NewAiAgentFormValues } from "@/feature/new-ai-agent/new-ai-agent-form-schema";
+import type { Project } from "@/module/project/project-type";
+
 import { Button } from "@/component/ui/button";
 import {
   Combobox,
@@ -37,9 +41,7 @@ import {
 } from "@/component/ui/select";
 import { Separator } from "@/component/ui/separator";
 import { Spinner } from "@/component/ui/spinner";
-import type { NewAiAgentFormValues } from "@/feature/new-ai-agent/new-ai-agent-form-schema";
 import { aiModels } from "@/module/ai-agent/ai-agent-type";
-import type { Project } from "@/module/project/project-type";
 
 type NewAiAgentFormProps = {
   form: UseFormReturn<NewAiAgentFormValues>;

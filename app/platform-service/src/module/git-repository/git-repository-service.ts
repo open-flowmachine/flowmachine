@@ -1,10 +1,12 @@
 import { err, ok } from "neverthrow";
+
 import type { GitRepository } from "@/module/git-repository/git-repository-model";
+import type { Id } from "@/shared/model/model-id";
+import type { Tenant } from "@/shared/model/model-tenant";
+
 import { gitRepositoryRepository } from "@/module/git-repository/git-repository-repository";
 import { Err } from "@/shared/err/err";
 import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
-import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
 
 const createGitRepository = async (input: {
   ctx: { tenant: Tenant };
@@ -36,10 +38,7 @@ const createGitRepository = async (input: {
   return ok({ id: model.id });
 };
 
-const getGitRepository = async (input: {
-  ctx: { tenant: Tenant };
-  id: Id;
-}) => {
+const getGitRepository = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
   const { ctx, id } = input;
 
   const result = await gitRepositoryRepository.findById({ ctx, id });
@@ -62,9 +61,7 @@ const listGitRepositories = async (input: {
 
   return gitRepositoryRepository.findMany({
     ctx,
-    filter: filter?.projectId
-      ? { "projects.id": filter.projectId }
-      : undefined,
+    filter: filter?.projectId ? { "projects.id": filter.projectId } : undefined,
   });
 };
 

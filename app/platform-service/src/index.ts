@@ -2,6 +2,7 @@ import { cors } from "@elysiajs/cors";
 import openapi, { fromTypes } from "@elysiajs/openapi";
 import { Elysia } from "elysia";
 import z from "zod";
+
 import { aiAgentV1Router } from "@/router/ai-agent/v1/router-ai-agent-v1";
 import { authRouter } from "@/router/auth/router-auth";
 import { credentialV1Router } from "@/router/credential/v1/router-credential-v1";

@@ -1,9 +1,12 @@
 import Elysia from "elysia";
+
 import type { Credential } from "@/module/credential/credential-model";
+
 import { makeCredentialService } from "@/module/credential/credential-service";
 
 const credentialService = makeCredentialService();
 import type { CredentialResponseDto } from "@/router/credential/v1/router-credential-v1-dto";
+
 import {
   deleteCredentialRequestParamsDtoSchema,
   patchCredentialRequestBodyDtoSchema,
@@ -23,7 +26,11 @@ const toDto = (credential: Credential) => {
   };
 
   if (credential.type === "apiKey") {
-    return { ...base, type: credential.type, apiKey: credential.apiKey } satisfies CredentialResponseDto;
+    return {
+      ...base,
+      type: credential.type,
+      apiKey: credential.apiKey,
+    } satisfies CredentialResponseDto;
   }
 
   return {

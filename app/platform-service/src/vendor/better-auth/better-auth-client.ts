@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { emailOTP, organization } from "better-auth/plugins";
+
 import { newId } from "@/shared/model/model-id";
 import { makeBetterAuthUtil } from "@/vendor/better-auth/better-auth-util";
 import { getEnv } from "@/vendor/env/env";

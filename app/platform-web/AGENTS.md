@@ -91,7 +91,10 @@ bun run shadcn:add       # Add shadcn/ui components
   const getCreatedAt = () => {
     /* ... */
   };
-  const makeCredentialService = (input: { credential: Credential }) => ({ getName, getCreatedAt });
+  const makeCredentialService = (input: { credential: Credential }) => ({
+    getName,
+    getCreatedAt,
+  });
   export { makeCredentialService };
   ```
 

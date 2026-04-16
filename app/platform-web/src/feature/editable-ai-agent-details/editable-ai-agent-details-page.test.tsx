@@ -1,12 +1,15 @@
 import { screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { AiAgent } from "@/module/ai-agent/ai-agent-type";
 import type { Project } from "@/module/project/project-type";
+
 import { makeAiAgentMswHandler } from "@/test/msw/msw-ai-agent-handler";
 import { makeProjectMswHandler } from "@/test/msw/msw-project-handler";
 import { mswServer } from "@/test/msw/msw-server";
 import { testRender } from "@/test/test-render";
+
 import { EditableAiAgentDetailsPage } from "./editable-ai-agent-details-page";
 
 vi.mock("next/navigation", () => ({
@@ -15,8 +18,7 @@ vi.mock("next/navigation", () => ({
     replace: vi.fn(),
     refresh: vi.fn(),
   }),
-  usePathname: () =>
-    "/platform/ai-agent/01961a2b-0000-7000-8000-000000000001",
+  usePathname: () => "/platform/ai-agent/01961a2b-0000-7000-8000-000000000001",
 }));
 
 const aiAgentHandler = makeAiAgentMswHandler();
@@ -129,9 +131,7 @@ describe("EditableAiAgentDetailsPage", () => {
 
       getByIdHandler.resolveRequest();
 
-      expect(
-        await screen.findByText("No projects assigned"),
-      ).toBeVisible();
+      expect(await screen.findByText("No projects assigned")).toBeVisible();
     });
 
     it("displays formatted created at timestamp", async () => {
@@ -179,9 +179,7 @@ describe("EditableAiAgentDetailsPage", () => {
 
       getByIdHandler.resolveRequest();
 
-      expect(
-        await screen.findByRole("button", { name: "Edit" }),
-      ).toBeVisible();
+      expect(await screen.findByRole("button", { name: "Edit" })).toBeVisible();
     });
 
     it("displays assigned project name when projects are present", async () => {
@@ -191,9 +189,7 @@ describe("EditableAiAgentDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITH_PROJECTS.id} />,
-      );
+      testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITH_PROJECTS.id} />);
 
       getByIdHandler.resolveRequest();
 

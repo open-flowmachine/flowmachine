@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { err, ok } from "neverthrow";
+
 import type { Project } from "@/module/project/project-model";
+import type { Tenant } from "@/shared/model/model-tenant";
+
 import { Err } from "@/shared/err/err";
 import { type Id, idSchema } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
 
 // --- Mock setup ---
 

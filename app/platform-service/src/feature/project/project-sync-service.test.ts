@@ -1,14 +1,17 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { err, ok } from "neverthrow";
+
 import type { AiAgent } from "@/module/ai-agent/ai-agent-model";
 import type { Credential } from "@/module/credential/credential-model";
 import type { GitRepository } from "@/module/git-repository/git-repository-model";
 import type { ProjectIssueFieldDefinition } from "@/module/project/project-issue-field-definition-model";
 import type { Project } from "@/module/project/project-model";
 import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-model";
-import { Err } from "@/shared/err/err";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
+
+import { Err } from "@/shared/err/err";
+
 import { makeProjectSyncService } from "./project-sync-service";
 
 // --- Constants ---

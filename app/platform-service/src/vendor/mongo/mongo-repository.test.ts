@@ -1,9 +1,12 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
 import type { Document } from "mongodb";
-import { Err } from "@/shared/err/err";
+
+import { beforeEach, describe, expect, it, mock } from "bun:test";
+
 import type { Model } from "@/shared/model/model";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
+
+import { Err } from "@/shared/err/err";
 
 // --- Mock setup ---
 

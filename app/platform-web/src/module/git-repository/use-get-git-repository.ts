@@ -1,9 +1,11 @@
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
-import { useProtectedHttpClient } from "@/hook/use-protected-http-client";
+
 import type { HttpEnvelope } from "@/lib/http/http-schema";
+import type { GitRepository } from "@/module/git-repository/git-repository-type";
+
+import { useProtectedHttpClient } from "@/hook/use-protected-http-client";
 import { makeGetGitRepositoryQueryKey } from "@/lib/query/query-key";
 import { makeGitRepositoryHttpClient } from "@/module/git-repository/git-repository-http-client";
-import type { GitRepository } from "@/module/git-repository/git-repository-type";
 
 type UseGetGitRepositoryOptions = Omit<
   UseQueryOptions<HttpEnvelope<GitRepository>, Error, GitRepository>,

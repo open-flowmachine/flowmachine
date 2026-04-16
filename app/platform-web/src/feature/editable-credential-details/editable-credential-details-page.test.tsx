@@ -1,10 +1,13 @@
 import { screen, waitForElementToBeRemoved } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { Credential } from "@/module/credential/credential-type";
+
 import { makeCredentialMswHandler } from "@/test/msw/msw-credential-handler";
 import { mswServer } from "@/test/msw/msw-server";
 import { testRender } from "@/test/test-render";
+
 import { EditableCredentialDetailsPage } from "./editable-credential-details-page";
 
 vi.mock("next/navigation", () => ({
@@ -52,9 +55,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -71,15 +72,11 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
-      expect(
-        await screen.findByText(CREDENTIAL_API_KEY.id),
-      ).toBeVisible();
+      expect(await screen.findByText(CREDENTIAL_API_KEY.id)).toBeVisible();
     });
 
     it("displays credential name in details", async () => {
@@ -88,9 +85,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -106,9 +101,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -124,9 +117,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -142,9 +133,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -157,9 +146,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -172,9 +159,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -187,15 +172,11 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
-      expect(
-        await screen.findByRole("button", { name: "Edit" }),
-      ).toBeVisible();
+      expect(await screen.findByRole("button", { name: "Edit" })).toBeVisible();
     });
 
     it("displays Password field for basic type", async () => {
@@ -204,9 +185,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_BASIC.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_BASIC.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -222,9 +201,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -270,9 +247,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -298,9 +273,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -318,18 +291,14 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
       await screen.findByRole("button", { name: "Edit" });
       await userEvent.click(screen.getByRole("button", { name: "Edit" }));
 
-      expect(screen.getByLabelText("Name")).toHaveValue(
-        "Production API Token",
-      );
+      expect(screen.getByLabelText("Name")).toHaveValue("Production API Token");
       expect(screen.getByLabelText("API Key")).toHaveValue(
         "sk-1234567890abcdef",
       );
@@ -341,9 +310,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_BASIC.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_BASIC.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -361,9 +328,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -384,9 +349,7 @@ describe("EditableCredentialDetailsPage", () => {
       const updateHandler = credentialHandler.updateById();
       mswServer.use(getByIdHandler, updateHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 
@@ -417,9 +380,7 @@ describe("EditableCredentialDetailsPage", () => {
       });
       mswServer.use(getByIdHandler, updateHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
       updateHandler.resolveRequest();
@@ -444,9 +405,7 @@ describe("EditableCredentialDetailsPage", () => {
       const updateHandler = credentialHandler.updateById();
       mswServer.use(getByIdHandler, updateHandler);
 
-      testRender(
-        <EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />,
-      );
+      testRender(<EditableCredentialDetailsPage id={CREDENTIAL_API_KEY.id} />);
 
       getByIdHandler.resolveRequest();
 

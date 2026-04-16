@@ -1,9 +1,11 @@
 import { err, ok } from "neverthrow";
+
+import type { Id } from "@/shared/model/model-id";
+import type { Tenant } from "@/shared/model/model-tenant";
+
 import { credentialRepository } from "@/module/credential/credential-repository";
 import { Err } from "@/shared/err/err";
 import { newModel } from "@/shared/model/model";
-import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
 
 type CredentialPayload =
   | { type: "apiKey"; name: string; apiKey: string; expiredAt: Date }
@@ -73,10 +75,7 @@ const updateCredential = async (input: {
   return credentialRepository.update({ ctx, id, data });
 };
 
-const deleteCredential = async (input: {
-  ctx: { tenant: Tenant };
-  id: Id;
-}) => {
+const deleteCredential = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
   const { ctx, id } = input;
 
   return credentialRepository.deleteById({ ctx, id });

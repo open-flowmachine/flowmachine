@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import Elysia from "elysia";
 import { err, ok } from "neverthrow";
+
 import type { Project } from "@/module/project/project-model";
-import { Err } from "@/shared/err/err";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
+
+import { Err } from "@/shared/err/err";
 
 // --- Mock setup ---
 

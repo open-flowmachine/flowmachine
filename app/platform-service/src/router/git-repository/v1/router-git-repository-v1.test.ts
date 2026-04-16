@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import Elysia from "elysia";
 import { err, ok } from "neverthrow";
+
 import type { GitRepository } from "@/module/git-repository/git-repository-model";
-import { Err } from "@/shared/err/err";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
+
+import { Err } from "@/shared/err/err";
 
 // --- Mock setup ---
 
@@ -37,9 +39,8 @@ mock.module("@/router/router-auth-guard", () => ({
   ),
 }));
 
-const { gitRepositoryV1Router } = await import(
-  "@/router/git-repository/v1/router-git-repository-v1"
-);
+const { gitRepositoryV1Router } =
+  await import("@/router/git-repository/v1/router-git-repository-v1");
 
 // --- Helpers ---
 
@@ -219,10 +220,7 @@ describe("GET /api/v1/git-repository/:id", () => {
     const gitRepo = makeGitRepository();
     mockGetGitRepository.mockResolvedValue(ok({ data: gitRepo }));
 
-    const response = await request(
-      "GET",
-      `/api/v1/git-repository/${TEST_ID}`,
-    );
+    const response = await request("GET", `/api/v1/git-repository/${TEST_ID}`);
     const json = await response.json();
 
     expect(json.status).toBe(200);
@@ -237,10 +235,7 @@ describe("GET /api/v1/git-repository/:id", () => {
   it("should return errEnvelope when not found", async () => {
     mockGetGitRepository.mockResolvedValue(err(Err.code("notFound")));
 
-    const response = await request(
-      "GET",
-      `/api/v1/git-repository/${TEST_ID}`,
-    );
+    const response = await request("GET", `/api/v1/git-repository/${TEST_ID}`);
     const json = await response.json();
 
     expect(json.status).toBe(404);

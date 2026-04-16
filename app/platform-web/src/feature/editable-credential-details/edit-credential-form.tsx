@@ -6,6 +6,10 @@ import {
   type FieldErrors,
   type UseFormReturn,
 } from "react-hook-form";
+
+import type { EditCredentialFormValues } from "@/feature/editable-credential-details/edit-credential-form-schema";
+import type { Credential } from "@/module/credential/credential-type";
+
 import { Badge } from "@/component/ui/badge";
 import { Button } from "@/component/ui/button";
 import { Calendar } from "@/component/ui/calendar";
@@ -27,9 +31,7 @@ import {
 } from "@/component/ui/popover";
 import { Separator } from "@/component/ui/separator";
 import { Spinner } from "@/component/ui/spinner";
-import type { EditCredentialFormValues } from "@/feature/editable-credential-details/edit-credential-form-schema";
 import { cn } from "@/lib/util";
-import type { Credential } from "@/module/credential/credential-type";
 import { makeCredentialService } from "@/module/credential/credential-service";
 
 type EditCredentialFormProps = {

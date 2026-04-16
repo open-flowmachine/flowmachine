@@ -1,7 +1,9 @@
 import Elysia from "elysia";
+
 import type { AiAgent } from "@/module/ai-agent/ai-agent-model";
-import { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
 import type { AiAgentResponseDto } from "@/router/ai-agent/v1/router-ai-agent-v1-dto";
+
+import { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
 import {
   deleteAiAgentRequestParamsDtoSchema,
   patchAiAgentRequestBodyDtoSchema,

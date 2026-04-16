@@ -1,10 +1,13 @@
 import { screen, waitForElementToBeRemoved } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { Project } from "@/module/project/project-type";
+
 import { makeProjectMswHandler } from "@/test/msw/msw-project-handler";
 import { mswServer } from "@/test/msw/msw-server";
 import { testRender } from "@/test/test-render";
+
 import { EditableProjectDetailsPage } from "./editable-project-details-page";
 
 vi.mock("next/navigation", () => ({

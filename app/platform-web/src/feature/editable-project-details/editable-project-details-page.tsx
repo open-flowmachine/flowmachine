@@ -4,10 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isNil } from "es-toolkit";
 import { useState } from "react";
 import { toast } from "sonner";
+
+import type { EditProjectFormValues } from "@/feature/editable-project-details/edit-project-form-schema";
+
 import { PlatformPageNotFoundError } from "@/component/platform/platform-page-not-found-error";
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { EditProjectForm } from "@/feature/editable-project-details/edit-project-form";
-import type { EditProjectFormValues } from "@/feature/editable-project-details/edit-project-form-schema";
 import { EditableProjectDetails } from "@/feature/editable-project-details/editable-project-details";
 import { useEditProjectForm } from "@/feature/editable-project-details/use-edit-project-form";
 import { useCopyToClipboard } from "@/hook/use-copy-to-clipboard";

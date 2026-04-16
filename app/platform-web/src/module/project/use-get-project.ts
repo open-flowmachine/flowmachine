@@ -1,9 +1,11 @@
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
-import { useProtectedHttpClient } from "@/hook/use-protected-http-client";
+
 import type { HttpEnvelope } from "@/lib/http/http-schema";
+import type { Project } from "@/module/project/project-type";
+
+import { useProtectedHttpClient } from "@/hook/use-protected-http-client";
 import { makeGetProjectQueryKey } from "@/lib/query/query-key";
 import { makeProjectHttpClient } from "@/module/project/project-http-client";
-import type { Project } from "@/module/project/project-type";
 
 type UseGetProjectOptions = Omit<
   UseQueryOptions<HttpEnvelope<Project>, Error, Project>,

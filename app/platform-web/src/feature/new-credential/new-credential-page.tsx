@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
+import type { NewCredentialFormValues } from "@/feature/new-credential/new-credential-form-schema";
+
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { NewCredentialForm } from "@/feature/new-credential/new-credential-form";
-import type { NewCredentialFormValues } from "@/feature/new-credential/new-credential-form-schema";
 import { useNewCredentialForm } from "@/feature/new-credential/use-new-credential-form";
 import { useCreateCredential } from "@/module/credential/use-create-credential";
 

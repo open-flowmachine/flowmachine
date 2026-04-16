@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { err, ok } from "neverthrow";
+
 import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-model";
+import type { Tenant } from "@/shared/model/model-tenant";
+
 import { Err } from "@/shared/err/err";
 import { type Id, idSchema } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
 
 // --- Mock setup ---
 
@@ -30,7 +32,8 @@ mock.module("@/shared/model/model-id", () => ({
   newId: () => NEW_ID,
 }));
 
-const { makeWorkflowDefinitionService } = await import("./workflow-definition-service");
+const { makeWorkflowDefinitionService } =
+  await import("./workflow-definition-service");
 const workflowDefinitionService = makeWorkflowDefinitionService();
 
 // --- Helpers ---

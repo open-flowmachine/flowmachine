@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { afterAll, afterEach, beforeAll } from "vitest";
+
 import { mswServer } from "@/test/msw/msw-server";
 
 // JSDOM does not implement window.matchMedia

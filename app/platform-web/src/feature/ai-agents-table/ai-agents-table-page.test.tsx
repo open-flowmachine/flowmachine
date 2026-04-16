@@ -1,13 +1,13 @@
-import {
-  screen,
-  waitForElementToBeRemoved,
-} from "@testing-library/react";
+import { screen, waitForElementToBeRemoved } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { AiAgent } from "@/module/ai-agent/ai-agent-type";
+
 import { makeAiAgentMswHandler } from "@/test/msw/msw-ai-agent-handler";
 import { mswServer } from "@/test/msw/msw-server";
 import { testRender } from "@/test/test-render";
+
 import AiAgentsTablePage from "./ai-agents-table-page";
 
 vi.mock("next/navigation", () => ({
@@ -122,10 +122,7 @@ describe("AiAgentsTablePage", () => {
     listHandler.resolveRequest();
 
     const link = await screen.findByRole("link", { name: "Alpha Agent" });
-    expect(link).toHaveAttribute(
-      "href",
-      `/platform/ai-agent/${AI_AGENT_1.id}`,
-    );
+    expect(link).toHaveAttribute("href", `/platform/ai-agent/${AI_AGENT_1.id}`);
   });
 
   it("renders the New AI Agent button linking to /platform/ai-agent/new", async () => {
@@ -201,9 +198,7 @@ describe("AiAgentsTablePage", () => {
       await openActionsMenu();
       await userEvent.click(screen.getByText("Copy"));
 
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-        AI_AGENT_1.id,
-      );
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(AI_AGENT_1.id);
       expect(await screen.findByText("Copied to clipboard")).toBeVisible();
     });
   });

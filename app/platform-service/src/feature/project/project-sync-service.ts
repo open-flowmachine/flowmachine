@@ -1,6 +1,8 @@
+import type { Result } from "neverthrow";
+
 import { isNil } from "es-toolkit";
 import { err, ok } from "neverthrow";
-import type { Result } from "neverthrow";
+
 import type { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
 import type { Credential } from "@/module/credential/credential-model";
 import type { makeCredentialService } from "@/module/credential/credential-service";
@@ -10,9 +12,10 @@ import type { makeProjectIssueFieldDefinitionService } from "@/module/project/pr
 import type { Project } from "@/module/project/project-model";
 import type { makeProjectService } from "@/module/project/project-service";
 import type { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";
-import { Err } from "@/shared/err/err";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
+
+import { Err } from "@/shared/err/err";
 
 type ExternalProjectService = {
   createCustomIssueField: (input: {

@@ -6,10 +6,13 @@ import {
 import { userEvent } from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { Project } from "@/module/project/project-type";
+
 import { makeProjectMswHandler } from "@/test/msw/msw-project-handler";
 import { mswServer } from "@/test/msw/msw-server";
 import { testRender } from "@/test/test-render";
+
 import ProjectsTablePage from "./projects-table-page";
 
 vi.mock("next/navigation", () => ({

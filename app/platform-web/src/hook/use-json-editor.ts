@@ -1,6 +1,7 @@
+import type { z } from "zod/v4";
+
 import { useState } from "react";
 import { toast } from "sonner";
-import type { z } from "zod/v4";
 
 type UseJsonEditorOptions<TSchema extends z.ZodType> = {
   initialValue?: string;

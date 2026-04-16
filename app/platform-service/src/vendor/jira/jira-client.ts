@@ -1,5 +1,6 @@
 import axios from "axios";
 import { err, ok } from "neverthrow";
+
 import { mapJiraError } from "@/vendor/jira/jira-err";
 
 type JiraClientConfig = {

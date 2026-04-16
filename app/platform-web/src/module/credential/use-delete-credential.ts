@@ -3,13 +3,15 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+
+import type { HttpClientDeleteCredentialInput } from "@/module/credential/credential-type";
+
 import { useProtectedHttpClient } from "@/hook/use-protected-http-client";
 import {
   makeGetCredentialQueryKey,
   makeListCredentialsQueryKey,
 } from "@/lib/query/query-key";
 import { makeCredentialHttpClient } from "@/module/credential/credential-http-client";
-import type { HttpClientDeleteCredentialInput } from "@/module/credential/credential-type";
 
 type UseDeleteCredentialOptions = Omit<
   UseMutationOptions<void, Error, HttpClientDeleteCredentialInput, unknown>,

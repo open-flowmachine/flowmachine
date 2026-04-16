@@ -19,16 +19,19 @@ Use this as a minimal checklist when the user says "start coding" or "implement 
 ## Red-Green-Refactor Checklist
 
 Red:
+
 - Test name describes the behavior.
 - Fails for the expected reason.
 - Minimal setup.
 
 Green:
+
 - Smallest code change.
 - No extra features.
 - Rerun the test subset.
 
 Refactor:
+
 - Clean names and structure.
 - Keep behavior unchanged.
 - Keep tests green.

@@ -1,13 +1,13 @@
-import {
-  screen,
-  waitForElementToBeRemoved,
-} from "@testing-library/react";
+import { screen, waitForElementToBeRemoved } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { GitRepository } from "@/module/git-repository/git-repository-type";
+
 import { makeGitRepositoryMswHandler } from "@/test/msw/msw-git-repository-handler";
 import { mswServer } from "@/test/msw/msw-server";
 import { testRender } from "@/test/test-render";
+
 import GitRepositoriesTablePage from "./git-repositories-table-page";
 
 vi.mock("next/navigation", () => ({

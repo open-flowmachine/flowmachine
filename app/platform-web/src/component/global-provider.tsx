@@ -1,10 +1,12 @@
 "use client";
 
+import type { PropsWithChildren } from "react";
+
 import { AuthUIProvider } from "@daveyplate/better-auth-ui";
 import { QueryClientProvider } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { PropsWithChildren } from "react";
+
 import { Toaster } from "@/component/ui/sonner";
 import { authClient } from "@/lib/auth/auth-client";
 import { queryClient } from "@/lib/query/query-client";

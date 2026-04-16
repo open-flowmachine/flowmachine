@@ -1,10 +1,12 @@
 import { err, ok } from "neverthrow";
+
 import type { ProjectIssueFieldDefinition } from "@/module/project/project-issue-field-definition-model";
+import type { Id } from "@/shared/model/model-id";
+import type { Tenant } from "@/shared/model/model-tenant";
+
 import { projectIssueFieldDefinitionRepository } from "@/module/project/project-issue-field-definition-repository";
 import { Err } from "@/shared/err/err";
 import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
-import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
 
 const createProjectIssueFieldDefinition = async (input: {
   ctx: { tenant: Tenant };
@@ -80,9 +82,7 @@ const listProjectIssueFieldDefinitions = async (input: {
 const updateProjectIssueFieldDefinition = async (input: {
   ctx: { tenant: Tenant };
   id: Id;
-  data: Partial<
-    Omit<ProjectIssueFieldDefinition, ExcludedUpdateModelFields>
-  >;
+  data: Partial<Omit<ProjectIssueFieldDefinition, ExcludedUpdateModelFields>>;
 }) => {
   const { ctx, id, data } = input;
 

@@ -1,5 +1,4 @@
 import type { HttpClient } from "@/lib/http/http-client";
-import { type HttpEnvelope } from "@/lib/http/http-schema";
 import type {
   HttpClientCreateProjectInput,
   HttpClientDeleteProjectInput,
@@ -8,6 +7,8 @@ import type {
   HttpClientUpdateProjectInput,
   Project,
 } from "@/module/project/project-type";
+
+import { type HttpEnvelope } from "@/lib/http/http-schema";
 
 const BASE_PATH = "/api/v1/project";
 

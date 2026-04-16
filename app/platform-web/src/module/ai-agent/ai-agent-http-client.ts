@@ -1,5 +1,4 @@
 import type { HttpClient } from "@/lib/http/http-client";
-import { type HttpEnvelope } from "@/lib/http/http-schema";
 import type {
   AiAgent,
   HttpClientAiAgentInput,
@@ -7,6 +6,8 @@ import type {
   HttpClientDeleteAiAgentInput,
   HttpClientGetAiAgentInput,
 } from "@/module/ai-agent/ai-agent-type";
+
+import { type HttpEnvelope } from "@/lib/http/http-schema";
 
 const BASE_PATH = "/api/v1/ai-agent";
 

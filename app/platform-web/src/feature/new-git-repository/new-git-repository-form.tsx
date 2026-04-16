@@ -4,6 +4,10 @@ import {
   type SubmitHandler,
   type UseFormReturn,
 } from "react-hook-form";
+
+import type { NewGitRepositoryFormValues } from "@/feature/new-git-repository/new-git-repository-form-schema";
+import type { Project } from "@/module/project/project-type";
+
 import { Button } from "@/component/ui/button";
 import {
   Combobox,
@@ -37,8 +41,6 @@ import {
 } from "@/component/ui/select";
 import { Separator } from "@/component/ui/separator";
 import { Spinner } from "@/component/ui/spinner";
-import type { NewGitRepositoryFormValues } from "@/feature/new-git-repository/new-git-repository-form-schema";
-import type { Project } from "@/module/project/project-type";
 
 type NewGitRepositoryFormProps = {
   form: UseFormReturn<NewGitRepositoryFormValues>;

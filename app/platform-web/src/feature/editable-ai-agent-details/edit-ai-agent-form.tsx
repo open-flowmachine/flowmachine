@@ -4,6 +4,10 @@ import {
   type FieldErrors,
   type UseFormReturn,
 } from "react-hook-form";
+
+import type { EditAiAgentFormValues } from "@/feature/editable-ai-agent-details/edit-ai-agent-form-schema";
+import type { Project } from "@/module/project/project-type";
+
 import { Button } from "@/component/ui/button";
 import {
   Combobox,
@@ -36,10 +40,8 @@ import {
   SelectValue,
 } from "@/component/ui/select";
 import { Spinner } from "@/component/ui/spinner";
-import type { EditAiAgentFormValues } from "@/feature/editable-ai-agent-details/edit-ai-agent-form-schema";
 import { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
 import { type AiAgent, aiModels } from "@/module/ai-agent/ai-agent-type";
-import type { Project } from "@/module/project/project-type";
 
 type EditAiAgentFormProps = {
   aiAgent: AiAgent;

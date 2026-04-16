@@ -4,6 +4,9 @@ import {
   type SubmitHandler,
   type UseFormReturn,
 } from "react-hook-form";
+
+import type { NewProjectFormValues } from "@/feature/new-project/new-project-form-schema";
+
 import { Button } from "@/component/ui/button";
 import {
   Field,
@@ -25,9 +28,8 @@ import {
 } from "@/component/ui/select";
 import { Separator } from "@/component/ui/separator";
 import { Spinner } from "@/component/ui/spinner";
-import type { NewProjectFormValues } from "@/feature/new-project/new-project-form-schema";
-import { projectProviders } from "@/module/project/project-type";
 import { projectProviderToDisplayName } from "@/module/project/project-service";
+import { projectProviders } from "@/module/project/project-type";
 
 type NewProjectFormProps = {
   form: UseFormReturn<NewProjectFormValues>;

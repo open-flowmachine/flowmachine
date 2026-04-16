@@ -1,5 +1,6 @@
-import { createHmac } from "crypto";
 import { describe, expect, it } from "bun:test";
+import { createHmac } from "crypto";
+
 import { verifyWebhookSignature } from "@/shared/webhook/webhook-signature";
 
 describe("verifyWebhookSignature", () => {
@@ -67,7 +68,8 @@ describe("verifyWebhookSignature", () => {
   });
 
   it("should compute correct HMAC for a JSON payload", () => {
-    const jsonBody = '{"webhookEvent":"jira:issue_updated","issue":{"key":"PROJ-1"}}';
+    const jsonBody =
+      '{"webhookEvent":"jira:issue_updated","issue":{"key":"PROJ-1"}}';
     const hmac = createHmac("sha256", secret).update(jsonBody).digest("hex");
     const signature = `sha256=${hmac}`;
 

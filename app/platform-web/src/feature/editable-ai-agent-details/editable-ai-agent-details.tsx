@@ -1,5 +1,9 @@
 import { CopyIcon } from "lucide-react";
 import Link from "next/link";
+
+import type { AiAgent } from "@/module/ai-agent/ai-agent-type";
+import type { Project } from "@/module/project/project-type";
+
 import { Badge } from "@/component/ui/badge";
 import { Button } from "@/component/ui/button";
 import {
@@ -12,8 +16,6 @@ import {
 } from "@/component/ui/field";
 import { Separator } from "@/component/ui/separator";
 import { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
-import type { AiAgent } from "@/module/ai-agent/ai-agent-type";
-import type { Project } from "@/module/project/project-type";
 
 type EditableAiAgentDetailsProps = {
   aiAgent: AiAgent;

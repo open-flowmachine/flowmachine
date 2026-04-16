@@ -4,10 +4,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { isNil } from "es-toolkit";
 import { useState } from "react";
 import { toast } from "sonner";
+
+import type { EditGitRepositoryFormValues } from "@/feature/editable-git-repository-details/edit-git-repository-form-schema";
+
 import { PlatformPageNotFoundError } from "@/component/platform/platform-page-not-found-error";
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { EditGitRepositoryForm } from "@/feature/editable-git-repository-details/edit-git-repository-form";
-import type { EditGitRepositoryFormValues } from "@/feature/editable-git-repository-details/edit-git-repository-form-schema";
 import { EditableGitRepositoryDetails } from "@/feature/editable-git-repository-details/editable-git-repository-details";
 import { useEditGitRepositoryForm } from "@/feature/editable-git-repository-details/use-edit-git-repository-form";
 import { useCopyToClipboard } from "@/hook/use-copy-to-clipboard";

@@ -3,13 +3,15 @@
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+
+import type { Credential } from "@/module/credential/credential-type";
+
 import { DataTable } from "@/component/extended-ui/data-table";
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { Button } from "@/component/ui/button";
 import { makeCredentialsTableColumnDef } from "@/feature/credentials-table/credentials-table-column-def";
 import { useConfirmableAction } from "@/hook/use-confirmable-action";
 import { useCopyToClipboard } from "@/hook/use-copy-to-clipboard";
-import type { Credential } from "@/module/credential/credential-type";
 import { useDeleteCredential } from "@/module/credential/use-delete-credential";
 import { useListCredentials } from "@/module/credential/use-list-credentials";
 

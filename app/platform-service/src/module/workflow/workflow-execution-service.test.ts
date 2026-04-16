@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 import { err, ok } from "neverthrow";
+
 import type { WorkflowExecution } from "@/module/workflow/workflow-execution-model";
+import type { Tenant } from "@/shared/model/model-tenant";
+
 import { Err } from "@/shared/err/err";
 import { type Id, idSchema } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
 
 // --- Mock setup ---
 
@@ -30,9 +32,8 @@ mock.module("@/shared/model/model-id", () => ({
   newId: () => NEW_ID,
 }));
 
-const { makeWorkflowExecutionService } = await import(
-  "./workflow-execution-service"
-);
+const { makeWorkflowExecutionService } =
+  await import("./workflow-execution-service");
 const workflowExecutionService = makeWorkflowExecutionService();
 
 // --- Helpers ---
@@ -175,7 +176,9 @@ describe("listWorkflowExecutions", () => {
   it("should return all workflow executions for the tenant", async () => {
     const executions = [
       makeWorkflowExecution(),
-      makeWorkflowExecution({ integration: { externalId: "ext-789", provider: "inngest" } }),
+      makeWorkflowExecution({
+        integration: { externalId: "ext-789", provider: "inngest" },
+      }),
     ];
     mockRepository.findMany.mockResolvedValue(ok({ data: executions }));
 

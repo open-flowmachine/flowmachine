@@ -1,4 +1,5 @@
 import z from "zod";
+
 import { idSchema } from "@/shared/model/model-id";
 
 const tenantTypes = ["organization", "user"] as const;

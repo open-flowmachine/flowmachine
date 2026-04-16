@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+
 import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-type";
 
 const makeWorkflowDefinitionService = (input: {
@@ -10,8 +11,7 @@ const makeWorkflowDefinitionService = (input: {
       format(workflowDefinition.createdAt, "MMM d, yyyy, h:mm a"),
     getUpdatedAt: () =>
       format(workflowDefinition.updatedAt, "MMM d, yyyy, h:mm a"),
-    getStatusLabel: () =>
-      workflowDefinition.isActive ? "Active" : "Inactive",
+    getStatusLabel: () => (workflowDefinition.isActive ? "Active" : "Inactive"),
   };
 };
 

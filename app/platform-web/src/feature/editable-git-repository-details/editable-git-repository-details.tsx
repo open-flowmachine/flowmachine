@@ -1,5 +1,9 @@
 import { CopyIcon } from "lucide-react";
 import Link from "next/link";
+
+import type { GitRepository } from "@/module/git-repository/git-repository-type";
+import type { Project } from "@/module/project/project-type";
+
 import { Badge } from "@/component/ui/badge";
 import { Button } from "@/component/ui/button";
 import {
@@ -11,9 +15,7 @@ import {
   FieldSet,
 } from "@/component/ui/field";
 import { Separator } from "@/component/ui/separator";
-import type { GitRepository } from "@/module/git-repository/git-repository-type";
 import { makeGitRepositoryService } from "@/module/git-repository/git-repository-service";
-import type { Project } from "@/module/project/project-type";
 
 type EditableGitRepositoryDetailsProps = {
   gitRepository: GitRepository;

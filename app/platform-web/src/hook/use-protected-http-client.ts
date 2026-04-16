@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useMemo } from "react";
+
 import { getEnv } from "@/lib/env/env";
 
 export const useProtectedHttpClient = () => {

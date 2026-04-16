@@ -1,8 +1,6 @@
 import { format } from "date-fns";
-import type {
-  Project,
-  projectProviders,
-} from "@/module/project/project-type";
+
+import type { Project, projectProviders } from "@/module/project/project-type";
 
 const projectProviderToDisplayName = {
   jira: "Jira",

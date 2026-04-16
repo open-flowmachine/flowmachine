@@ -8,6 +8,9 @@ import {
   type SubmitHandler,
   type UseFormReturn,
 } from "react-hook-form";
+
+import type { NewCredentialFormValues } from "@/feature/new-credential/new-credential-form-schema";
+
 import { Button } from "@/component/ui/button";
 import { Calendar } from "@/component/ui/calendar";
 import {
@@ -35,7 +38,6 @@ import {
 } from "@/component/ui/select";
 import { Separator } from "@/component/ui/separator";
 import { Spinner } from "@/component/ui/spinner";
-import type { NewCredentialFormValues } from "@/feature/new-credential/new-credential-form-schema";
 import { cn } from "@/lib/util";
 import { credentialTypes } from "@/module/credential/credential-type";
 

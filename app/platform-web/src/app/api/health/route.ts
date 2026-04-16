@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { getEnv } from "@/lib/env/env";
 
 export const GET = () => {

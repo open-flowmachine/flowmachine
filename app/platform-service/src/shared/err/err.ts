@@ -1,4 +1,5 @@
 import { isString } from "es-toolkit";
+
 import { type ErrCode, errDetails } from "@/shared/err/err-details";
 
 class Err extends Error {

@@ -3,13 +3,15 @@
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+
+import type { Project } from "@/module/project/project-type";
+
 import { DataTable } from "@/component/extended-ui/data-table";
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { Button } from "@/component/ui/button";
 import { makeProjectsTableColumnDef } from "@/feature/projects-table/projects-table-column-def";
 import { useConfirmableAction } from "@/hook/use-confirmable-action";
 import { useCopyToClipboard } from "@/hook/use-copy-to-clipboard";
-import type { Project } from "@/module/project/project-type";
 import { useDeleteProject } from "@/module/project/use-delete-project";
 import { useListProjects } from "@/module/project/use-list-projects";
 import { useSyncProject } from "@/module/project/use-sync-project";

@@ -1,9 +1,11 @@
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
-import { useProtectedHttpClient } from "@/hook/use-protected-http-client";
+
 import type { HttpEnvelope } from "@/lib/http/http-schema";
+import type { Credential } from "@/module/credential/credential-type";
+
+import { useProtectedHttpClient } from "@/hook/use-protected-http-client";
 import { makeGetCredentialQueryKey } from "@/lib/query/query-key";
 import { makeCredentialHttpClient } from "@/module/credential/credential-http-client";
-import type { Credential } from "@/module/credential/credential-type";
 
 type UseGetCredentialOptions = Omit<
   UseQueryOptions<HttpEnvelope<Credential>, Error, Credential>,

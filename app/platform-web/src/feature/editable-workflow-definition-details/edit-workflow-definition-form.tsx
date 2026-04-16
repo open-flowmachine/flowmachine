@@ -4,6 +4,11 @@ import {
   type FieldErrors,
   type UseFormReturn,
 } from "react-hook-form";
+
+import type { EditWorkflowDefinitionFormValues } from "@/feature/editable-workflow-definition-details/edit-workflow-definition-form-schema";
+import type { Project } from "@/module/project/project-type";
+import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-type";
+
 import { JsonEditorTextarea } from "@/component/extended-ui/json-editor-textarea";
 import { Button } from "@/component/ui/button";
 import {
@@ -31,10 +36,7 @@ import {
 import { Input } from "@/component/ui/input";
 import { Spinner } from "@/component/ui/spinner";
 import { Switch } from "@/component/ui/switch";
-import type { EditWorkflowDefinitionFormValues } from "@/feature/editable-workflow-definition-details/edit-workflow-definition-form-schema";
-import type { Project } from "@/module/project/project-type";
 import { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";
-import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-type";
 
 type EditWorkflowDefinitionFormProps = {
   workflowDefinition: WorkflowDefinition;

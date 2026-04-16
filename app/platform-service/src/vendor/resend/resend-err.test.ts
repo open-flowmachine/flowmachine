@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+
 import { Err } from "@/shared/err/err";
 import { mapResendError } from "@/vendor/resend/resend-err";
 

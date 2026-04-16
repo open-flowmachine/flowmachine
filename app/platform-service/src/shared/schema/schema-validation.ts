@@ -1,5 +1,7 @@
-import { err, ok } from "neverthrow";
 import type z from "zod";
+
+import { err, ok } from "neverthrow";
+
 import { Err } from "@/shared/err/err";
 
 const validate = <T>(schema: z.ZodSchema<T>, data: unknown) => {

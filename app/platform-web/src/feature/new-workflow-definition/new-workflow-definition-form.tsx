@@ -4,6 +4,10 @@ import {
   type SubmitHandler,
   type UseFormReturn,
 } from "react-hook-form";
+
+import type { NewWorkflowDefinitionFormValues } from "@/feature/new-workflow-definition/new-workflow-definition-form-schema";
+import type { Project } from "@/module/project/project-type";
+
 import { JsonEditorTextarea } from "@/component/extended-ui/json-editor-textarea";
 import { Button } from "@/component/ui/button";
 import {
@@ -32,8 +36,6 @@ import { Input } from "@/component/ui/input";
 import { Separator } from "@/component/ui/separator";
 import { Spinner } from "@/component/ui/spinner";
 import { Switch } from "@/component/ui/switch";
-import type { NewWorkflowDefinitionFormValues } from "@/feature/new-workflow-definition/new-workflow-definition-form-schema";
-import type { Project } from "@/module/project/project-type";
 
 type NewWorkflowDefinitionFormProps = {
   form: UseFormReturn<NewWorkflowDefinitionFormValues>;

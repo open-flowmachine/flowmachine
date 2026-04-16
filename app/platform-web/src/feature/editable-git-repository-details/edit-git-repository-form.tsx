@@ -4,6 +4,11 @@ import {
   type FieldErrors,
   type UseFormReturn,
 } from "react-hook-form";
+
+import type { EditGitRepositoryFormValues } from "@/feature/editable-git-repository-details/edit-git-repository-form-schema";
+import type { GitRepository } from "@/module/git-repository/git-repository-type";
+import type { Project } from "@/module/project/project-type";
+
 import { Button } from "@/component/ui/button";
 import {
   Combobox,
@@ -36,10 +41,7 @@ import {
   SelectValue,
 } from "@/component/ui/select";
 import { Spinner } from "@/component/ui/spinner";
-import type { EditGitRepositoryFormValues } from "@/feature/editable-git-repository-details/edit-git-repository-form-schema";
-import type { GitRepository } from "@/module/git-repository/git-repository-type";
 import { makeGitRepositoryService } from "@/module/git-repository/git-repository-service";
-import type { Project } from "@/module/project/project-type";
 
 type EditGitRepositoryFormProps = {
   gitRepository: GitRepository;

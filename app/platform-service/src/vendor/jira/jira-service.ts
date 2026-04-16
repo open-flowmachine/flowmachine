@@ -1,5 +1,6 @@
 import { isNil } from "es-toolkit";
 import { err, ok } from "neverthrow";
+
 import { Err } from "@/shared/err/err";
 import { makeJiraClient } from "@/vendor/jira/jira-client";
 

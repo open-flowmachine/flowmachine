@@ -1,10 +1,12 @@
 import { err, ok } from "neverthrow";
+
 import type { AiAgent } from "@/module/ai-agent/ai-agent-model";
+import type { Id } from "@/shared/model/model-id";
+import type { Tenant } from "@/shared/model/model-tenant";
+
 import { aiAgentRepository } from "@/module/ai-agent/ai-agent-repository";
 import { Err } from "@/shared/err/err";
 import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
-import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
 
 const createAiAgent = async (input: {
   ctx: { tenant: Tenant };
@@ -55,9 +57,7 @@ const listAiAgents = async (input: {
 
   return aiAgentRepository.findMany({
     ctx,
-    filter: filter?.projectId
-      ? { "projects.id": filter.projectId }
-      : undefined,
+    filter: filter?.projectId ? { "projects.id": filter.projectId } : undefined,
   });
 };
 

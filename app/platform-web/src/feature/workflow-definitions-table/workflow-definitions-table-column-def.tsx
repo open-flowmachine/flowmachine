@@ -1,6 +1,10 @@
 import type { ColumnDef } from "@tanstack/react-table";
+
 import { MoreHorizontalIcon, PencilIcon, TrashIcon } from "lucide-react";
 import Link from "next/link";
+
+import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-type";
+
 import { DataTableColumnHeader } from "@/component/extended-ui/data-table";
 import {
   AlertDialog,
@@ -22,7 +26,6 @@ import {
   DropdownMenuTrigger,
 } from "@/component/ui/dropdown-menu";
 import { Spinner } from "@/component/ui/spinner";
-import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-type";
 import { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";
 
 type MakeWorkflowDefinitionsTableColumnDefInput = {
@@ -79,10 +82,9 @@ export const makeWorkflowDefinitionsTableColumnDef = ({
         <DataTableColumnHeader column={column} title="Status" />
       ),
       cell: ({ row }) => {
-        const workflowDefinitionDomainService =
-          makeWorkflowDefinitionService({
-            workflowDefinition: row.original,
-          });
+        const workflowDefinitionDomainService = makeWorkflowDefinitionService({
+          workflowDefinition: row.original,
+        });
         return (
           <Badge variant={row.getValue("isActive") ? "default" : "secondary"}>
             {workflowDefinitionDomainService.getStatusLabel()}
@@ -108,10 +110,9 @@ export const makeWorkflowDefinitionsTableColumnDef = ({
         <DataTableColumnHeader column={column} title="Created" />
       ),
       cell: ({ row }) => {
-        const workflowDefinitionDomainService =
-          makeWorkflowDefinitionService({
-            workflowDefinition: row.original,
-          });
+        const workflowDefinitionDomainService = makeWorkflowDefinitionService({
+          workflowDefinition: row.original,
+        });
         return <span>{workflowDefinitionDomainService.getCreatedAt()}</span>;
       },
       enableSorting: false,

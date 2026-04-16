@@ -1,8 +1,11 @@
 import type { Document, Filter, IndexDescription, WithId } from "mongodb";
+
 import { err, ok } from "neverthrow";
-import { type Model } from "@/shared/model/model";
+
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
+
+import { type Model } from "@/shared/model/model";
 import { getEnv } from "@/vendor/env/env";
 import { mongoClient } from "@/vendor/mongo/mongo-client";
 import { mapMongoError } from "@/vendor/mongo/mongo-err";

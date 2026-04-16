@@ -3,13 +3,15 @@
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+
+import type { AiAgent } from "@/module/ai-agent/ai-agent-type";
+
 import { DataTable } from "@/component/extended-ui/data-table";
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { Button } from "@/component/ui/button";
 import { makeAiAgentsTableColumnDef } from "@/feature/ai-agents-table/ai-agents-table-column-def";
 import { useConfirmableAction } from "@/hook/use-confirmable-action";
 import { useCopyToClipboard } from "@/hook/use-copy-to-clipboard";
-import type { AiAgent } from "@/module/ai-agent/ai-agent-type";
 import { useDeleteAiAgent } from "@/module/ai-agent/use-delete-ai-agent";
 import { useListAiAgents } from "@/module/ai-agent/use-list-ai-agents";
 

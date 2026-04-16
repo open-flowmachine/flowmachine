@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
+import type { NewAiAgentFormValues } from "@/feature/new-ai-agent/new-ai-agent-form-schema";
+
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { NewAiAgentForm } from "@/feature/new-ai-agent/new-ai-agent-form";
-import type { NewAiAgentFormValues } from "@/feature/new-ai-agent/new-ai-agent-form-schema";
 import { useNewAiAgentForm } from "@/feature/new-ai-agent/use-new-ai-agent-form";
 import { useCreateAiAgent } from "@/module/ai-agent/use-create-ai-agent";
 import { useListProjects } from "@/module/project/use-list-projects";

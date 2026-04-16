@@ -1,4 +1,5 @@
 import type { ColumnDef } from "@tanstack/react-table";
+
 import {
   CopyIcon,
   MoreHorizontalIcon,
@@ -7,6 +8,9 @@ import {
   TrashIcon,
 } from "lucide-react";
 import Link from "next/link";
+
+import type { Project } from "@/module/project/project-type";
+
 import { DataTableColumnHeader } from "@/component/extended-ui/data-table";
 import {
   AlertDialog,
@@ -28,7 +32,6 @@ import {
 } from "@/component/ui/dropdown-menu";
 import { Spinner } from "@/component/ui/spinner";
 import { makeProjectService } from "@/module/project/project-service";
-import type { Project } from "@/module/project/project-type";
 
 type MakeProjectsTableColumnDefInput = {
   isDeleteConfirmationAlertOpen: boolean;
