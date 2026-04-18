@@ -32,7 +32,9 @@ In practice, narrow with `zod` at boundaries — see below.
 
 ## Native `enum` → `as const` + derived union
 
-Native `enum` produces runtime JS objects with surprising bidirectional mappings (numeric enums) and generates code. `as const` + derived union is purely structural:
+Native `enum` produces runtime JS objects with surprising bidirectional mappings (numeric enums) and generates code. `as const` + derived union is purely structural. Pick the shape by what the members carry:
+
+**String-literal enum → `as const` array.** No key/value duplication, trivial `(typeof x)[number]` derivation:
 
 ```typescript
 // No
@@ -42,11 +44,18 @@ enum Status {
 }
 
 // Yes
-const Status = { Idle: "idle", Ready: "ready" } as const;
-type Status = (typeof Status)[keyof typeof Status]; // "idle" | "ready"
+const statuses = ["idle", "ready"] as const;
+type Status = (typeof statuses)[number]; // "idle" | "ready"
 ```
 
-The derived union is a literal string union — directly usable as a discriminant in unions (see UNIONS.md).
+**Complex-value enum → `as const` object.** Use when members map to numbers, objects, tuples, or functions:
+
+```typescript
+const httpCodes = { ok: 200, notFound: 404 } as const;
+type HttpCode = (typeof httpCodes)[keyof typeof httpCodes]; // 200 | 404
+```
+
+Casing: value side (`statuses`, `httpCodes`, members) is `camelCase`; the derived type is `PascalCase`. The derived union is directly usable as a discriminant in unions (see UNIONS.md).
 
 ## `as T` → narrow or parse
 

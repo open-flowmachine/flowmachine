@@ -49,8 +49,13 @@ Rule: reach for `satisfies` when a literal object must conform to a type but you
 Source of truth is the value. Derive the type:
 
 ```typescript
-const Status = { Idle: "idle", Ready: "ready" } as const;
-type Status = (typeof Status)[keyof typeof Status]; // "idle" | "ready"
+// String-literal enum → array form.
+const statuses = ["idle", "ready"] as const;
+type Status = (typeof statuses)[number]; // "idle" | "ready"
+
+// Complex-value enum → object form.
+const httpCodes = { ok: 200, notFound: 404 } as const;
+type HttpCode = (typeof httpCodes)[keyof typeof httpCodes]; // 200 | 404
 
 const handlers = {
   click: (e: MouseEvent) => {},
@@ -59,7 +64,7 @@ const handlers = {
 type EventName = keyof typeof handlers; // "click" | "key"
 ```
 
-This pattern replaces native `enum` (see ANTI-PATTERNS.md) and keeps the value + type in lockstep.
+These patterns replace native `enum` (see ANTI-PATTERNS.md) and keep the value + type in lockstep.
 
 ## Utility types
 

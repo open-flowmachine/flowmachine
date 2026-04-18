@@ -5,23 +5,31 @@ description: Apply when creating or renaming folders, files, variables, function
 
 # Naming Conventions
 
-| Target                                       | Casing                 | Example                            |
-| -------------------------------------------- | ---------------------- | ---------------------------------- |
-| Folder                                       | `kebab-case`           | `user-profile/`                    |
-| File (all, incl. `.ts` / `.tsx`)             | `kebab-case`           | `user-card.tsx`, `auth-service.ts` |
-| Variable                                     | `camelCase`            | `currentUser`                      |
-| Function                                     | `camelCase`            | `getUserById`                      |
-| Class                                        | `PascalCase`           | `UserService`                      |
-| Type / Interface                             | `PascalCase`           | `UserProfile`                      |
-| Enum (type + members)                        | `PascalCase`           | `OrderStatus.Pending`              |
-| Module-level constant (primitive, immutable) | `SCREAMING_SNAKE_CASE` | `MAX_RETRIES`                      |
+> For TypeScript type design (illegal states, enum replacement, branded types, escape hatches) → `conventions-typescript`.
+
+| Target                                       | Casing                       | Example                            |
+| -------------------------------------------- | ---------------------------- | ---------------------------------- |
+| Folder                                       | `kebab-case`                 | `user-profile/`                    |
+| File (all, incl. `.ts` / `.tsx`)             | `kebab-case`                 | `user-card.tsx`, `auth-service.ts` |
+| Variable                                     | `camelCase`                  | `currentUser`                      |
+| Function                                     | `camelCase`                  | `getUserById`                      |
+| Class                                        | `PascalCase`                 | `UserService`                      |
+| Type / Interface                             | `PascalCase`                 | `UserProfile`                      |
+| `as const` array (string-literal enum)       | `camelCase`                  | `statuses`, `["idle", "ready"]`    |
+| `as const` object (complex-value enum)       | `camelCase` object + members | `httpCodes.ok`, `roles.admin`      |
+| Derived union type (paired with the value)   | `PascalCase`                 | `type Status = …`                  |
+| Module-level constant (primitive, immutable) | `SCREAMING_SNAKE_CASE`       | `MAX_RETRIES`                      |
+| Module-level constant (non-primitive)        | `camelCase`                  | `handlers`, `status`               |
 
 ## Rules
 
 - Files and folders: `kebab-case`, always. React components included (`user-card.tsx`, not `UserCard.tsx`).
 - Variables and functions: `camelCase`.
-- Classes, types, interfaces, enums (and enum members): `PascalCase`.
-- Module-level primitive constants: `SCREAMING_SNAKE_CASE`. In-function `const` locals stay `camelCase`.
+- Classes, types, and interfaces: `PascalCase`.
+- Native `enum` is banned (see `conventions-typescript`). Replace with an `as const` value + derived union. Value side is `camelCase`; derived type is `PascalCase`.
+  - String-literal enum → `as const` **array**: `const statuses = ["idle", "ready"] as const; type Status = (typeof statuses)[number]`.
+  - Complex-value enum (numbers, objects, functions, …) → `as const` **object**: `const httpCodes = { ok: 200, notFound: 404 } as const; type HttpCode = (typeof httpCodes)[keyof typeof httpCodes]`.
+- Module-level primitive constants: `SCREAMING_SNAKE_CASE`. Non-primitive module-level constants (objects, arrays, maps): `camelCase`. In-function `const` locals stay `camelCase`.
 
 ## Namespacing
 
