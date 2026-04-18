@@ -161,7 +161,7 @@ export const userMongoAdapter = (/* db handle */): UserRepoPort => ({
 
 ## Composition root
 
-Adapters are wired to ports **at the app entry** (e.g. `app/service/src/main.ts`), never inside the context:
+Adapters are wired to ports **at the app entry** (the `main.ts` / `index.ts` that boots the app), never inside the context. The `@/` alias used below resolves to wherever the composition root's TS path alias points — typically the app's `src/` root. The import paths matter only in that they cross from the composition root into a context's `use-case/` and `adapter/` folders; that crossing is allowed **only** here.
 
 ```typescript
 import { createUserUseCase } from "@/identity/use-case/create-user.use-case";

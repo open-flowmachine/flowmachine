@@ -1,6 +1,6 @@
 ---
 name: architecture-hexagonal
-description: Apply when creating a new bounded context, moving code between layers, adding an adapter, or reviewing a diff that touches context structure. Defines bounded-context-first hexagonal (ports & adapters) layout for the monorepo. Excludes DDD tactical patterns.
+description: Apply whenever creating, moving, renaming, or reviewing code inside a bounded context — new contexts, new adapters, new ports, new use cases, or diffs that cross context folders. Trigger even when the user doesn't say "hexagonal" or "ports and adapters" but is clearly laying out backend/domain code, wiring infra to logic, or deciding what belongs where. Defines the bounded-context-first hexagonal layout and role-suffixed naming for the monorepo. Excludes DDD tactical patterns (→ architecture-ddd), casing (→ conventions-naming), and type shape (→ conventions-typescript).
 ---
 
 # Hexagonal Architecture — Bounded-Context First
@@ -20,6 +20,8 @@ Scope: layout, layering, and role-suffixed naming. Casing → `conventions-namin
 - **Shared kernel stays small.** A top-level `kernel/` holds cross-cutting primitives only — ids, time, result helpers, branded-type utilities. Not "generic business things."
 
 ## Canonical tree
+
+This is the **logical layout** of one bounded context. Where these folders root inside a repo — a single app, multiple apps, a shared package — is a monorepo-layout decision, not a hex decision. Every context has exactly these folders with these names, and the import rules hold regardless of where the root sits.
 
 ```
 kernel/                          # shared primitives — cross-context, infra-free
@@ -49,24 +51,20 @@ One bounded context = one hexagon. Naming the context is itself a design decisio
 
 ## Naming quick table
 
-| Role                | File suffix    | Type name suffix | Example file              | Example type        |
-| ------------------- | -------------- | ---------------- | ------------------------- | ------------------- |
-| Domain entity/value | _(none)_       | _(none)_         | `user.ts`                 | `User`              |
-| Driving port        | `.port.ts`     | `Port`           | `create-user.port.ts`     | `CreateUserPort`    |
-| Driven port         | `.port.ts`     | `Port`           | `user-repo.port.ts`       | `UserRepoPort`      |
-| Use case            | `.use-case.ts` | `UseCase`        | `create-user.use-case.ts` | `CreateUserUseCase` |
-| Inbound adapter     | `.adapter.ts`  | `Adapter`        | `user-http.adapter.ts`    | `UserHttpAdapter`   |
-| Outbound adapter    | `.adapter.ts`  | `Adapter`        | `user-mongo.adapter.ts`   | `UserMongoAdapter`  |
-| Kernel primitive    | _(none)_       | _(none)_         | `id.ts`, `time.ts`        | `Id`, `Clock`       |
+| Role     | File suffix    | Type suffix |
+| -------- | -------------- | ----------- |
+| Port     | `.port.ts`     | `Port`      |
+| Use case | `.use-case.ts` | `UseCase`   |
+| Adapter  | `.adapter.ts`  | `Adapter`   |
 
-Casing follows `conventions-naming` (files `kebab-case`, types `PascalCase`). The suffixes above are the only hex-specific addition.
+Domain and kernel files carry no role suffix — the folder already identifies them. Files are `kebab-case`, types `PascalCase` — casing rules live in `conventions-naming`. Full suffix table (incl. inbound vs outbound examples), role edge cases, and anti-patterns → [references/NAMING.md](./references/NAMING.md).
 
 ## References
 
-| Topic                                                         | Reference                                            |
-| ------------------------------------------------------------- | ---------------------------------------------------- |
-| Folder layout, import direction, worked example               | [references/STRUCTURE.md](./references/STRUCTURE.md) |
-| Naming edge cases, anti-patterns to reject                    | [references/NAMING.md](./references/NAMING.md)       |
-| Modeling inside `domain/` (aggregates, value objects, events) | `architecture-ddd`                                   |
-| File/identifier casing                                        | `conventions-naming`                                 |
-| Port shapes, `Result<T, E>`, branded types                    | `conventions-typescript`                             |
+| Topic                                                             | Reference                                            |
+| ----------------------------------------------------------------- | ---------------------------------------------------- |
+| Folder layout, import direction, worked example, composition root | [references/STRUCTURE.md](./references/STRUCTURE.md) |
+| Full suffix table, role edge cases, testing seams, anti-patterns  | [references/NAMING.md](./references/NAMING.md)       |
+| Modeling inside `domain/` (aggregates, value objects, events)     | `architecture-ddd`                                   |
+| File/identifier casing                                            | `conventions-naming`                                 |
+| Port shapes, `Result<T, E>`, branded types                        | `conventions-typescript`                             |

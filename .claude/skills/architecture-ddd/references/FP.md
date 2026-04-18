@@ -21,9 +21,13 @@ export type User = {
   readonly status: UserStatus;
 };
 
-export type UserEvent =
-  | { type: "userRegistered"; userId: UserId; email: Email }
-  | { type: "emailChanged"; userId: UserId; email: Email };
+type BaseUserEvent = {
+  type: "userRegistered" | "emailChanged";
+  userId: UserId;
+};
+type UserRegistered = BaseUserEvent & { type: "userRegistered"; email: Email };
+type EmailChanged = BaseUserEvent & { type: "emailChanged"; email: Email };
+export type UserEvent = UserRegistered | EmailChanged;
 
 export type CreateUserError = "invalidEmail";
 export type ChangeEmailError = "invalidEmail" | "sameEmail";
@@ -98,7 +102,23 @@ export const changeUserEmail: ChangeEmailUseCase =
   };
 ```
 
-Chain multiple commands by threading `state` through and concatenating `events` arrays.
+Chain multiple commands by threading `state` through and concatenating `events` arrays:
+
+```typescript
+const created = User.create({ id, email });
+if (created.isErr()) return err(created.error);
+
+const renamed = User.changeEmail(created.value.state, { newEmail });
+if (renamed.isErr()) return err(renamed.error);
+
+const finalState = renamed.value.state;
+const events = [...created.value.events, ...renamed.value.events];
+
+await userRepo.save(finalState);
+await eventBus.publish(events);
+```
+
+Each command sees the previous command's fresh state; events accumulate and are published once after the save commits.
 
 ## Factories, domain services, specifications
 

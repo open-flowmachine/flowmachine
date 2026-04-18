@@ -16,10 +16,10 @@ Immutable, equality by value, no identity. Models a concept whose instances are 
 import { Result, ok, err } from "neverthrow";
 
 type Email = string & { readonly __brand: "Email" };
-type EmailError = "invalid_format";
+type EmailError = "invalidFormat";
 
 const makeEmail = (raw: string): Result<Email, EmailError> =>
-  /^[^@\s]+@[^@\s]+$/.test(raw) ? ok(raw as Email) : err("invalid_format");
+  /^[^@\s]+@[^@\s]+$/.test(raw) ? ok(raw as Email) : err("invalidFormat");
 ```
 
 **Reject:** value objects with `id`, with setters, or that throw instead of returning `Result`.
@@ -76,9 +76,9 @@ A collection-like interface for **one aggregate type**. Looks like an in-memory 
 
 ```typescript
 type UserRepoPort = {
-  readonly findById: (id: UserId) => Promise<Result<User, "not_found">>;
+  readonly findById: (id: UserId) => Promise<Result<User, "notFound">>;
   readonly add: (user: User) => Promise<Result<void, "conflict">>;
-  readonly remove: (id: UserId) => Promise<Result<void, "not_found">>;
+  readonly remove: (id: UserId) => Promise<Result<void, "notFound">>;
 };
 ```
 

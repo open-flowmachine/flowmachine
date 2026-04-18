@@ -6,7 +6,7 @@ Strategic DDD decides _where the seams are_ before tactical DDD decides _what's 
 
 A shared vocabulary between engineers and domain experts, agreed inside a single bounded context.
 
-- Every identifier in `core/` (types, methods, events, value objects) must come from this vocabulary. No translation layer between expert speech and code.
+- Every identifier in `domain/` (types, methods, events, value objects) must come from this vocabulary. No translation layer between expert speech and code.
 - Update the language when the domain changes. Renames in code follow renames in conversation, not the other way around.
 - Cross-context translation is the job of an Anti-Corruption Layer (see Context maps), not of an engineer's head.
 

@@ -1,6 +1,6 @@
 ---
 name: architecture-ddd
-description: Apply when modeling domain logic inside a feature core — designing aggregates, value objects, domain events, repositories, factories, specifications, or splitting bounded contexts and subdomains. Defines DDD strategic + tactical patterns and the full-FP aggregate approach (readonly state + pure command functions). Excludes folder layout (architecture-hexagonal) and casing (conventions-naming).
+description: Apply when modeling domain logic inside a feature's `domain/` folder — designing aggregates, value objects, domain events, repositories, factories, specifications, or splitting bounded contexts and subdomains. Trigger whenever a user is placing behaviour inside a feature, asking where a rule or validation should live, designing events, or asking about entities vs value objects — even if they don't say "DDD" or "aggregate". Defines DDD strategic + tactical patterns and the full-FP aggregate approach (readonly state + pure command functions). Excludes folder layout (architecture-hexagonal) and casing (conventions-naming).
 ---
 
 # Domain-Driven Design — Strategic + Tactical + FP
@@ -13,7 +13,7 @@ Scope: how to model the domain inside a feature's `domain/` folder. Folder/file 
 
 ## Principle & thinking
 
-- **Model-driven design.** The code is the model. No "domain" diagram that diverges from `core/`.
+- **Model-driven design.** The code is the model. No "domain" diagram that diverges from `domain/`.
 - **Ubiquitous language per bounded context.** One vocabulary, agreed with experts. The same word can legitimately mean different things in different contexts (`User` in auth ≠ `User` in billing) — that's why contexts exist.
 - **Aggregate = consistency boundary.** One transaction touches one aggregate. Cross-aggregate consistency is eventual, mediated by domain events.
 - **Behavior with the data it protects.** Methods (or functions) live next to the state they enforce invariants on. Anemic data + service-layer logic is the failure mode this skill exists to prevent.
