@@ -16,7 +16,7 @@ Scope: layout, layering, and role-suffixed naming. Casing → `conventions-namin
 - **Dependency rule.** Imports flow `adapter → port → use-case → domain`. Never the reverse. The domain must be runnable with zero infra imports.
 - **Ports are owned by the domain, adapters by infra.** A port is an interface the domain _asks for_. An adapter is the implementation the composition root _provides_.
 - **Driving vs driven — always split.** `inbound/` (HTTP, CLI, worker) and `outbound/` (DB, email, external API) live in separate subfolders so the direction of control is visible at a glance.
-- **Public surface is the barrel.** Cross-context calls go through `<context>/index.ts`. Deep imports into another context are a review block.
+- **Public surface is `port/inbound/` + public `domain/` types.** Cross-context imports reach those two paths directly; anything else (`use-case/`, `port/outbound/`, `adapter/`, `domain/` internals) is a review block.
 - **Shared kernel stays small.** A top-level `kernel/` holds cross-cutting primitives only — ids, time, result helpers, branded-type utilities. Not "generic business things."
 
 ## Canonical tree
@@ -43,7 +43,6 @@ kernel/                          # shared primitives — cross-context, infra-fr
       <channel>.adapter.ts
     outbound/                    # db, http client, email, etc.
       <impl>.adapter.ts
-  index.ts                       # public barrel — exports port/inbound + domain types only
 ```
 
 One bounded context = one hexagon. Naming the context is itself a design decision (the _ubiquitous language_ for its domain) — see `architecture-ddd`. Avoid technical names (`api/`, `backend/`) and generic buckets (`common/`, `shared/`).
@@ -59,16 +58,15 @@ One bounded context = one hexagon. Naming the context is itself a design decisio
 | Inbound adapter     | `.adapter.ts`  | `Adapter`        | `user-http.adapter.ts`    | `UserHttpAdapter`   |
 | Outbound adapter    | `.adapter.ts`  | `Adapter`        | `user-mongo.adapter.ts`   | `UserMongoAdapter`  |
 | Kernel primitive    | _(none)_       | _(none)_         | `id.ts`, `time.ts`        | `Id`, `Clock`       |
-| Barrel              | `index.ts`     | —                | `index.ts`                | —                   |
 
 Casing follows `conventions-naming` (files `kebab-case`, types `PascalCase`). The suffixes above are the only hex-specific addition.
 
 ## References
 
-| Topic                                           | Reference                                            |
-| ----------------------------------------------- | ---------------------------------------------------- |
-| Folder layout, import direction, worked example | [references/STRUCTURE.md](./references/STRUCTURE.md) |
-| Naming edge cases, anti-patterns to reject      | [references/NAMING.md](./references/NAMING.md)       |
-| Modeling inside `domain/` (aggregates, value objects, events) | `architecture-ddd`                     |
-| File/identifier casing                          | `conventions-naming`                                 |
-| Port shapes, `Result<T, E>`, branded types      | `conventions-typescript`                             |
+| Topic                                                         | Reference                                            |
+| ------------------------------------------------------------- | ---------------------------------------------------- |
+| Folder layout, import direction, worked example               | [references/STRUCTURE.md](./references/STRUCTURE.md) |
+| Naming edge cases, anti-patterns to reject                    | [references/NAMING.md](./references/NAMING.md)       |
+| Modeling inside `domain/` (aggregates, value objects, events) | `architecture-ddd`                                   |
+| File/identifier casing                                        | `conventions-naming`                                 |
+| Port shapes, `Result<T, E>`, branded types                    | `conventions-typescript`                             |

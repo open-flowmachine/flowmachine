@@ -28,7 +28,7 @@ The scope inside which one model and one ubiquitous language are consistent.
 
 - **One model per context.** The same noun (`User`, `Order`, `Document`) can — and often should — exist as different types in different contexts.
 - **One bounded context ≈ one feature folder** in the hexagonal layout. Two contexts in one folder is a smell; one context spread across folders is a worse smell.
-- **Public surface is the barrel** (`feature/<name>/index.ts`). Cross-context calls go through it; deep imports across contexts are a review block.
+- **Public surface is `port/inbound/` + public `domain/` types.** Nothing else is importable from another context — see `architecture-hexagonal` for the layering and review rules.
 - **Context boundary = transaction boundary.** A use case spans one bounded context. Cross-context coordination uses domain events, not shared transactions.
 
 ## Context map relationships
@@ -49,7 +49,7 @@ Default to **ACL** when consuming any external or upstream model — it keeps th
 
 ## Anti-patterns
 
-- **Leaking another context's model across the barrel.** Re-exporting a foreign aggregate or DTO via `index.ts` welds two contexts together.
+- **Leaking another context's model across the public surface.** Re-exporting a foreign aggregate or DTO from your context's `port/inbound/` or `domain/` welds two contexts together.
 - **One giant context covering multiple subdomains.** "User-and-billing-and-notifications" is three contexts wearing a trench coat.
 - **Technical-named contexts.** `utils`, `shared-business`, `common-domain` — none of these names exist in the ubiquitous language, so none of them are bounded contexts.
 - **Translating in your head.** If a method takes an upstream type, you're missing an ACL.

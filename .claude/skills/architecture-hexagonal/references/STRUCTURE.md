@@ -2,16 +2,16 @@
 
 ## Layering invariants
 
-| Layer              | May import                                           | May NOT import                                              |
-| ------------------ | ---------------------------------------------------- | ----------------------------------------------------------- |
-| `kernel/`          | Nothing outside `kernel/`                            | Any context, any framework, DB, HTTP, env reads             |
-| `domain/`          | Other `domain/` files, `kernel/`                     | Anything in `port/`, `use-case/`, `adapter/`; any framework, DB, HTTP, env reads |
-| `port/inbound/`    | `domain/` types, `kernel/`                           | `adapter/`, `use-case/`                                     |
-| `port/outbound/`   | `domain/` types, `kernel/`                           | `adapter/`, `use-case/`                                     |
-| `use-case/`        | `domain/`, `port/inbound`, `port/outbound`, `kernel/`| `adapter/` (inbound or outbound)                            |
-| `adapter/inbound`  | `port/inbound` (to invoke it), `domain/` types, `kernel/` | `use-case/` directly, `adapter/outbound`               |
-| `adapter/outbound` | `port/outbound` (to implement it), `domain/` types, `kernel/` | `use-case/`, `adapter/inbound`, other contexts' internals |
-| `index.ts`         | Re-exports `port/inbound` + `domain/` public types   | Never re-exports `adapter/` or `use-case/`                  |
+| Layer              | May import                                                      | May NOT import                                                                           |
+| ------------------ | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `kernel/`          | Nothing outside `kernel/`                                       | Any context, any framework, DB, HTTP, env reads                                          |
+| `domain/`          | Other `domain/` files, `kernel/`                                | Anything in `port/`, `use-case/`, `adapter/`; any framework, DB, HTTP, env reads         |
+| `port/inbound/`    | `domain/` types, `kernel/`                                      | `adapter/`, `use-case/`                                                                  |
+| `port/outbound/`   | `domain/` types, `kernel/`                                      | `adapter/`, `use-case/`                                                                  |
+| `use-case/`        | `domain/`, `port/inbound`, `port/outbound`, `kernel/`           | `adapter/` (inbound or outbound)                                                         |
+| `adapter/inbound`  | `port/inbound` (to invoke it), `domain/` types, `kernel/`       | `use-case/` directly, `adapter/outbound`                                                 |
+| `adapter/outbound` | `port/outbound` (to implement it), `domain/` types, `kernel/`   | `use-case/`, `adapter/inbound`, other contexts' internals                                |
+| cross-context      | Another context's `port/inbound/` + public `domain/` types only | Another context's `use-case/`, `port/outbound/`, `adapter/`, or internal `domain/` files |
 
 Rule of thumb: if you need to ask "can I import this," draw the arrow. If it points _toward_ the domain, it's allowed. Otherwise invert via a port.
 
@@ -48,7 +48,6 @@ identity/
       user-http.adapter.ts
     outbound/
       user-mongo.adapter.ts
-  index.ts
 ```
 
 ```typescript
@@ -59,10 +58,32 @@ export const newId = <Brand extends string>(): Id<Brand> =>
 ```
 
 ```typescript
-// identity/domain/user.ts — pure shapes and rules.
+// identity/domain/user.ts — aggregate is a readonly state record + pure command
+// functions. Full shape (commands, events, domain errors) in `architecture-ddd`
+// → FP.md. Kept minimal here to keep focus on layout.
+import { err, ok, type Result } from "neverthrow";
 import type { Id } from "@/kernel/id";
+
 export type UserId = Id<"UserId">;
 export type User = { readonly id: UserId; readonly email: string };
+export type UserEvent = {
+  type: "userRegistered";
+  userId: UserId;
+  email: string;
+};
+export type CreateUserError = "invalidEmail";
+
+export const create = (input: {
+  id: UserId;
+  email: string;
+}): Result<{ state: User; events: UserEvent[] }, CreateUserError> => {
+  if (!input.email.includes("@")) return err("invalidEmail");
+  const state: User = { id: input.id, email: input.email };
+  const events: UserEvent[] = [
+    { type: "userRegistered", userId: input.id, email: input.email },
+  ];
+  return ok({ state, events });
+};
 ```
 
 ```typescript
@@ -79,29 +100,35 @@ export type CreateUserPort = (
 
 ```typescript
 // port/outbound/user-repo.port.ts — what the use-case needs from infra.
-import type { User, UserId } from "../../domain/user";
+import type { User } from "../../domain/user";
 
 export type UserRepoPort = {
   readonly findByEmail: (email: string) => Promise<User | undefined>;
-  readonly insert: (user: User) => Promise<void>;
-  readonly nextId: () => UserId;
+  readonly add: (user: User) => Promise<void>;
 };
 ```
 
 ```typescript
 // use-case/create-user.use-case.ts — orchestrates domain + outbound ports.
+// Orchestration only — validation, construction, and events are produced by
+// the aggregate's pure commands (see `architecture-ddd` → TACTICAL.md / FP.md).
 import { err, ok } from "neverthrow";
+import { newId } from "@/kernel/id";
+import * as User from "../domain/user";
 import type { CreateUserPort } from "../port/inbound/create-user.port";
 import type { UserRepoPort } from "../port/outbound/user-repo.port";
 
 export const createUserUseCase =
   (repo: UserRepoPort): CreateUserPort =>
   async ({ email }) => {
-    if (!email.includes("@")) return err("invalidEmail");
     if (await repo.findByEmail(email)) return err("emailTaken");
-    const user = { id: repo.nextId(), email };
-    await repo.insert(user);
-    return ok(user);
+    const created = User.create({ id: newId<"UserId">(), email });
+    if (created.isErr()) return err(created.error);
+    const { state, events } = created.value;
+    await repo.add(state);
+    // Publish `events` via an event-bus port here — wiring shown in
+    // `architecture-ddd` → FP.md "Use-case wiring".
+    return ok(state);
   };
 ```
 
@@ -110,29 +137,26 @@ export const createUserUseCase =
 import type { CreateUserPort } from "../../port/inbound/create-user.port";
 
 export const userHttpAdapter = (createUser: CreateUserPort) => ({
-  post: async (body: { email: string }) => (await createUser(body)).match(
-    (user) => ({ status: 201, body: user }),
-    (e) => ({ status: 400, body: { error: e } }),
-  ),
+  post: async (body: { email: string }) =>
+    (await createUser(body)).match(
+      (user) => ({ status: 201, body: user }),
+      (e) => ({ status: 400, body: { error: e } }),
+    ),
 });
 ```
 
 ```typescript
 // adapter/outbound/user-mongo.adapter.ts — implements the driven port.
-import { newId } from "@/kernel/id";
 import type { UserRepoPort } from "../../port/outbound/user-repo.port";
 
 export const userMongoAdapter = (/* db handle */): UserRepoPort => ({
-  findByEmail: async (_email) => { /* ... */ return undefined; },
-  insert: async (_user) => { /* ... */ },
-  nextId: () => newId<"UserId">(),
+  findByEmail: async (_email) => {
+    /* ... */ return undefined;
+  },
+  add: async (_user) => {
+    /* ... */
+  },
 });
-```
-
-```typescript
-// identity/index.ts — public surface of the context.
-export type { User, UserId } from "./domain/user";
-export type { CreateUserPort, CreateUserInput, CreateUserError } from "./port/inbound/create-user.port";
 ```
 
 ## Composition root
@@ -149,12 +173,13 @@ const createUser = createUserUseCase(userRepo);
 const userRoute = userHttpAdapter(createUser);
 ```
 
-The composition root is the **only** place that reaches past another context's `index.ts`.
+The composition root is the **only** place that imports another context's `use-case/` and `adapter/` directly — everywhere else, cross-context access is limited to `port/inbound/` and public `domain/` types.
 
 ## Cross-context rule
 
-- Context A calls context B **only** through `<b>/index.ts`.
-- If B's barrel doesn't expose what A needs, the fix is "widen the barrel," not "reach in."
+- Context A imports from context B only via `<b>/port/inbound/*.port.ts` or public types in `<b>/domain/`.
+- Importing `<b>/use-case/`, `<b>/port/outbound/`, `<b>/adapter/`, or internal `<b>/domain/` files from A is a review block.
+- If A needs behavior that B's inbound ports don't expose, add a new `*.port.ts` in B rather than reaching past it.
 - If A needs B's outbound adapter behavior, model it as a new port in A and inject B's use-case as the implementation at the composition root.
 
 ## Kernel — scope and boundaries
@@ -170,7 +195,7 @@ Rules:
 
 - Kernel imports from nothing but other kernel files. If it needs a context, it's not kernel.
 - Adding to kernel requires at least two context call sites. Otherwise it belongs in the context that owns it.
-- Kernel never holds business concepts (no `Money`, no `Organization`). Those live in the context that owns them and are re-exported via that context's `index.ts`.
+- Kernel never holds business concepts (no `Money`, no `Organization`). Those live in the context that owns them and are accessed via that context's `domain/` types or `port/inbound/`.
 
 ## What NOT to put in `domain/`
 

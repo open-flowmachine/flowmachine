@@ -22,11 +22,12 @@ Ports in `port/inbound/` and `port/outbound/` share a suffix because the folder 
 - **Port granularity.** One port per _capability_ the domain needs — not one port per adapter, and not one mega-port per context. `UserRepoPort` with three methods is fine; `UserRepoPort` with twenty is a seam you're missing.
 - **Vendor-scoped adapters.** Name outbound adapters by vendor + capability so a future swap is obvious: `resend-email.adapter.ts`, `stripe-billing.adapter.ts`, `daytona-sandbox.adapter.ts`. Not `email.adapter.ts` — the whole point of the port is that email has one name and many implementations.
 - **Inbound adapters.** Name by subject + transport: `user-http.adapter.ts`, `user-cli.adapter.ts`, `user-inngest.adapter.ts`.
+- **Inbound ACL.** An inbound adapter that translates an external or upstream model into the local ubiquitous language is an Anti-Corruption Layer — see `architecture-ddd` → STRATEGIC.md. Keep the translation in the adapter; no foreign types cross into `domain/` or `port/`.
 - **Port has one use-case?** Still split. `port/inbound/` defines the _contract_; `use-case/` defines the _implementation_. Keeping them in separate folders means a grep for `.port.ts` finds every contract boundary without false positives.
 - **Multiple outbound ports, one adapter.** Fine — a single `user-mongo.adapter.ts` may export a factory returning an object that satisfies several `*.port.ts` types. The adapter filename reflects the infra, not the ports.
 - **Kernel files.** Named by primitive, no suffix (`id.ts`, `time.ts`, `result.ts`). If the primitive _is_ a port (e.g. `Clock`), the type ends in `Port` but the file does not — kernel files are standalone utilities, not context boundaries.
 - **Tests.** Sibling `*.test.ts` (see `conventions-naming`). Test `domain/` and `use-case/` directly with in-memory adapters. Test outbound adapters via contract tests that drive the port from both the real and the fake implementation.
-- **Barrel contents.** `index.ts` exports only: domain public types + `port/inbound/*` types. Never use-cases, never adapters, never domain internals.
+- **No barrels.** Contexts do not have a root `index.ts`. The public surface is the set of files under `port/inbound/` and the public type exports in `domain/` — consumers import those paths directly.
 
 ## Anti-patterns to reject in review
 
@@ -43,6 +44,8 @@ Ports in `port/inbound/` and `port/outbound/` share a suffix because the folder 
 | `adapter/inbound/` importing `adapter/outbound/`             | Adapters never talk to each other; they talk through ports + use-cases. |
 | Business types in `kernel/` (`Money`, `Organization`, …)     | Kernel is infra-free primitives only. Business lives in the owning context. |
 | `kernel/` importing from a bounded context                   | Kernel is a leaf — nothing in it may know a context exists. |
-| Deep import `<context-a>/use-case/...` from context B        | Must go through `<context-a>/index.ts`.               |
+| Cross-context import of `<context-a>/use-case/`, `<context-a>/port/outbound/`, `<context-a>/adapter/`, or an internal `<context-a>/domain/` file | Only `<context-a>/port/inbound/*.port.ts` and public `<context-a>/domain/` types are importable across contexts. |
+| A root `index.ts` in any bounded context                     | There are no barrels — consumers import `port/inbound/` and `domain/` paths directly. |
+| `class` in `domain/` (aggregate, domain service, factory, specification) | Aggregates are readonly state records + pure command functions — see `architecture-ddd` → FP.md. |
 | Port type without `Port` suffix, use-case without `UseCase` suffix | Breaks grep-ability and makes role invisible at call site. |
 | `any` / `enum` / `as T` / `x!` anywhere in hex code          | See `conventions-typescript`.                         |

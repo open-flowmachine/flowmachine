@@ -2,7 +2,7 @@
 
 The vocabulary for what lives inside a bounded context's `domain/` folder. Each pattern is a tool with a narrow purpose — reach for the smallest one that fits.
 
-> Type machinery (branded types, `Result<T, E>`, discriminated unions) → `conventions-typescript`. Folder placement → `architecture-hexagonal`. Class-vs-function split for these patterns → `HYBRID.md`.
+> Type machinery (branded types, `Result<T, E>`, discriminated unions) → `conventions-typescript`. Folder placement → `architecture-hexagonal`. Concrete aggregate + command shape → `FP.md`.
 
 ## Value Object
 
@@ -96,12 +96,12 @@ A pure function that expresses domain behavior involving **multiple aggregates**
 
 ## Factory
 
-Encapsulates non-trivial construction of an aggregate or complex value object. Returns `Result<Aggregate, DomainError>`.
+Encapsulates non-trivial construction of an aggregate or complex value object. Returns `Result<{ state, events }, DomainError>` (or `Result<Value, E>` for value objects).
 
-- Default location: `static create(...)` on the aggregate class — see `HYBRID.md`.
-- Use a standalone factory function only when construction needs collaborators (other aggregates, policies) that don't belong on the aggregate.
+- Default: an exported `create` function on the aggregate module — see `FP.md`.
+- Standalone factory file only when construction needs collaborators (other aggregates, policies) that don't belong on the aggregate.
 
-**Reject:** `new Aggregate(...)` called from outside the aggregate's own file. Construction without validation.
+**Reject:** literal-object construction (`{ id, email, ... }`) of an aggregate outside its own module. Construction without validation.
 
 ## Specification
 
