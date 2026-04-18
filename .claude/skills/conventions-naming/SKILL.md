@@ -1,6 +1,6 @@
 ---
 name: conventions-naming
-description: Apply when creating or renaming folders, files, variables, functions, classes, types, enums, or constants. Defines the casing rules for the entire codebase.
+description: Apply when creating or renaming folders, files, variables, functions, classes, types, enum replacements, or constants, or when reviewing casing in a diff. Defines the casing rules for the entire codebase.
 ---
 
 # Naming Conventions
@@ -15,17 +15,18 @@ description: Apply when creating or renaming folders, files, variables, function
 | Function                                     | `camelCase`                  | `getUserById`                      |
 | Class                                        | `PascalCase`                 | `UserService`                      |
 | Type / Interface                             | `PascalCase`                 | `UserProfile`                      |
-| `as const` array (string-literal enum)       | `camelCase`                  | `statuses`, `["idle", "ready"]`    |
+| `as const` array (string-literal enum)       | `camelCase`                  | `statuses = ["idle", "ready"]`     |
 | `as const` object (complex-value enum)       | `camelCase` object + members | `httpCodes.ok`, `roles.admin`      |
-| Derived union type (paired with the value)   | `PascalCase`                 | `type Status = …`                  |
 | Module-level constant (primitive, immutable) | `SCREAMING_SNAKE_CASE`       | `MAX_RETRIES`                      |
 | Module-level constant (non-primitive)        | `camelCase`                  | `handlers`, `status`               |
 
 ## Rules
 
 - Files and folders: `kebab-case`, always. React components included (`user-card.tsx`, not `UserCard.tsx`).
+- Test files: sibling `*.test.ts` / `*.test.tsx` next to the file under test (`user-card.tsx` → `user-card.test.tsx`). Use `bun test` runner; no `__tests__/` dirs, no `.spec.` suffix.
 - Variables and functions: `camelCase`.
 - Classes, types, and interfaces: `PascalCase`.
+- Acronyms in `PascalCase`/`camelCase`: only the first letter is uppercase (`UserId`, `HttpCode`, `parseUrl`, not `UserID`/`HTTPCode`/`parseURL`). Keeps identifiers readable and grep-friendly.
 - Native `enum` is banned (see `conventions-typescript`). Replace with an `as const` value + derived union. Value side is `camelCase`; derived type is `PascalCase`.
   - String-literal enum → `as const` **array**: `const statuses = ["idle", "ready"] as const; type Status = (typeof statuses)[number]`.
   - Complex-value enum (numbers, objects, functions, …) → `as const` **object**: `const httpCodes = { ok: 200, notFound: 404 } as const; type HttpCode = (typeof httpCodes)[keyof typeof httpCodes]`.
