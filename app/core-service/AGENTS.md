@@ -15,8 +15,11 @@ bun run lint             # Run oxlint
 
 ## Naming Convention
 
-- **Directories** — bare domain/bounded-context name, no prefix: `project/`, `credential/`, `workflow-definition/`.
-- **Files** — prefixed with their parent directory: `project.ts`, `project-id.ts`, `project-events.ts`, `project-repository.ts`.
+Three skills jointly own the conventions used in this service:
+
+- [`.agents/skills/naming-conventions/SKILL.md`](../../.agents/skills/naming-conventions/SKILL.md) — generic identifier casing and structural naming: directories, files, types, classes, functions, factories, React components/hooks, Zod schemas, enum replacements, env vars, discriminator strings, import paths.
+- [`.agents/skills/hexagonal-architecture/SKILL.md`](../../.agents/skills/hexagonal-architecture/SKILL.md) — `*Port` / adapter / `<Verb><Aggregate>UseCase` / Command / Output naming and the use-case factory exception.
+- [`.agents/skills/domain-driven-design/SKILL.md`](../../.agents/skills/domain-driven-design/SKILL.md) — branded IDs, aggregate roots, value objects, past-tense domain events, repository-port preference, domain error classes.
 
 ## Architecture
 
@@ -70,6 +73,6 @@ Aggregate folders never import each other's internals. Cross-aggregate reference
 
 ### Application Layer
 
-- Driver ports (use cases): `I<Name>UseCase { execute(command): Promise<Result<Output, ApplicationError>> }`. Each aggregate folder under `application/` has a `<name>-use-cases.ts` file exporting command types and use-case interfaces.
+- Driver ports (use cases): `<Verb><Aggregate>UseCase { execute(command): Promise<Result<Output, ApplicationError>> }`. Each aggregate folder under `application/` has a `<name>-use-cases.ts` file exporting command, output, and use-case types (e.g. `CreateCredentialCommand` / `CreateCredentialOutput` / `CreateCredentialUseCase`).
 - Driven ports (SPI): `application/shared/` houses cross-cutting ports — `UnitOfWorkPort`, `DomainEventPublisherPort`, `IntegrationEventPublisherPort`, `WebhookSignatureVerifierPort`, `ClockPort`, `IdGeneratorPort`. Aggregate-specific driven ports (`ExternalIssueTrackerPort`, `SandboxProviderPort`) live under the relevant orchestration folder (`application/project-sync/`).
 - **No factories in `application/`** — `application/` defines types only. Concrete wiring belongs in `infra/`.
