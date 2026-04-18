@@ -5,5 +5,8 @@
       "Bash(bun run test:*)",
       "Bash(bun run lint:*)"
     ]
+  },
+  "enabledPlugins": {
+    "skill-creator@claude-plugins-official": true
   }
 }
