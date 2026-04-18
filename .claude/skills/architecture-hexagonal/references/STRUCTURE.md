@@ -52,11 +52,13 @@ identity/
 
 ```typescript
 // kernel/id.ts — generic branded-id primitive shared by every context.
-// Parametric brands can't be expressed with `z.<type>().brand<"Name">()`;
-// a manual brand + the `as unknown as T` escape hatch is the accepted form.
-export type Id<Brand extends string> = string & { readonly __brand: Brand };
-export const newId = <Brand extends string>(): Id<Brand> =>
-  crypto.randomUUID() as unknown as Id<Brand>;
+// Parametric brands compose with `z.<type>().brand<Brand>()`; the generic
+// flows through `.parse()`, so no `as` cast is needed.
+import { z } from "zod/v4";
+
+export type Id<Brand extends string> = string & z.BRAND<Brand>;
+export const newId = <const Brand extends string>(): Id<Brand> =>
+  z.uuid().brand<Brand>().parse(crypto.randomUUID());
 ```
 
 ```typescript
