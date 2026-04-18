@@ -40,9 +40,13 @@ enum Status {
   Idle,
   Ready,
 }
+
+// Yes — see GENERICS.md → "Deriving types from values"
+const statuses = ["idle", "ready"] as const;
+type Status = (typeof statuses)[number];
 ```
 
-See GENERICS.md → _Deriving types from values_ for the canonical shape (string-literal array vs. complex-value object), the casing rules, and the derivation idiom. The resulting union is directly usable as a discriminant in unions (see UNIONS.md).
+Full shape (string-literal array vs. complex-value object) and the derivation idiom: GENERICS.md. Casing: `conventions-naming`. The resulting union is directly usable as a discriminant in unions (see UNIONS.md).
 
 ## `as T` → narrow or parse
 
@@ -77,17 +81,22 @@ With `noUncheckedIndexedAccess`, `arr[i]` is `T | undefined` and `record[key]` i
 
 ## Branded types for primitives
 
-Plain `string` / `number` for domain identity invites mix-ups (`userId` passed as `orgId`). Brand at construction:
+Plain `string` / `number` for domain identity invites mix-ups (`userId` passed as `orgId`). Brand at construction via `zod`'s `.brand<"Name">()` — no `as` cast needed:
 
 ```typescript
-type Email = string & { readonly __brand: "Email" };
-const makeEmail = (raw: string): Email => {
-  if (!/^[^@\s]+@[^@\s]+$/.test(raw)) throw new Error("invalid");
-  return raw as Email; // sole cast, co-located with the validator
+import { z } from "zod/v4";
+import { type Result, err, ok } from "neverthrow";
+
+const EmailSchema = z.email().brand<"Email">();
+type Email = z.infer<typeof EmailSchema>;
+
+const makeEmail = (raw: string): Result<Email, "invalidEmail"> => {
+  const parsed = EmailSchema.safeParse(raw);
+  return parsed.success ? ok(parsed.data) : err("invalidEmail");
 };
 ```
 
-The cast inside a smart constructor is the only place `as` is acceptable — because the validator _is_ the proof.
+`zod` is allowed inside `domain/` — specifically for smart constructors of value objects and branded primitives. The domain-purity rule forbids _injected runtime_ dependencies (ports, clocks, DB handles), not compile-time libraries.
 
 ## Immutability
 
@@ -106,7 +115,7 @@ Use `readonly` on every field that isn't deliberately mutable. Prefer `ReadonlyA
 
 ## Boundary parsing
 
-Untrusted data — env vars, HTTP bodies, DB documents, message queues, third-party APIs — **must** pass through a `zod/v4` schema before entering typed code. No `as` on boundary data. The schema is the bridge from `unknown` to a branded domain type.
+Untrusted data — env vars, HTTP bodies, DB documents, message queues, third-party APIs — **must** pass through a `zod/v4` schema before entering typed code. No `as` on boundary data. The schema is the bridge from `unknown` to a branded domain type. `zod` is also used inside `domain/` for smart constructors (see _Branded types_ above).
 
 ```typescript
 import { z } from "zod/v4";

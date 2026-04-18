@@ -28,17 +28,6 @@ Ports in `port/inbound/` and `port/outbound/` share a suffix because the folder 
 - **Kernel files.** Named by primitive, no suffix (`id.ts`, `time.ts`, `result.ts`). If the primitive _is_ a port (e.g. `Clock`), the type ends in `Port` but the file does not — kernel files are standalone utilities, not context boundaries.
 - **No barrels.** Contexts do not have a root `index.ts`. The public surface is the set of files under `port/inbound/` and the public type exports in `domain/` — consumers import those paths directly.
 
-## Testing seams
-
-The payoff of hex is that each layer has a clean seam to test against. If you can't test a layer without reaching into another, the boundary is wrong.
-
-- **`domain/` — test directly.** Pure functions, no mocks, no setup, no clock, no db. If a test of `domain/` wants a mock, the domain is leaking infra; move the leak out via a port.
-- **`use-case/` — test against in-memory adapters.** The composition root wires the real adapters; tests wire fakes that implement the same `port/outbound/` type. Same contract, different implementation. This is the main unit of behaviour-level testing.
-- **`adapter/outbound/` — contract tests.** Write one suite against the port and run it twice: once against the real adapter (hitting a real db / external service in integration), once against the in-memory fake. If both pass, the fake is faithful and the swap is safe.
-- **`adapter/inbound/` — thin translation tests.** Assert only transport↔port mapping (HTTP body → port input; port result → HTTP response/status). Business behaviour under test belongs in the use-case's test, not duplicated here.
-- **File placement.** Sibling `*.test.ts` next to the file under test. Casing rules → `conventions-naming`. No top-level `__tests__/` folder, no parallel `tests/` tree — colocation keeps the test and the code it guards visible together.
-- **In-memory fakes live with the port they implement.** A `user-repo.port.ts` is paired with a `user-repo.in-memory.adapter.ts` under `adapter/outbound/` (or in a `*.test.ts` helper if only one test needs it). It's still an adapter — just one whose backing store is a `Map`.
-
 ## Anti-patterns to reject in review
 
 | Rejected                                                                                                                                         | Why                                                                                                              |

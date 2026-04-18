@@ -8,19 +8,25 @@ The vocabulary for what lives inside a bounded context's `domain/` folder. Each 
 
 Immutable, equality by value, no identity. Models a concept whose instances are interchangeable when their attributes match (`Email`, `Money`, `DateRange`).
 
-- Branded type + smart constructor returning `Result<T, ValidationError>` — see `conventions-typescript` → `references/ANTI-PATTERNS.md` _Branded types_.
+- Branded type + smart constructor returning `Result<T, DomainError>` — see `conventions-typescript` → `references/ANTI-PATTERNS.md` _Branded types_.
 - Mutating "operations" return a **new** value object (`money.add(other) → Money`).
 - No `id`. Two `Email`s with the same string are the same email.
 
 ```typescript
-import { Result, ok, err } from "neverthrow";
+import { z } from "zod/v4";
+import { type Result, err, ok } from "neverthrow";
 
-type Email = string & { readonly __brand: "Email" };
-type EmailError = "invalidFormat";
+const EmailSchema = z.email().brand<"Email">();
+export type Email = z.infer<typeof EmailSchema>;
+export type EmailError = "invalidFormat";
 
-const makeEmail = (raw: string): Result<Email, EmailError> =>
-  /^[^@\s]+@[^@\s]+$/.test(raw) ? ok(raw as Email) : err("invalidFormat");
+export const makeEmail = (raw: string): Result<Email, EmailError> => {
+  const parsed = EmailSchema.safeParse(raw);
+  return parsed.success ? ok(parsed.data) : err("invalidFormat");
+};
 ```
+
+**`zod` is allowed inside `domain/`** — specifically for value-object and branded-primitive smart constructors. The domain-purity rule forbids _injected runtime_ dependencies (ports, clocks, DB handles, HTTP clients), not compile-time libraries like `zod`, `neverthrow`, or `es-toolkit`.
 
 **Reject:** value objects with `id`, with setters, or that throw instead of returning `Result`.
 

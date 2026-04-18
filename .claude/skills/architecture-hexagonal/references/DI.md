@@ -61,6 +61,8 @@ The infra handle (`db`, sdk client, api key) is itself constructed at the compos
 
 ### Domain — no injection
 
+The domain has no **injected** dependencies. Ports, clocks, DB handles, and HTTP clients are passed by the use case, not imported. Compile-time libraries — `zod`, `neverthrow`, `es-toolkit` — are fine; `zod` is the required tool for branded smart constructors (see `architecture-ddd` → TACTICAL.md).
+
 ```typescript
 // good — id and now are plain arguments, provided by the use-case
 export const create = (input: { id: UserId; now: Date; email: string }) => {
@@ -70,25 +72,28 @@ export const create = (input: { id: UserId; now: Date; email: string }) => {
 // bad — domain importing a port, a clock, or anything with I/O
 ```
 
-If a domain function needs time or an id, the use-case reads it from its injected port and passes the value in. `domain/` stays free of _all_ dependencies, not just infra.
+If a domain function needs time or an id, the use-case reads it from its injected port and passes the value in.
 
-### Cross-context — no direct dependency, events only
+### Cross-context — wiring only
 
-Bounded contexts don't call each other. They communicate by publishing and subscribing to **integration events** on a shared event bus — that's the only seam between them.
+> **Policy** (outbox atomicity, integration vs domain events, at-least-once, idempotency, when sync is allowed) lives in `architecture-ddd` → `references/STRATEGIC.md`. This section covers only the wiring shape.
 
-- The publishing context declares an `EventBusPort` (outbound) and publishes at the end of its use-case.
-- The reacting context declares an inbound subscriber adapter that receives the event and calls its own `port/inbound/`.
-- The bus implementation (e.g. `inngest-bus.adapter.ts`) is constructed at the composition root and injected into every context that needs it.
+Bounded contexts don't import each other. They talk through:
+
+- An **`EventBusPort`** (outbound) declared in the publishing context.
+- A **relay adapter** that reads the outbox and forwards to the bus — lives in `adapter/outbound/` of the publishing context.
+- A **subscriber adapter** in the reacting context's `adapter/inbound/` that receives the event and invokes its own `port/inbound/`.
+- The bus implementation (e.g. `inngest-bus.adapter.ts`) is constructed **once** at the composition root and injected into every context that needs it.
 
 ```typescript
-// A — use-case publishes; knows nothing about B
+// A — use-case writes to outbox via eventBus port
 const createUser = createUserUseCase(userRepo, eventBus);
 
 // B — its own inbound subscriber adapter, wired to its own inbound port
 const onUserRegistered = userRegisteredInngestAdapter(sendWelcome);
 ```
 
-Neither context imports anything from the other — not use-cases, not inbound ports, not domain types. The event payload is its own contract.
+Neither context imports anything from the other — not use-cases, not inbound ports, not domain types. The event payload is the only contract.
 
 ### Composition root — the only crossing
 

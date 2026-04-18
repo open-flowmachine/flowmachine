@@ -13,26 +13,14 @@ type BaseRequestState = {
   error?: Error | undefined;
 };
 
-type IdleRequestState = BaseRequestState & {
-  status: "idle";
-  data?: undefined;
-  error?: undefined;
-};
-type LoadingRequestState = BaseRequestState & {
-  status: "loading";
-  data?: undefined;
-  error?: undefined;
-};
 type SuccessRequestState = BaseRequestState & {
   status: "success";
   data: User;
   error?: undefined;
 };
-type ErrorRequestState = BaseRequestState & {
-  status: "error";
-  data?: undefined;
-  error: Error;
-};
+
+// IdleRequestState, LoadingRequestState, ErrorRequestState follow the
+// same pattern: pin `status`, set required fields, mark absent fields `?: undefined`.
 
 type RequestState =
   | IdleRequestState
@@ -113,7 +101,7 @@ Prefer `zod` at real system boundaries — see ANTI-PATTERNS.md → _Boundary pa
 
 ## Errors as values — `neverthrow`
 
-Fallible operations return a `Result<T, E>`, not a thrown exception. `Result` is a discriminated union (`Ok<T>` | `Err<E>`) — the compiler forces the caller to handle both sides.
+Fallible operations return a `Result<T, E>`, not a thrown exception. `Result` is a discriminated union (`Ok<T>` | `Err<E>`) — the compiler forces the caller to handle both sides. For hand-rolled Result-like unions, apply the Base + named variant + union shape above.
 
 ```typescript
 import { Result, ok, err } from "neverthrow";

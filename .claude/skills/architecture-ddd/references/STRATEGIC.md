@@ -51,12 +51,14 @@ Default to **ACL** when consuming any external or upstream model — it keeps th
 
 How cross-context communication actually happens. **Default mechanism: the outbox pattern emitting integration events.** No other mechanism unless justified in writing.
 
+> **Wiring** (`EventBusPort`, relay adapter, subscriber adapter, composition root injection) lives in `architecture-hexagonal` → `references/DI.md`. This section covers only the policy.
+
 - **Domain event vs integration event.**
   - _Domain event_ — internal to a context. Rich, free to evolve, consumed by the same context's use cases or projections. Never leaves the context.
   - _Integration event_ — crosses a context boundary. Part of the **Published Language**: versioned, stable, minimal payload, named in the publishing context's ubiquitous language. Breaking its schema is a breaking change for every subscriber.
-- **Outbox pattern.** In the **same transaction** that commits the aggregate state change, append the integration event(s) to an `outbox` collection. A separate relay/worker reads the outbox and publishes to the message bus. This is the only way to make "state changed ↔ event published" atomic without distributed transactions.
+- **Outbox pattern.** In the **same transaction** that commits the aggregate state change, append the integration event(s) to an `outbox` collection. A separate relay reads the outbox and publishes to the bus. This is the only way to make "state changed ↔ event published" atomic without distributed transactions.
 - **At-least-once, not exactly-once.** Consumers must be idempotent (dedupe by event id). Assume duplicates and out-of-order delivery when designing subscribers.
-- **Never publish from inside the domain.** The aggregate returns events in its `{ state, events }` result; the use case decides which are domain-internal and which promote to integration events, then writes the integration events to the outbox alongside the state change. The relay is an adapter concern — see `architecture-hexagonal`.
+- **Never publish from inside the domain.** The aggregate returns events in its `{ state, events }` result; the use case decides which are domain-internal and which promote to integration events, then writes the integration events to the outbox alongside the state change.
 - **Inbound side = ACL.** Subscribers translate the foreign integration event into the local ubiquitous language at the boundary before invoking a use case. Never let a foreign event shape reach `domain/`.
 - **When not to use it.** Synchronous request/reply across contexts is acceptable only for read queries where stale reads are unacceptable; even then, prefer a local projection fed by integration events. Never use shared DB writes.
 
@@ -66,6 +68,3 @@ How cross-context communication actually happens. **Default mechanism: the outbo
 - **One giant context covering multiple subdomains.** "User-and-billing-and-notifications" is three contexts wearing a trench coat.
 - **Technical-named contexts.** `utils`, `shared-business`, `common-domain` — none of these names exist in the ubiquitous language, so none of them are bounded contexts.
 - **Translating in your head.** If a method takes an upstream type, you're missing an ACL.
-- **Publishing without the outbox.** Any direct "publish to bus" from a use case creates a window where the state commits but the event is lost (or vice versa). If there's no outbox row, it didn't happen.
-- **Exposing domain events across contexts.** Domain events are internal. If another context needs to react, promote a dedicated integration event with a stable, versioned schema — do not subscribe a foreign context to your internal event stream.
-- **Synchronous cross-context calls for state changes.** RPC/HTTP between contexts to mutate state re-couples the contexts and loses atomicity. Use integration events.

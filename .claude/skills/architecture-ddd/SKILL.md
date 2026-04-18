@@ -19,12 +19,8 @@ Scope: how to model the domain inside a feature's `domain/` folder. Folder/file 
 - **Behavior with the data it protects.** Methods (or functions) live next to the state they enforce invariants on. Anemic data + service-layer logic is the failure mode this skill exists to prevent.
 - **Domain events are first-class outputs.** Commands return `{ state, events }`, not `void`. Domain events are the contract between aggregates _within_ a context.
 - **Cross-context = integration events via outbox (default).** Between contexts, publish _integration events_ (versioned, stable, minimal) written to an `outbox` collection in the same transaction as the state change; a relay worker forwards them to the bus. Consumers are idempotent. No direct publish, no shared transactions, no synchronous state-mutating RPC across contexts.
-- **Domain is infra-free.** No DB, HTTP, clock, or `crypto` calls inside `domain/`. Inject what you need as command inputs. Cross-link `architecture-hexagonal` for the dependency rule.
+- **Domain is infra-free.** No injected runtime dependencies inside `domain/` — no DB handles, HTTP clients, clocks, or `crypto` calls. Inject what you need as command inputs. Compile-time libraries are fine: `zod` (required for smart constructors), `neverthrow` (required for `Result`), `es-toolkit`. Cross-link `architecture-hexagonal` for the full dependency rule.
 - **Small over clever.** Smaller aggregates, fewer abstractions. Reach for Specification/Domain Service only after exhausting placement on the aggregate itself.
-
-## Full-FP approach (one-line summary)
-
-The aggregate is a **readonly state record plus a sibling namespace of pure command functions** of shape `(state, command) => Result<{ state, events }, DomainError>`. No classes, no `this`, no instance mutation, no hidden event buffers. Events are returned from every command; the use case accumulates and publishes them. Full shape in `FP.md`.
 
 ## References
 

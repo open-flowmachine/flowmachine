@@ -51,39 +51,19 @@ identity/
 ```
 
 ```typescript
-// kernel/id.ts — branded id primitive shared by every context.
+// kernel/id.ts — generic branded-id primitive shared by every context.
+// Parametric brands can't be expressed with `z.<type>().brand<"Name">()`;
+// a manual brand + the `as unknown as T` escape hatch is the accepted form.
 export type Id<Brand extends string> = string & { readonly __brand: Brand };
 export const newId = <Brand extends string>(): Id<Brand> =>
-  crypto.randomUUID() as Id<Brand>;
+  crypto.randomUUID() as unknown as Id<Brand>;
 ```
 
 ```typescript
-// identity/domain/user.ts — aggregate is a readonly state record + pure command
-// functions. Full shape (commands, events, domain errors) in `architecture-ddd`
-// → FP.md. Kept minimal here to keep focus on layout.
-import { err, ok, type Result } from "neverthrow";
-import type { Id } from "@/kernel/id";
-
-export type UserId = Id<"UserId">;
-export type User = { readonly id: UserId; readonly email: string };
-export type UserEvent = {
-  type: "userRegistered";
-  userId: UserId;
-  email: string;
-};
-export type CreateUserError = "invalidEmail";
-
-export const create = (input: {
-  id: UserId;
-  email: string;
-}): Result<{ state: User; events: UserEvent[] }, CreateUserError> => {
-  if (!input.email.includes("@")) return err("invalidEmail");
-  const state: User = { id: input.id, email: input.email };
-  const events: UserEvent[] = [
-    { type: "userRegistered", userId: input.id, email: input.email },
-  ];
-  return ok({ state, events });
-};
+// identity/domain/user.ts — a readonly state record + pure command functions.
+// Full aggregate shape (commands, events, errors) → `architecture-ddd` → FP.md.
+export type User = { readonly id: UserId; readonly email: Email };
+export const create: /* ... */ = /* ... */;
 ```
 
 ```typescript
@@ -126,8 +106,6 @@ export const createUserUseCase =
     if (created.isErr()) return err(created.error);
     const { state, events } = created.value;
     await repo.add(state);
-    // Publish `events` via an event-bus port here — wiring shown in
-    // `architecture-ddd` → FP.md "Use-case wiring".
     return ok(state);
   };
 ```
@@ -180,7 +158,7 @@ The composition root is the **only** place that imports another context's `use-c
 - Context A imports from context B only via `<b>/port/inbound/*.port.ts` or public types in `<b>/domain/`.
 - Importing `<b>/use-case/`, `<b>/port/outbound/`, `<b>/adapter/`, or internal `<b>/domain/` files from A is a review block.
 - If A needs behavior that B's inbound ports don't expose, add a new `*.port.ts` in B rather than reaching past it.
-- If A needs B's outbound adapter behavior, model it as a new port in A and inject B's use-case as the implementation at the composition root.
+- State changes across contexts go through integration events, not direct calls — see `architecture-ddd` → STRATEGIC.md for the policy and `references/DI.md` for the wiring.
 
 ## Kernel — scope and boundaries
 
@@ -200,6 +178,6 @@ Rules:
 ## What NOT to put in `domain/`
 
 - Framework decorators or base classes (Elysia handlers, Next route helpers).
-- `zod` schemas that mirror transport shape — those belong next to the adapter that parses them.
+- `zod` schemas that mirror _transport_ shape (HTTP bodies, DB documents, queue payloads) — those belong next to the adapter that parses them. `zod` _is_ allowed in `domain/` for smart constructors of value objects and branded primitives — see `architecture-ddd` → TACTICAL.md.
 - Database driver types (`ObjectId`, `Collection<T>`).
 - `process.env` reads, `Date.now()`, random id generation — inject via ports (or use `kernel/` primitives) so the domain stays pure and testable.

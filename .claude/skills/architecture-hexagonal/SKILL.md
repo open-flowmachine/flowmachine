@@ -7,17 +7,15 @@ description: Apply whenever creating, moving, renaming, or reviewing code inside
 
 > **The One Rule** — _The domain depends on nothing; everything depends on the domain._
 
-Scope: layout, layering, and role-suffixed naming. Casing → `conventions-naming`. Type shape (ports, Results, branded types) → `conventions-typescript`. How to model the contents of `domain/` (aggregates, value objects, repositories as collections, domain events) → `architecture-ddd` — we borrow only the word "domain" here to name the pure-logic layer.
-
 ## Principle & thinking
 
 - **Domain-first.** The domain is the entry point of design and the anchor of every context. You model the domain before you choose a framework, a database, or a route shape.
 - **Bounded-context first, not layer-first.** One folder per bounded context (`identity/`, `billing/`, `workflow/`), not one folder per technical layer (`controllers/`, `services/`). A context owns its language, its model, and its ports.
-- **Dependency rule.** Imports flow `adapter → port → use-case → domain`. Never the reverse. The domain must be runnable with zero infra imports.
+- **Dependency rule.** Imports flow `adapter → port → use-case → domain`. Never the reverse. The domain has no **injected** runtime dependencies — compile-time libraries like `zod`, `neverthrow`, and `es-toolkit` are allowed (`zod` is required for branded smart constructors — see `architecture-ddd` → TACTICAL.md).
 - **Ports are owned by the domain, adapters by infra.** A port is an interface the domain _asks for_. An adapter is the implementation the composition root _provides_.
 - **Driving vs driven — always split.** `inbound/` (HTTP, CLI, worker) and `outbound/` (DB, email, external API) live in separate subfolders so the direction of control is visible at a glance.
-- **Public surface is `port/inbound/` + public `domain/` types.** Cross-context imports reach those two paths directly; anything else (`use-case/`, `port/outbound/`, `adapter/`, `domain/` internals) is a review block.
-- **Shared kernel stays small.** A top-level `kernel/` holds cross-cutting primitives only — ids, time, result helpers, branded-type utilities. Not "generic business things."
+- **Public surface is `port/inbound/` + public `domain/` types.** Cross-context imports reach those two paths directly; anything else (`use-case/`, `port/outbound/`, `adapter/`, `domain/` internals) is a review block. Cross-context _communication_ (what counts as the contract, when events vs sync reads are allowed) lives in `architecture-ddd` → STRATEGIC.md; this skill owns only the wiring.
+- **Shared kernel stays small.** A top-level `kernel/` holds cross-cutting primitives only — full rules in `STRUCTURE.md`.
 
 ## Canonical tree
 
@@ -68,8 +66,9 @@ Factory functions with closure at every layer — ports in, port (or handler) ou
 | Topic                                                             | Reference                                            |
 | ----------------------------------------------------------------- | ---------------------------------------------------- |
 | Folder layout, import direction, worked example, composition root | [references/STRUCTURE.md](./references/STRUCTURE.md) |
-| Full suffix table, role edge cases, testing seams, anti-patterns  | [references/NAMING.md](./references/NAMING.md)       |
+| Full suffix table, role edge cases, anti-patterns                 | [references/NAMING.md](./references/NAMING.md)       |
 | DI pattern per layer, composition root, test wiring               | [references/DI.md](./references/DI.md)               |
+| Layer testing seams, in-memory fakes, test file placement         | [references/TESTING.md](./references/TESTING.md)     |
 | Modeling inside `domain/` (aggregates, value objects, events)     | `architecture-ddd`                                   |
 | File/identifier casing                                            | `conventions-naming`                                 |
 | Port shapes, `Result<T, E>`, branded types                        | `conventions-typescript`                             |

@@ -70,12 +70,14 @@ User.changeEmail(state, { newEmail });
 ## Rules
 
 1. **Fixed command shape.** `(state, command) => Result<{ state, events }, DomainError>`. Never `void`. Never throws.
-2. **State is a plain readonly record.** No methods. No hidden fields. No class.
+2. **State is a plain readonly record.** No methods. No hidden fields. No classes (no aggregate class, no `UserManager`, no static factories on classes).
 3. **No I/O, no globals, no `this`.** No `Date.now()`, `crypto.randomUUID()`, `fetch`. Pass non-determinism in via the command (`now: Date`, `id: UserId`).
-4. **Fresh state out.** Spread / structural construction; no in-place mutation.
-5. **Events returned, not buffered.** Each command returns `{ state, events }`. The use case accumulates and publishes.
+4. **Fresh state out.** Spread / structural construction; no in-place mutation. `state.email = …` and `Object.assign(state, …)` are banned.
+5. **Events returned, not buffered.** Each command returns `{ state, events }`. No `pullEvents()`, no hidden event arrays. The use case accumulates and publishes.
 6. **Equality by `state.id`.** Compare the id field — no helper method needed.
 7. **`DomainError` is a discriminated union** — see `conventions-typescript` → `references/UNIONS.md`.
+8. **Call commands as module functions, never methods.** `User.changeEmail(user, …)` — not `user.changeEmail(…)`.
+9. **Compile-time libraries only.** `zod`, `neverthrow`, and `es-toolkit` are allowed inside `domain/`. Injected runtime dependencies (ports, clocks, DB, HTTP, I/O) are not.
 
 ## Use-case wiring
 
@@ -126,11 +128,3 @@ Each command sees the previous command's fresh state; events accumulate and are 
 - **Domain service** — a named exported function in `domain/`. Takes aggregate states in, returns `Result<{ ...states, events }, E>`. No classes.
 - **Specification** — a named exported function returning `boolean` (or composed via `and` / `or` / `not` helpers). Pure, stateless, reused.
 
-## Banned
-
-- **Classes in `domain/`.** No aggregate classes, no `UserManager`, no static factories on classes.
-- **Methods on state records.** `user.changeEmail(...)` is forbidden; call `User.changeEmail(user, ...)`.
-- **Throwing from commands.** Commands return `Result`. Exceptions are for unrecoverable bugs only.
-- **Reading time or randomness inside a command.** Pass it in via the command argument.
-- **In-place updates.** `state.email = ...` or `Object.assign(state, ...)` — always return a new state.
-- **Event buffers.** No `pullEvents()`, no hidden event arrays. Return events from every command.

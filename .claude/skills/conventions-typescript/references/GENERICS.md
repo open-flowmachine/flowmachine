@@ -46,14 +46,12 @@ Rule: reach for `satisfies` when a literal object must conform to a type but you
 
 ## Deriving types from values
 
-Source of truth is the value. Derive the type:
+Source of truth is the value. Derive the type with `(typeof x)[number]` (array form) or `(typeof x)[keyof typeof x]` (object form). Casing rules → `conventions-naming`.
 
 ```typescript
-// String-literal enum → array form.
 const statuses = ["idle", "ready"] as const;
 type Status = (typeof statuses)[number]; // "idle" | "ready"
 
-// Complex-value enum → object form.
 const httpCodes = { ok: 200, notFound: 404 } as const;
 type HttpCode = (typeof httpCodes)[keyof typeof httpCodes]; // 200 | 404
 
