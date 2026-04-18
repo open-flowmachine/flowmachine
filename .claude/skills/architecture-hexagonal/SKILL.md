@@ -59,12 +59,17 @@ One bounded context = one hexagon. Naming the context is itself a design decisio
 
 Domain and kernel files carry no role suffix — the folder already identifies them. Files are `kebab-case`, types `PascalCase` — casing rules live in `conventions-naming`. Full suffix table (incl. inbound vs outbound examples), role edge cases, and anti-patterns → [references/NAMING.md](./references/NAMING.md).
 
+## Dependency injection
+
+Factory functions with closure at every layer — ports in, port (or handler) out. No DI containers, no decorators, no classes, no service locators. Adapters are only constructed at the composition root. How this looks per layer (use-case, inbound adapter, outbound adapter, domain, cross-context, tests), plus the rules of thumb → [references/DI.md](./references/DI.md).
+
 ## References
 
 | Topic                                                             | Reference                                            |
 | ----------------------------------------------------------------- | ---------------------------------------------------- |
 | Folder layout, import direction, worked example, composition root | [references/STRUCTURE.md](./references/STRUCTURE.md) |
 | Full suffix table, role edge cases, testing seams, anti-patterns  | [references/NAMING.md](./references/NAMING.md)       |
+| DI pattern per layer, composition root, test wiring               | [references/DI.md](./references/DI.md)               |
 | Modeling inside `domain/` (aggregates, value objects, events)     | `architecture-ddd`                                   |
 | File/identifier casing                                            | `conventions-naming`                                 |
 | Port shapes, `Result<T, E>`, branded types                        | `conventions-typescript`                             |
