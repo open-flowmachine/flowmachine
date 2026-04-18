@@ -29,7 +29,7 @@ description: Apply when creating or renaming folders, files, variables, function
 - Native `enum` is banned (see `conventions-typescript`). Replace with an `as const` value + derived union. Value side is `camelCase`; derived type is `PascalCase`.
   - String-literal enum → `as const` **array**: `const statuses = ["idle", "ready"] as const; type Status = (typeof statuses)[number]`.
   - Complex-value enum (numbers, objects, functions, …) → `as const` **object**: `const httpCodes = { ok: 200, notFound: 404 } as const; type HttpCode = (typeof httpCodes)[keyof typeof httpCodes]`.
-- Module-level constants: primitives in `SCREAMING_SNAKE_CASE`, non-primitives (objects, arrays, maps) in `camelCase`. In-function `const` locals stay `camelCase`.
+- In-function `const` locals stay `camelCase` regardless of immutability — the `SCREAMING_SNAKE_CASE` rule applies only to module-level primitives.
 
 ## Namespacing
 

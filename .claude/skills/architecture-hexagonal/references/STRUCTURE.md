@@ -180,6 +180,6 @@ Rules:
 ## What NOT to put in `domain/`
 
 - Framework decorators or base classes (Elysia handlers, Next route helpers).
-- `zod` schemas that mirror _transport_ shape (HTTP bodies, DB documents, queue payloads) — those belong next to the adapter that parses them. `zod` _is_ allowed in `domain/` for smart constructors of value objects and branded primitives — see `architecture-ddd` → TACTICAL.md.
+- `zod` schemas that mirror _transport_ shape (HTTP bodies, DB documents, queue payloads) — those belong next to the adapter that parses them. (`zod` _is_ allowed in `domain/` for smart constructors — see `architecture-ddd` → TACTICAL.md.)
 - Database driver types (`ObjectId`, `Collection<T>`).
 - `process.env` reads, `Date.now()`, random id generation — inject via ports (or use `kernel/` primitives) so the domain stays pure and testable.

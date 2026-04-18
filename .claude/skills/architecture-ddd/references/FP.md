@@ -77,34 +77,11 @@ User.changeEmail(state, { newEmail });
 6. **Equality by `state.id`.** Compare the id field — no helper method needed.
 7. **`DomainError` is a discriminated union** — see `conventions-typescript` → `references/UNIONS.md`.
 8. **Call commands as module functions, never methods.** `User.changeEmail(user, …)` — not `user.changeEmail(…)`.
-9. **Compile-time libraries only.** `zod`, `neverthrow`, and `es-toolkit` are allowed inside `domain/`. Injected runtime dependencies (ports, clocks, DB, HTTP, I/O) are not.
+9. **No injected runtime dependencies; compile-time libs are fine** — see SKILL.md → _Principle & thinking_.
 
 ## Use-case wiring
 
-The use case (in `use-case/` per `architecture-hexagonal`) loads state, calls commands, saves, publishes:
-
-```typescript
-import * as User from "../domain/user";
-
-export const changeUserEmail: ChangeEmailUseCase =
-  ({ userRepo, eventBus }) =>
-  async (input) => {
-    const loaded = await userRepo.findById(input.userId);
-    if (loaded.isErr()) return err(loaded.error);
-
-    const changed = User.changeEmail(loaded.value, {
-      newEmail: input.newEmail,
-    });
-    if (changed.isErr()) return err(changed.error);
-
-    const { state, events } = changed.value;
-    await userRepo.save(state);
-    await eventBus.publish(events);
-    return ok();
-  };
-```
-
-Chain multiple commands by threading `state` through and concatenating `events` arrays:
+Single-command wiring (load → command → save → publish) is shown in `architecture-hexagonal` → `references/STRUCTURE.md`. The DDD-specific pattern is **chaining multiple commands** by threading `state` through and concatenating `events` arrays:
 
 ```typescript
 const created = User.create({ id, email });
