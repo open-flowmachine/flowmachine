@@ -96,7 +96,7 @@ const makeEmail = (raw: string): Result<Email, "invalidEmail"> => {
 };
 ```
 
-`zod` is allowed inside `domain/` — specifically for smart constructors of value objects and branded primitives. The domain-purity rule forbids _injected runtime_ dependencies (ports, clocks, DB handles), not compile-time libraries.
+`zod` is allowed inside `domain/` for smart constructors — see `architecture-ddd` → TACTICAL.md for the rule.
 
 ## Immutability
 
@@ -115,7 +115,7 @@ Use `readonly` on every field that isn't deliberately mutable. Prefer `ReadonlyA
 
 ## Boundary parsing
 
-Untrusted data — env vars, HTTP bodies, DB documents, message queues, third-party APIs — **must** pass through a `zod/v4` schema before entering typed code. No `as` on boundary data. The schema is the bridge from `unknown` to a branded domain type. `zod` is also used inside `domain/` for smart constructors (see _Branded types_ above).
+Untrusted data — env vars, HTTP bodies, DB documents, message queues, third-party APIs — **must** pass through a `zod/v4` schema before entering typed code. No `as` on boundary data.
 
 ```typescript
 import { z } from "zod/v4";

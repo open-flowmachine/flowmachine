@@ -1,6 +1,6 @@
 ---
 name: architecture-ddd
-description: Apply when modeling domain logic inside a feature's `domain/` folder — designing aggregates, value objects, domain events, integration events, repositories, factories, specifications, or splitting bounded contexts and subdomains. Trigger whenever a user is placing behaviour inside a feature, asking where a rule or validation should live, designing events, deciding how two contexts talk (outbox, integration events, ACL), or asking about entities vs value objects — even if they don't say "DDD" or "aggregate". Defines DDD strategic + tactical patterns, the outbox-based integration default, and the full-FP aggregate approach (readonly state + pure command functions). Excludes folder layout (architecture-hexagonal) and casing (conventions-naming).
+description: Apply when modeling domain logic inside a feature's `domain/` folder — designing aggregates, value objects, domain events, integration events, repositories, factories, specifications, or splitting bounded contexts and subdomains. Trigger whenever placing behaviour inside a feature, deciding where a rule lives, designing events, deciding how two contexts talk (outbox, integration events, ACL), or choosing entities vs value objects. Defines DDD strategic + tactical patterns, the outbox-based integration default, and the full-FP aggregate approach (readonly state + pure command functions). Excludes folder layout (architecture-hexagonal) and casing (conventions-naming).
 ---
 
 # Domain-Driven Design — Strategic + Tactical + FP

@@ -26,7 +26,7 @@ export const makeEmail = (raw: string): Result<Email, EmailError> => {
 };
 ```
 
-**`zod` is allowed inside `domain/`** — specifically for value-object and branded-primitive smart constructors. The domain-purity rule forbids _injected runtime_ dependencies (ports, clocks, DB handles, HTTP clients), not compile-time libraries like `zod`, `neverthrow`, or `es-toolkit`.
+`zod` is used here as a compile-time library for smart constructors — see SKILL.md → _Principle & thinking_ for the domain-purity rule.
 
 **Reject:** value objects with `id`, with setters, or that throw instead of returning `Result`.
 
@@ -80,13 +80,7 @@ A collection-like interface for **one aggregate type**. Looks like an in-memory 
 - One repository per aggregate root. Never per entity, never per "screen."
 - No query-builder leakage. Domain code never composes SQL/Mongo queries.
 
-```typescript
-type UserRepoPort = {
-  readonly findById: (id: UserId) => Promise<Result<User, "notFound">>;
-  readonly add: (user: User) => Promise<Result<void, "conflict">>;
-  readonly remove: (id: UserId) => Promise<Result<void, "notFound">>;
-};
-```
+Concrete port shape (file + folder placement) → `architecture-hexagonal` → `references/STRUCTURE.md` (`user-repo.port.ts` worked example).
 
 **Reject:** repositories returning DTOs, repositories with `findByEmailAndStatusAndCreatedAfter`-style query soup, repositories that span multiple aggregate types.
 

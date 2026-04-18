@@ -20,7 +20,7 @@ Anywhere a side effect or non-determinism appears: repos, clocks, id/uuid genera
 | `use-case/`         | Outbound ports + kernel ports             | Inbound port                           | Composition root  |
 | `adapter/inbound/`  | Inbound port                              | Transport handler (route, CLI, worker) | Composition root  |
 | `adapter/outbound/` | Infra handles (db client, SDK, api key)   | Outbound port                          | Composition root  |
-| `kernel/`           | Nothing                                   | Primitive (sometimes a port)           | Imported directly |
+| `kernel/`           | Nothing                                   | Primitive or kernel port (e.g. `ClockPort` + `systemClock` impl) | Imported directly |
 
 Every box is a factory function — no classes, no DI containers, no decorators, no service locators.
 
@@ -61,7 +61,7 @@ The infra handle (`db`, sdk client, api key) is itself constructed at the compos
 
 ### Domain — no injection
 
-The domain has no **injected** dependencies. Ports, clocks, DB handles, and HTTP clients are passed by the use case, not imported. Compile-time libraries — `zod`, `neverthrow`, `es-toolkit` — are fine; `zod` is the required tool for branded smart constructors (see `architecture-ddd` → TACTICAL.md).
+The domain has no **injected** dependencies. Ports, clocks, DB handles, and HTTP clients are passed by the use case, not imported. Compile-time libraries are allowed — see `architecture-ddd` → TACTICAL.md for the `zod` smart-constructor rule.
 
 ```typescript
 // good — id and now are plain arguments, provided by the use-case

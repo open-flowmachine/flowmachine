@@ -1,6 +1,6 @@
 ---
 name: architecture-hexagonal
-description: Apply whenever creating, moving, renaming, or reviewing code inside a bounded context — new contexts, new adapters, new ports, new use cases, or diffs that cross context folders. Trigger even when the user doesn't say "hexagonal" or "ports and adapters" but is clearly laying out backend/domain code, wiring infra to logic, or deciding what belongs where. Defines the bounded-context-first hexagonal layout and role-suffixed naming for the monorepo. Excludes DDD tactical patterns (→ architecture-ddd), casing (→ conventions-naming), and type shape (→ conventions-typescript).
+description: Apply whenever creating, moving, renaming, or reviewing code inside a bounded context — new contexts, new adapters, new ports, new use cases, or diffs that cross context folders. Trigger also when laying out backend/domain code, wiring infra to logic, or deciding what belongs where. Defines the bounded-context-first hexagonal layout and role-suffixed naming for the monorepo. Excludes DDD tactical patterns (→ architecture-ddd), casing (→ conventions-naming), and type shape (→ conventions-typescript).
 ---
 
 # Hexagonal Architecture — Bounded-Context First
@@ -11,41 +11,24 @@ description: Apply whenever creating, moving, renaming, or reviewing code inside
 
 - **Domain-first.** The domain is the entry point of design and the anchor of every context. You model the domain before you choose a framework, a database, or a route shape.
 - **Bounded-context first, not layer-first.** One folder per bounded context (`identity/`, `billing/`, `workflow/`), not one folder per technical layer (`controllers/`, `services/`). A context owns its language, its model, and its ports.
-- **Dependency rule.** Imports flow `adapter → port → use-case → domain`. Never the reverse. The domain has no **injected** runtime dependencies — compile-time libraries like `zod`, `neverthrow`, and `es-toolkit` are allowed (`zod` is required for branded smart constructors — see `architecture-ddd` → TACTICAL.md).
-- **Ports are owned by the domain, adapters by infra.** A port is an interface the domain _asks for_. An adapter is the implementation the composition root _provides_.
+- **Dependency rule.** Imports flow `adapter → port → use-case → domain`. Never the reverse. The domain has no **injected** runtime dependencies; compile-time libraries (`zod`, `neverthrow`, `es-toolkit`) are allowed — see `architecture-ddd` → TACTICAL.md.
+- **Ports owned by the domain, adapters by infra.** A port is an interface the domain _asks for_; an adapter is the implementation the composition root _provides_.
 - **Driving vs driven — always split.** `inbound/` (HTTP, CLI, worker) and `outbound/` (DB, email, external API) live in separate subfolders so the direction of control is visible at a glance.
-- **Public surface is `port/inbound/` + public `domain/` types.** Cross-context imports reach those two paths directly; anything else (`use-case/`, `port/outbound/`, `adapter/`, `domain/` internals) is a review block. Cross-context _communication_ (what counts as the contract, when events vs sync reads are allowed) lives in `architecture-ddd` → STRATEGIC.md; this skill owns only the wiring.
-- **Shared kernel stays small.** A top-level `kernel/` holds cross-cutting primitives only — full rules in `STRUCTURE.md`.
 
 ## Canonical tree
 
-This is the **logical layout** of one bounded context. Where these folders root inside a repo — a single app, multiple apps, a shared package — is a monorepo-layout decision, not a hex decision. Every context has exactly these folders with these names, and the import rules hold regardless of where the root sits.
+Every bounded context has exactly these folders (monorepo-layout decisions like where the root lives are orthogonal):
 
 ```
-kernel/                          # shared primitives — cross-context, infra-free
-  id.ts                          # branded ids, uuid-v7 helper
-  time.ts                        # clock port + default impl
-  result.ts                      # Result helpers on top of neverthrow
-
-<bounded-context>/               # e.g. identity/, billing/, workflow/
-  domain/                        # pure logic; zero infra imports
-    <entity>.ts                  # shapes + pure functions
-    <policy>.ts                  # invariants, derived rules
-  port/
-    inbound/                     # driving ports (use-case contracts)
-      <action>.port.ts
-    outbound/                    # driven ports (infra contracts)
-      <dependency>.port.ts
-  use-case/                      # orchestrators implementing port/inbound
-    <action>.use-case.ts
-  adapter/
-    inbound/                     # http, cli, worker, queue consumer
-      <channel>.adapter.ts
-    outbound/                    # db, http client, email, etc.
-      <impl>.adapter.ts
+kernel/                          # shared primitives; infra-free
+<bounded-context>/
+  domain/                        # pure logic, zero infra imports
+  port/{inbound,outbound}/       # *.port.ts
+  use-case/                      # *.use-case.ts
+  adapter/{inbound,outbound}/    # *.adapter.ts
 ```
 
-One bounded context = one hexagon. Naming the context is itself a design decision (the _ubiquitous language_ for its domain) — see `architecture-ddd`. Avoid technical names (`api/`, `backend/`) and generic buckets (`common/`, `shared/`).
+One bounded context = one hexagon. Naming the context is itself a design decision (the _ubiquitous language_ for its domain) — see `architecture-ddd`. Avoid technical names (`api/`, `backend/`) and generic buckets (`common/`, `shared/`). Full tree, kernel scope, and cross-context rules → [references/STRUCTURE.md](./references/STRUCTURE.md).
 
 ## Naming quick table
 
