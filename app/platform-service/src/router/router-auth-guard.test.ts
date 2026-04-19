@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from "bun:test";
+import { expect, mock, test } from "bun:test";
 import Elysia from "elysia";
 
 import type { Id } from "@/shared/model/model-id";
@@ -21,54 +21,64 @@ const { routerAuthGuard } = await import("@/router/router-auth-guard");
 const makeTestApp = () =>
   new Elysia().use(routerAuthGuard).get("/test", ({ tenant }) => ({ tenant }));
 
-describe("routerAuthGuard", () => {
-  it("should resolve tenant as user when no activeOrganizationId", async () => {
-    mockGetSession.mockResolvedValue({
-      session: { userId: USER_ID, activeOrganizationId: null },
-      user: { id: USER_ID },
-    });
-
-    const app = makeTestApp();
-    const response = await app
-      .handle(new Request("http://localhost/test"))
-      .then((r) => r.json());
-
-    expect(response).toEqual({
-      tenant: { id: USER_ID, type: "user" },
-    });
+test("routerAuthGuard: given no activeOrganizationId, when session resolves, then tenant is the user", async () => {
+  // given
+  mockGetSession.mockResolvedValue({
+    session: { userId: USER_ID, activeOrganizationId: null },
+    user: { id: USER_ID },
   });
 
-  it("should resolve tenant as organization when activeOrganizationId exists", async () => {
-    mockGetSession.mockResolvedValue({
-      session: { userId: USER_ID, activeOrganizationId: ORG_ID },
-      user: { id: USER_ID },
-    });
+  // when
+  const app = makeTestApp();
+  const response = await app
+    .handle(new Request("http://localhost/test"))
+    .then((r) => r.json());
 
-    const app = makeTestApp();
-    const response = await app
-      .handle(new Request("http://localhost/test"))
-      .then((r) => r.json());
+  // then
+  expect(response).toEqual({
+    tenant: { id: USER_ID, type: "user" },
+  });
+});
 
-    expect(response).toEqual({
-      tenant: { id: ORG_ID, type: "organization" },
-    });
+test("routerAuthGuard: given an activeOrganizationId, when session resolves, then tenant is the organization", async () => {
+  // given
+  mockGetSession.mockResolvedValue({
+    session: { userId: USER_ID, activeOrganizationId: ORG_ID },
+    user: { id: USER_ID },
   });
 
-  it("should throw when session is null", async () => {
-    mockGetSession.mockResolvedValue(null);
+  // when
+  const app = makeTestApp();
+  const response = await app
+    .handle(new Request("http://localhost/test"))
+    .then((r) => r.json());
 
-    const app = makeTestApp();
-    const response = await app.handle(new Request("http://localhost/test"));
-
-    expect(response.status).not.toBe(200);
+  // then
+  expect(response).toEqual({
+    tenant: { id: ORG_ID, type: "organization" },
   });
+});
 
-  it("should throw when getSession throws", async () => {
-    mockGetSession.mockRejectedValue(new Error("Auth service error"));
+test("routerAuthGuard: given a null session, when request is handled, then response is not 200", async () => {
+  // given
+  mockGetSession.mockResolvedValue(null);
 
-    const app = makeTestApp();
-    const response = await app.handle(new Request("http://localhost/test"));
+  // when
+  const app = makeTestApp();
+  const response = await app.handle(new Request("http://localhost/test"));
 
-    expect(response.status).not.toBe(200);
-  });
+  // then
+  expect(response.status).not.toBe(200);
+});
+
+test("routerAuthGuard: given getSession throws, when request is handled, then response is not 200", async () => {
+  // given
+  mockGetSession.mockRejectedValue(new Error("Auth service error"));
+
+  // when
+  const app = makeTestApp();
+  const response = await app.handle(new Request("http://localhost/test"));
+
+  // then
+  expect(response.status).not.toBe(200);
 });

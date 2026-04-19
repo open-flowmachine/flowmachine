@@ -1,80 +1,100 @@
-import { describe, expect, it } from "bun:test";
+import { expect, test } from "bun:test";
 import { createHmac } from "crypto";
 
 import { verifyWebhookSignature } from "@/shared/webhook/webhook-signature";
 
-describe("verifyWebhookSignature", () => {
-  const secret = "It's a Secret to Everybody";
-  const body = "Hello World!";
-  const validSignature =
-    "sha256=a4771c39fbe90f317c7824e83ddef3caae9cb3d976c214ace1f2937e133263c9";
+const secret = "It's a Secret to Everybody";
+const body = "Hello World!";
+const validSignature =
+  "sha256=a4771c39fbe90f317c7824e83ddef3caae9cb3d976c214ace1f2937e133263c9";
 
-  it("should return true for a valid signature", () => {
-    const result = verifyWebhookSignature(body, secret, validSignature);
+test("verifyWebhookSignature: given a valid signature, when verified, then returns true", () => {
+  // given
 
-    expect(result).toBe(true);
-  });
+  // when
+  const result = verifyWebhookSignature(body, secret, validSignature);
 
-  it("should return false for an invalid signature", () => {
-    const result = verifyWebhookSignature(
-      body,
-      secret,
-      "sha256=0000000000000000000000000000000000000000000000000000000000000000",
-    );
+  // then
+  expect(result).toBe(true);
+});
 
-    expect(result).toBe(false);
-  });
+test("verifyWebhookSignature: given an invalid signature, when verified, then returns false", () => {
+  // given
+  const invalidSignature =
+    "sha256=0000000000000000000000000000000000000000000000000000000000000000";
 
-  it("should return false for a wrong secret", () => {
-    const result = verifyWebhookSignature(body, "wrong-secret", validSignature);
+  // when
+  const result = verifyWebhookSignature(body, secret, invalidSignature);
 
-    expect(result).toBe(false);
-  });
+  // then
+  expect(result).toBe(false);
+});
 
-  it("should return false for a tampered body", () => {
-    const result = verifyWebhookSignature(
-      "Tampered Body",
-      secret,
-      validSignature,
-    );
+test("verifyWebhookSignature: given a wrong secret, when verified, then returns false", () => {
+  // given
 
-    expect(result).toBe(false);
-  });
+  // when
+  const result = verifyWebhookSignature(body, "wrong-secret", validSignature);
 
-  it("should return false when method is not sha256", () => {
-    const result = verifyWebhookSignature(
-      body,
-      secret,
-      "sha1=a4771c39fbe90f317c7824e83ddef3caae9cb3d976c214ace1f2937e133263c9",
-    );
+  // then
+  expect(result).toBe(false);
+});
 
-    expect(result).toBe(false);
-  });
+test("verifyWebhookSignature: given a tampered body, when verified, then returns false", () => {
+  // given
 
-  it("should return false when signature header has no method prefix", () => {
-    const result = verifyWebhookSignature(
-      body,
-      secret,
-      "a4771c39fbe90f317c7824e83ddef3caae9cb3d976c214ace1f2937e133263c9",
-    );
+  // when
+  const result = verifyWebhookSignature("Tampered Body", secret, validSignature);
 
-    expect(result).toBe(false);
-  });
+  // then
+  expect(result).toBe(false);
+});
 
-  it("should return false when signature length does not match", () => {
-    const result = verifyWebhookSignature(body, secret, "sha256=abcd");
+test("verifyWebhookSignature: given a non-sha256 method prefix, when verified, then returns false", () => {
+  // given
+  const sha1Signature =
+    "sha1=a4771c39fbe90f317c7824e83ddef3caae9cb3d976c214ace1f2937e133263c9";
 
-    expect(result).toBe(false);
-  });
+  // when
+  const result = verifyWebhookSignature(body, secret, sha1Signature);
 
-  it("should compute correct HMAC for a JSON payload", () => {
-    const jsonBody =
-      '{"webhookEvent":"jira:issue_updated","issue":{"key":"PROJ-1"}}';
-    const hmac = createHmac("sha256", secret).update(jsonBody).digest("hex");
-    const signature = `sha256=${hmac}`;
+  // then
+  expect(result).toBe(false);
+});
 
-    const result = verifyWebhookSignature(jsonBody, secret, signature);
+test("verifyWebhookSignature: given a signature with no method prefix, when verified, then returns false", () => {
+  // given
+  const noPrefix =
+    "a4771c39fbe90f317c7824e83ddef3caae9cb3d976c214ace1f2937e133263c9";
 
-    expect(result).toBe(true);
-  });
+  // when
+  const result = verifyWebhookSignature(body, secret, noPrefix);
+
+  // then
+  expect(result).toBe(false);
+});
+
+test("verifyWebhookSignature: given a signature with wrong length, when verified, then returns false", () => {
+  // given
+  const shortSignature = "sha256=abcd";
+
+  // when
+  const result = verifyWebhookSignature(body, secret, shortSignature);
+
+  // then
+  expect(result).toBe(false);
+});
+
+test("verifyWebhookSignature: given a JSON payload with computed HMAC, when verified, then returns true", () => {
+  // given
+  const jsonBody =
+    '{"webhookEvent":"jira:issue_updated","issue":{"key":"PROJ-1"}}';
+  const hmac = createHmac("sha256", secret).update(jsonBody).digest("hex");
+  const signature = `sha256=${hmac}`;
+
+  // when
+  const result = verifyWebhookSignature(jsonBody, secret, signature);
+
+  // then
+  expect(result).toBe(true);
 });

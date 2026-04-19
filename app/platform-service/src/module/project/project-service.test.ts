@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, expect, mock, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { Project } from "@/module/project/project-model";
@@ -59,186 +59,204 @@ const resetMocks = () => {
 
 // --- Tests ---
 
-describe("createProject", () => {
-  beforeEach(resetMocks);
+beforeEach(resetMocks);
 
-  it("should insert a new project with generated id and timestamps", async () => {
-    mockRepository.insert.mockResolvedValue(ok());
+test("create: given valid payload, when inserted, then returns new project id and calls repository with correct data", async () => {
+  // given
+  mockRepository.insert.mockResolvedValue(ok());
 
-    const result = await projectService.create({
-      ctx,
-      payload: { name: "New Project", integration: null },
-    });
-
-    expect(result.isOk()).toBe(true);
-    expect(result._unsafeUnwrap()).toEqual({ id: NEW_ID });
-    expect(mockRepository.insert).toHaveBeenCalledWith({
-      ctx,
-      data: expect.objectContaining({
-        id: NEW_ID,
-        _version: 1,
-        name: "New Project",
-        integration: null,
-      }),
-    });
+  // when
+  const result = await projectService.create({
+    ctx,
+    payload: { name: "New Project", integration: null },
   });
 
-  it("should return err when repository insert fails", async () => {
-    mockRepository.insert.mockResolvedValue(
-      err(Err.code("unknown", { message: "Mongo database error" })),
-    );
-
-    const result = await projectService.create({
-      ctx,
-      payload: { name: "New Project", integration: null },
-    });
-
-    expect(result.isErr()).toBe(true);
-    expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(result._unsafeUnwrap()).toEqual({ id: NEW_ID });
+  expect(mockRepository.insert).toHaveBeenCalledWith({
+    ctx,
+    data: expect.objectContaining({
+      id: NEW_ID,
+      _version: 1,
+      name: "New Project",
+      integration: null,
+    }),
   });
 });
 
-describe("getProject", () => {
-  beforeEach(resetMocks);
+test("create: given repository insert fails, when inserted, then returns err", async () => {
+  // given
+  mockRepository.insert.mockResolvedValue(
+    err(Err.code("unknown", { message: "Mongo database error" })),
+  );
 
-  it("should return the project when found", async () => {
-    const project = makeProject();
-    mockRepository.findById.mockResolvedValue(ok({ data: project }));
-
-    const result = await projectService.get({ ctx, id: TEST_ID });
-
-    expect(result.isOk()).toBe(true);
-    expect(result._unsafeUnwrap()).toEqual({ data: project } as never);
-    expect(mockRepository.findById).toHaveBeenCalledWith({ ctx, id: TEST_ID });
+  // when
+  const result = await projectService.create({
+    ctx,
+    payload: { name: "New Project", integration: null },
   });
 
-  it("should return notFound err when project does not exist", async () => {
-    mockRepository.findById.mockResolvedValue(ok({ data: null }));
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+});
 
-    const result = await projectService.get({ ctx, id: TEST_ID });
+test("get: given project exists, when fetched by id, then returns the project", async () => {
+  // given
+  const project = makeProject();
+  mockRepository.findById.mockResolvedValue(ok({ data: project }));
 
-    expect(result.isErr()).toBe(true);
-    expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
-    expect(result._unsafeUnwrapErr()).toHaveProperty("code", "notFound");
+  // when
+  const result = await projectService.get({ ctx, id: TEST_ID });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(result._unsafeUnwrap()).toEqual({ data: project } as never);
+  expect(mockRepository.findById).toHaveBeenCalledWith({ ctx, id: TEST_ID });
+});
+
+test("get: given project does not exist, when fetched by id, then returns notFound err", async () => {
+  // given
+  mockRepository.findById.mockResolvedValue(ok({ data: null }));
+
+  // when
+  const result = await projectService.get({ ctx, id: TEST_ID });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  expect(result._unsafeUnwrapErr()).toHaveProperty("code", "notFound");
+});
+
+test("get: given repository fails, when fetched by id, then returns err", async () => {
+  // given
+  mockRepository.findById.mockResolvedValue(
+    err(Err.code("unknown", { message: "Mongo database error" })),
+  );
+
+  // when
+  const result = await projectService.get({ ctx, id: TEST_ID });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+});
+
+test("list: given repository returns projects, when listed, then returns all projects for the tenant", async () => {
+  // given
+  const projects = [makeProject(), makeProject({ name: "Second" })];
+  mockRepository.findMany.mockResolvedValue(ok({ data: projects }));
+
+  // when
+  const result = await projectService.list({ ctx });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(result._unsafeUnwrap()).toEqual({ data: projects } as never);
+  expect(mockRepository.findMany).toHaveBeenCalledWith({ ctx });
+});
+
+test("list: given repository fails, when listed, then returns err", async () => {
+  // given
+  mockRepository.findMany.mockResolvedValue(
+    err(Err.code("unknown", { message: "Mongo database error" })),
+  );
+
+  // when
+  const result = await projectService.list({ ctx });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+});
+
+test("update: given project exists, when updated, then returns updated data", async () => {
+  // given
+  const existing = makeProject();
+  const updated = makeProject({ name: "Updated", _version: 2 });
+  mockRepository.findById.mockResolvedValue(ok({ data: existing }));
+  mockRepository.update.mockResolvedValue(ok({ data: updated }));
+
+  // when
+  const result = await projectService.update({
+    ctx,
+    id: TEST_ID,
+    data: { name: "Updated", _version: 1 },
   });
 
-  it("should return err when repository fails", async () => {
-    mockRepository.findById.mockResolvedValue(
-      err(Err.code("unknown", { message: "Mongo database error" })),
-    );
-
-    const result = await projectService.get({ ctx, id: TEST_ID });
-
-    expect(result.isErr()).toBe(true);
-    expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(result._unsafeUnwrap()).toEqual({ data: updated } as never);
+  expect(mockRepository.update).toHaveBeenCalledWith({
+    ctx,
+    id: TEST_ID,
+    data: expect.objectContaining({ name: "Updated", _version: 1 }),
   });
 });
 
-describe("listProjects", () => {
-  beforeEach(resetMocks);
+test("update: given project does not exist, when updated, then returns notFound err", async () => {
+  // given
+  mockRepository.findById.mockResolvedValue(ok({ data: null }));
 
-  it("should return all projects for the tenant", async () => {
-    const projects = [makeProject(), makeProject({ name: "Second" })];
-    mockRepository.findMany.mockResolvedValue(ok({ data: projects }));
-
-    const result = await projectService.list({ ctx });
-
-    expect(result.isOk()).toBe(true);
-    expect(result._unsafeUnwrap()).toEqual({ data: projects } as never);
-    expect(mockRepository.findMany).toHaveBeenCalledWith({ ctx });
+  // when
+  const result = await projectService.update({
+    ctx,
+    id: TEST_ID,
+    data: { name: "Updated", _version: 1 },
   });
 
-  it("should return err when repository fails", async () => {
-    mockRepository.findMany.mockResolvedValue(
-      err(Err.code("unknown", { message: "Mongo database error" })),
-    );
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  expect(result._unsafeUnwrapErr()).toHaveProperty("code", "notFound");
+});
 
-    const result = await projectService.list({ ctx });
+test("update: given repository update fails, when updated, then returns err", async () => {
+  // given
+  const existing = makeProject();
+  mockRepository.findById.mockResolvedValue(ok({ data: existing }));
+  mockRepository.update.mockResolvedValue(
+    err(Err.code("unknown", { message: "Mongo database error" })),
+  );
 
-    expect(result.isErr()).toBe(true);
-    expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  // when
+  const result = await projectService.update({
+    ctx,
+    id: TEST_ID,
+    data: { name: "Updated", _version: 1 },
+  });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+});
+
+test("delete: given valid id, when deleted, then calls repository deleteById", async () => {
+  // given
+  mockRepository.deleteById.mockResolvedValue(ok());
+
+  // when
+  const result = await projectService.delete({ ctx, id: TEST_ID });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockRepository.deleteById).toHaveBeenCalledWith({
+    ctx,
+    id: TEST_ID,
   });
 });
 
-describe("updateProject", () => {
-  beforeEach(resetMocks);
+test("delete: given repository delete fails, when deleted, then returns err", async () => {
+  // given
+  mockRepository.deleteById.mockResolvedValue(
+    err(Err.code("unknown", { message: "Mongo database error" })),
+  );
 
-  it("should update the project and return updated data", async () => {
-    const existing = makeProject();
-    const updated = makeProject({ name: "Updated", _version: 2 });
-    mockRepository.findById.mockResolvedValue(ok({ data: existing }));
-    mockRepository.update.mockResolvedValue(ok({ data: updated }));
+  // when
+  const result = await projectService.delete({ ctx, id: TEST_ID });
 
-    const result = await projectService.update({
-      ctx,
-      id: TEST_ID,
-      data: { name: "Updated", _version: 1 },
-    });
-
-    expect(result.isOk()).toBe(true);
-    expect(result._unsafeUnwrap()).toEqual({ data: updated } as never);
-    expect(mockRepository.update).toHaveBeenCalledWith({
-      ctx,
-      id: TEST_ID,
-      data: expect.objectContaining({ name: "Updated", _version: 1 }),
-    });
-  });
-
-  it("should return notFound err when project does not exist", async () => {
-    mockRepository.findById.mockResolvedValue(ok({ data: null }));
-
-    const result = await projectService.update({
-      ctx,
-      id: TEST_ID,
-      data: { name: "Updated", _version: 1 },
-    });
-
-    expect(result.isErr()).toBe(true);
-    expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
-    expect(result._unsafeUnwrapErr()).toHaveProperty("code", "notFound");
-  });
-
-  it("should return err when repository update fails", async () => {
-    const existing = makeProject();
-    mockRepository.findById.mockResolvedValue(ok({ data: existing }));
-    mockRepository.update.mockResolvedValue(
-      err(Err.code("unknown", { message: "Mongo database error" })),
-    );
-
-    const result = await projectService.update({
-      ctx,
-      id: TEST_ID,
-      data: { name: "Updated", _version: 1 },
-    });
-
-    expect(result.isErr()).toBe(true);
-    expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
-  });
-});
-
-describe("deleteProject", () => {
-  beforeEach(resetMocks);
-
-  it("should delete the project by id and tenant", async () => {
-    mockRepository.deleteById.mockResolvedValue(ok());
-
-    const result = await projectService.delete({ ctx, id: TEST_ID });
-
-    expect(result.isOk()).toBe(true);
-    expect(mockRepository.deleteById).toHaveBeenCalledWith({
-      ctx,
-      id: TEST_ID,
-    });
-  });
-
-  it("should return err when repository delete fails", async () => {
-    mockRepository.deleteById.mockResolvedValue(
-      err(Err.code("unknown", { message: "Mongo database error" })),
-    );
-
-    const result = await projectService.delete({ ctx, id: TEST_ID });
-
-    expect(result.isErr()).toBe(true);
-    expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
-  });
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
 });

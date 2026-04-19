@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, expect, mock, test } from "bun:test";
 
 import {
   MOCK_BETTER_AUTH_URL,
@@ -23,190 +23,227 @@ const { sendOtpEmail, sendInvitationEmail } = makeBetterAuthUtil();
 
 // --- Tests ---
 
-describe("sendOtpEmail", () => {
-  beforeEach(() => {
-    mockSend.mockClear();
-    mockSend.mockResolvedValue(undefined);
-  });
-
-  it("should send sign-in OTP email with correct subject", async () => {
-    await sendOtpEmail({
-      email: "user@test.com",
-      otp: "123456",
-      type: "sign-in",
-    });
-
-    expect(mockSend).toHaveBeenCalledTimes(1);
-    expect(mockSend).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "user@test.com",
-        from: MOCK_RESEND_FROM_ADDRESS,
-        subject: "Your sign-in code",
-      }),
-    );
-  });
-
-  it("should send email-verification OTP email with correct subject", async () => {
-    await sendOtpEmail({
-      email: "user@test.com",
-      otp: "654321",
-      type: "email-verification",
-    });
-
-    expect(mockSend).toHaveBeenCalledWith(
-      expect.objectContaining({
-        subject: "Verify your email",
-      }),
-    );
-  });
-
-  it("should send forget-password OTP email with correct subject", async () => {
-    await sendOtpEmail({
-      email: "user@test.com",
-      otp: "111111",
-      type: "forget-password",
-    });
-
-    expect(mockSend).toHaveBeenCalledWith(
-      expect.objectContaining({
-        subject: "Reset your password",
-      }),
-    );
-  });
-
-  it("should include OTP in the email body", async () => {
-    await sendOtpEmail({
-      email: "user@test.com",
-      otp: "987654",
-      type: "sign-in",
-    });
-
-    expect(mockSend).toHaveBeenCalledWith(
-      expect.objectContaining({
-        html: expect.stringContaining("987654"),
-      }),
-    );
-  });
-
-  it("should include subject heading in the email body", async () => {
-    await sendOtpEmail({
-      email: "user@test.com",
-      otp: "123456",
-      type: "email-verification",
-    });
-
-    expect(mockSend).toHaveBeenCalledWith(
-      expect.objectContaining({
-        html: expect.stringContaining("Verify your email"),
-      }),
-    );
-  });
-
-  it("should return ok result on success", async () => {
-    const result = await sendOtpEmail({
-      email: "user@test.com",
-      otp: "123456",
-      type: "sign-in",
-    });
-
-    expect(result.isOk()).toBe(true);
-  });
-
-  it("should return err result on failure", async () => {
-    mockSend.mockRejectedValueOnce(new Error("Send failed"));
-
-    const result = await sendOtpEmail({
-      email: "user@test.com",
-      otp: "123456",
-      type: "sign-in",
-    });
-
-    expect(result.isErr()).toBe(true);
-  });
+beforeEach(() => {
+  mockSend.mockClear();
+  mockSend.mockResolvedValue(undefined);
 });
 
-describe("sendInvitationEmail", () => {
-  beforeEach(() => {
-    mockSend.mockClear();
-    mockSend.mockResolvedValue(undefined);
+test("sendOtpEmail: given a sign-in type, when called, then sends email with correct subject", async () => {
+  // given
+
+  // when
+  await sendOtpEmail({
+    email: "user@test.com",
+    otp: "123456",
+    type: "sign-in",
   });
 
-  it("should send invitation email with correct recipient and subject", async () => {
-    await sendInvitationEmail({
-      id: "inv-123",
-      email: "invitee@test.com",
-      organizationName: "Acme Corp",
-      inviterName: "Alice",
-    });
+  // then
+  expect(mockSend).toHaveBeenCalledTimes(1);
+  expect(mockSend).toHaveBeenCalledWith(
+    expect.objectContaining({
+      to: "user@test.com",
+      from: MOCK_RESEND_FROM_ADDRESS,
+      subject: "Your sign-in code",
+    }),
+  );
+});
 
-    expect(mockSend).toHaveBeenCalledTimes(1);
-    expect(mockSend).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "invitee@test.com",
-        from: MOCK_RESEND_FROM_ADDRESS,
-        subject: "You've been invited to Acme Corp",
-      }),
-    );
+test("sendOtpEmail: given an email-verification type, when called, then sends email with correct subject", async () => {
+  // given
+
+  // when
+  await sendOtpEmail({
+    email: "user@test.com",
+    otp: "654321",
+    type: "email-verification",
   });
 
-  it("should include inviter name and organization in the body", async () => {
-    await sendInvitationEmail({
-      id: "inv-123",
-      email: "invitee@test.com",
-      organizationName: "Acme Corp",
-      inviterName: "Alice",
-    });
+  // then
+  expect(mockSend).toHaveBeenCalledWith(
+    expect.objectContaining({
+      subject: "Verify your email",
+    }),
+  );
+});
 
-    expect(mockSend).toHaveBeenCalledWith(
-      expect.objectContaining({
-        html: expect.stringContaining("Alice"),
-      }),
-    );
-    expect(mockSend).toHaveBeenCalledWith(
-      expect.objectContaining({
-        html: expect.stringContaining("Acme Corp"),
-      }),
-    );
+test("sendOtpEmail: given a forget-password type, when called, then sends email with correct subject", async () => {
+  // given
+
+  // when
+  await sendOtpEmail({
+    email: "user@test.com",
+    otp: "111111",
+    type: "forget-password",
   });
 
-  it("should include accept invitation link with correct id", async () => {
-    await sendInvitationEmail({
-      id: "inv-456",
-      email: "invitee@test.com",
-      organizationName: "Acme Corp",
-      inviterName: "Bob",
-    });
+  // then
+  expect(mockSend).toHaveBeenCalledWith(
+    expect.objectContaining({
+      subject: "Reset your password",
+    }),
+  );
+});
 
-    expect(mockSend).toHaveBeenCalledWith(
-      expect.objectContaining({
-        html: expect.stringContaining(
-          `${MOCK_BETTER_AUTH_URL}/accept-invitation/inv-456`,
-        ),
-      }),
-    );
+test("sendOtpEmail: given a valid OTP, when called, then includes OTP in email body", async () => {
+  // given
+
+  // when
+  await sendOtpEmail({
+    email: "user@test.com",
+    otp: "987654",
+    type: "sign-in",
   });
 
-  it("should return ok result on success", async () => {
-    const result = await sendInvitationEmail({
-      id: "inv-123",
-      email: "invitee@test.com",
-      organizationName: "Acme Corp",
-      inviterName: "Alice",
-    });
+  // then
+  expect(mockSend).toHaveBeenCalledWith(
+    expect.objectContaining({
+      html: expect.stringContaining("987654"),
+    }),
+  );
+});
 
-    expect(result.isOk()).toBe(true);
+test("sendOtpEmail: given an email-verification type, when called, then includes subject heading in email body", async () => {
+  // given
+
+  // when
+  await sendOtpEmail({
+    email: "user@test.com",
+    otp: "123456",
+    type: "email-verification",
   });
 
-  it("should return err result on failure", async () => {
-    mockSend.mockRejectedValueOnce(new Error("Send failed"));
+  // then
+  expect(mockSend).toHaveBeenCalledWith(
+    expect.objectContaining({
+      html: expect.stringContaining("Verify your email"),
+    }),
+  );
+});
 
-    const result = await sendInvitationEmail({
-      id: "inv-123",
-      email: "invitee@test.com",
-      organizationName: "Acme Corp",
-      inviterName: "Alice",
-    });
+test("sendOtpEmail: given a valid input, when send succeeds, then returns ok result", async () => {
+  // given
 
-    expect(result.isErr()).toBe(true);
+  // when
+  const result = await sendOtpEmail({
+    email: "user@test.com",
+    otp: "123456",
+    type: "sign-in",
   });
+
+  // then
+  expect(result.isOk()).toBe(true);
+});
+
+test("sendOtpEmail: given a valid input, when send throws, then returns err result", async () => {
+  // given
+  mockSend.mockRejectedValueOnce(new Error("Send failed"));
+
+  // when
+  const result = await sendOtpEmail({
+    email: "user@test.com",
+    otp: "123456",
+    type: "sign-in",
+  });
+
+  // then
+  expect(result.isErr()).toBe(true);
+});
+
+test("sendInvitationEmail: given valid invitation details, when called, then sends email with correct recipient and subject", async () => {
+  // given
+
+  // when
+  await sendInvitationEmail({
+    id: "inv-123",
+    email: "invitee@test.com",
+    organizationName: "Acme Corp",
+    inviterName: "Alice",
+  });
+
+  // then
+  expect(mockSend).toHaveBeenCalledTimes(1);
+  expect(mockSend).toHaveBeenCalledWith(
+    expect.objectContaining({
+      to: "invitee@test.com",
+      from: MOCK_RESEND_FROM_ADDRESS,
+      subject: "You've been invited to Acme Corp",
+    }),
+  );
+});
+
+test("sendInvitationEmail: given inviter and organization, when called, then includes them in email body", async () => {
+  // given
+
+  // when
+  await sendInvitationEmail({
+    id: "inv-123",
+    email: "invitee@test.com",
+    organizationName: "Acme Corp",
+    inviterName: "Alice",
+  });
+
+  // then
+  expect(mockSend).toHaveBeenCalledWith(
+    expect.objectContaining({
+      html: expect.stringContaining("Alice"),
+    }),
+  );
+  expect(mockSend).toHaveBeenCalledWith(
+    expect.objectContaining({
+      html: expect.stringContaining("Acme Corp"),
+    }),
+  );
+});
+
+test("sendInvitationEmail: given an invitation id, when called, then includes accept link with correct id in body", async () => {
+  // given
+
+  // when
+  await sendInvitationEmail({
+    id: "inv-456",
+    email: "invitee@test.com",
+    organizationName: "Acme Corp",
+    inviterName: "Bob",
+  });
+
+  // then
+  expect(mockSend).toHaveBeenCalledWith(
+    expect.objectContaining({
+      html: expect.stringContaining(
+        `${MOCK_BETTER_AUTH_URL}/accept-invitation/inv-456`,
+      ),
+    }),
+  );
+});
+
+test("sendInvitationEmail: given a valid input, when send succeeds, then returns ok result", async () => {
+  // given
+
+  // when
+  const result = await sendInvitationEmail({
+    id: "inv-123",
+    email: "invitee@test.com",
+    organizationName: "Acme Corp",
+    inviterName: "Alice",
+  });
+
+  // then
+  expect(result.isOk()).toBe(true);
+});
+
+test("sendInvitationEmail: given a valid input, when send throws, then returns err result", async () => {
+  // given
+  mockSend.mockRejectedValueOnce(new Error("Send failed"));
+
+  // when
+  const result = await sendInvitationEmail({
+    id: "inv-123",
+    email: "invitee@test.com",
+    organizationName: "Acme Corp",
+    inviterName: "Alice",
+  });
+
+  // then
+  expect(result.isErr()).toBe(true);
 });

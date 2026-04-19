@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, expect, mock, test } from "bun:test";
 import Elysia from "elysia";
 import { err, ok } from "neverthrow";
 
@@ -91,14 +91,37 @@ const request = (method: string, path: string, body?: unknown) => {
 
 // --- Tests ---
 
-describe("POST /api/v1/git-repository", () => {
-  beforeEach(resetMocks);
+beforeEach(resetMocks);
 
-  it("should return okEnvelope with id on success", async () => {
-    const newId = "019606a0-0000-7000-8000-000000000099" as Id;
-    mockCreateGitRepository.mockResolvedValue(ok({ id: newId }));
+test("POST /api/v1/git-repository: given a valid payload, when created successfully, then returns okEnvelope with id", async () => {
+  // given
+  const newId = "019606a0-0000-7000-8000-000000000099" as Id;
+  mockCreateGitRepository.mockResolvedValue(ok({ id: newId }));
 
-    const response = await request("POST", "/api/v1/git-repository", {
+  // when
+  const response = await request("POST", "/api/v1/git-repository", {
+    name: "New Repo",
+    url: "https://github.com/org/new-repo",
+    config: {
+      defaultBranch: "main",
+      email: "dev@example.com",
+      username: "dev",
+    },
+    integration: {
+      provider: "github",
+      credentialId: TEST_ID,
+    },
+    projects: [],
+  });
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(json.data).toEqual({ id: newId });
+  expect(mockCreateGitRepository).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    payload: {
       name: "New Repo",
       url: "https://github.com/org/new-repo",
       config: {
@@ -111,206 +134,198 @@ describe("POST /api/v1/git-repository", () => {
         credentialId: TEST_ID,
       },
       projects: [],
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(json.data).toEqual({ id: newId });
-    expect(mockCreateGitRepository).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      payload: {
-        name: "New Repo",
-        url: "https://github.com/org/new-repo",
-        config: {
-          defaultBranch: "main",
-          email: "dev@example.com",
-          username: "dev",
-        },
-        integration: {
-          provider: "github",
-          credentialId: TEST_ID,
-        },
-        projects: [],
-      },
-    });
-  });
-
-  it("should return errEnvelope on service error", async () => {
-    mockCreateGitRepository.mockResolvedValue(err(Err.code("unknown")));
-
-    const response = await request("POST", "/api/v1/git-repository", {
-      name: "New Repo",
-      url: "https://github.com/org/new-repo",
-      config: {
-        defaultBranch: "main",
-        email: "dev@example.com",
-        username: "dev",
-      },
-      integration: {
-        provider: "github",
-        credentialId: TEST_ID,
-      },
-      projects: [],
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+    },
   });
 });
 
-describe("GET /api/v1/git-repository", () => {
-  beforeEach(resetMocks);
+test("POST /api/v1/git-repository: given a service failure, when called, then returns errEnvelope", async () => {
+  // given
+  mockCreateGitRepository.mockResolvedValue(err(Err.code("unknown")));
 
-  it("should return list of git repositories mapped to DTOs", async () => {
-    const repos = [
-      makeGitRepository(),
-      makeGitRepository({
-        name: "Second",
-        id: "019606a0-0000-7000-8000-000000000002" as Id,
-      }),
-    ];
-    mockListGitRepositories.mockResolvedValue(ok({ data: repos }));
-
-    const response = await request("GET", "/api/v1/git-repository");
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.data).toHaveLength(2);
-    expect(json.data[0].name).toBe("My Repo");
-    expect(json.data[1].name).toBe("Second");
-    expect(mockListGitRepositories).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      filter: undefined,
-    });
+  // when
+  const response = await request("POST", "/api/v1/git-repository", {
+    name: "New Repo",
+    url: "https://github.com/org/new-repo",
+    config: {
+      defaultBranch: "main",
+      email: "dev@example.com",
+      username: "dev",
+    },
+    integration: {
+      provider: "github",
+      credentialId: TEST_ID,
+    },
+    projects: [],
   });
+  const json = await response.json();
 
-  it("should pass projectId filter from query params", async () => {
-    mockListGitRepositories.mockResolvedValue(ok({ data: [] }));
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
+});
 
-    const response = await request(
-      "GET",
-      `/api/v1/git-repository?projectId=${PROJECT_ID}`,
-    );
-    const json = await response.json();
+test("GET /api/v1/git-repository: given repositories exist, when listed without filter, then returns repositories mapped to DTOs", async () => {
+  // given
+  const repos = [
+    makeGitRepository(),
+    makeGitRepository({
+      name: "Second",
+      id: "019606a0-0000-7000-8000-000000000002" as Id,
+    }),
+  ];
+  mockListGitRepositories.mockResolvedValue(ok({ data: repos }));
 
-    expect(json.status).toBe(200);
-    expect(mockListGitRepositories).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      filter: { projectId: PROJECT_ID },
-    });
-  });
+  // when
+  const response = await request("GET", "/api/v1/git-repository");
+  const json = await response.json();
 
-  it("should return errEnvelope on service error", async () => {
-    mockListGitRepositories.mockResolvedValue(err(Err.code("unknown")));
-
-    const response = await request("GET", "/api/v1/git-repository");
-    const json = await response.json();
-
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+  // then
+  expect(json.status).toBe(200);
+  expect(json.data).toHaveLength(2);
+  expect(json.data[0].name).toBe("My Repo");
+  expect(json.data[1].name).toBe("Second");
+  expect(mockListGitRepositories).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    filter: undefined,
   });
 });
 
-describe("GET /api/v1/git-repository/:id", () => {
-  beforeEach(resetMocks);
+test("GET /api/v1/git-repository: given a projectId query param, when listed, then passes projectId filter to service", async () => {
+  // given
+  mockListGitRepositories.mockResolvedValue(ok({ data: [] }));
 
-  it("should return single git repository mapped to DTO", async () => {
-    const gitRepo = makeGitRepository();
-    mockGetGitRepository.mockResolvedValue(ok({ data: gitRepo }));
+  // when
+  const response = await request(
+    "GET",
+    `/api/v1/git-repository?projectId=${PROJECT_ID}`,
+  );
+  const json = await response.json();
 
-    const response = await request("GET", `/api/v1/git-repository/${TEST_ID}`);
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.data.name).toBe("My Repo");
-    expect(json.data.id).toBe(TEST_ID);
-    expect(mockGetGitRepository).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-    });
-  });
-
-  it("should return errEnvelope when not found", async () => {
-    mockGetGitRepository.mockResolvedValue(err(Err.code("notFound")));
-
-    const response = await request("GET", `/api/v1/git-repository/${TEST_ID}`);
-    const json = await response.json();
-
-    expect(json.status).toBe(404);
-    expect(json.code).toBe("notFound");
+  // then
+  expect(json.status).toBe(200);
+  expect(mockListGitRepositories).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    filter: { projectId: PROJECT_ID },
   });
 });
 
-describe("PATCH /api/v1/git-repository/:id", () => {
-  beforeEach(resetMocks);
+test("GET /api/v1/git-repository: given a service failure, when listed, then returns errEnvelope", async () => {
+  // given
+  mockListGitRepositories.mockResolvedValue(err(Err.code("unknown")));
 
-  it("should return okEnvelope on success", async () => {
-    const updated = makeGitRepository({ name: "Updated", _version: 2 });
-    mockUpdateGitRepository.mockResolvedValue(ok({ data: updated }));
+  // when
+  const response = await request("GET", "/api/v1/git-repository");
+  const json = await response.json();
 
-    const response = await request(
-      "PATCH",
-      `/api/v1/git-repository/${TEST_ID}`,
-      { name: "Updated" },
-    );
-    const json = await response.json();
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
+});
 
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(mockUpdateGitRepository).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-      data: { name: "Updated" },
-    });
-  });
+test("GET /api/v1/git-repository/:id: given a repository exists, when fetched by id, then returns the repository mapped to DTO", async () => {
+  // given
+  const gitRepo = makeGitRepository();
+  mockGetGitRepository.mockResolvedValue(ok({ data: gitRepo }));
 
-  it("should return errEnvelope on service error", async () => {
-    mockUpdateGitRepository.mockResolvedValue(err(Err.code("notFound")));
+  // when
+  const response = await request("GET", `/api/v1/git-repository/${TEST_ID}`);
+  const json = await response.json();
 
-    const response = await request(
-      "PATCH",
-      `/api/v1/git-repository/${TEST_ID}`,
-      { name: "Updated" },
-    );
-    const json = await response.json();
-
-    expect(json.status).toBe(404);
-    expect(json.code).toBe("notFound");
+  // then
+  expect(json.status).toBe(200);
+  expect(json.data.name).toBe("My Repo");
+  expect(json.data.id).toBe(TEST_ID);
+  expect(mockGetGitRepository).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
   });
 });
 
-describe("DELETE /api/v1/git-repository/:id", () => {
-  beforeEach(resetMocks);
+test("GET /api/v1/git-repository/:id: given the repository does not exist, when fetched by id, then returns notFound errEnvelope", async () => {
+  // given
+  mockGetGitRepository.mockResolvedValue(err(Err.code("notFound")));
 
-  it("should return okEnvelope on success", async () => {
-    mockDeleteGitRepository.mockResolvedValue(ok());
+  // when
+  const response = await request("GET", `/api/v1/git-repository/${TEST_ID}`);
+  const json = await response.json();
 
-    const response = await request(
-      "DELETE",
-      `/api/v1/git-repository/${TEST_ID}`,
-    );
-    const json = await response.json();
+  // then
+  expect(json.status).toBe(404);
+  expect(json.code).toBe("notFound");
+});
 
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(mockDeleteGitRepository).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-    });
+test("PATCH /api/v1/git-repository/:id: given a valid update payload, when updated successfully, then returns okEnvelope", async () => {
+  // given
+  const updated = makeGitRepository({ name: "Updated", _version: 2 });
+  mockUpdateGitRepository.mockResolvedValue(ok({ data: updated }));
+
+  // when
+  const response = await request(
+    "PATCH",
+    `/api/v1/git-repository/${TEST_ID}`,
+    { name: "Updated" },
+  );
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(mockUpdateGitRepository).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
+    data: { name: "Updated" },
   });
+});
 
-  it("should return errEnvelope on service error", async () => {
-    mockDeleteGitRepository.mockResolvedValue(err(Err.code("unknown")));
+test("PATCH /api/v1/git-repository/:id: given a service failure, when updated, then returns errEnvelope", async () => {
+  // given
+  mockUpdateGitRepository.mockResolvedValue(err(Err.code("notFound")));
 
-    const response = await request(
-      "DELETE",
-      `/api/v1/git-repository/${TEST_ID}`,
-    );
-    const json = await response.json();
+  // when
+  const response = await request(
+    "PATCH",
+    `/api/v1/git-repository/${TEST_ID}`,
+    { name: "Updated" },
+  );
+  const json = await response.json();
 
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+  // then
+  expect(json.status).toBe(404);
+  expect(json.code).toBe("notFound");
+});
+
+test("DELETE /api/v1/git-repository/:id: given the repository exists, when deleted successfully, then returns okEnvelope", async () => {
+  // given
+  mockDeleteGitRepository.mockResolvedValue(ok());
+
+  // when
+  const response = await request(
+    "DELETE",
+    `/api/v1/git-repository/${TEST_ID}`,
+  );
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(mockDeleteGitRepository).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
   });
+});
+
+test("DELETE /api/v1/git-repository/:id: given a service failure, when deleted, then returns errEnvelope", async () => {
+  // given
+  mockDeleteGitRepository.mockResolvedValue(err(Err.code("unknown")));
+
+  // when
+  const response = await request(
+    "DELETE",
+    `/api/v1/git-repository/${TEST_ID}`,
+  );
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
 });

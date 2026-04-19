@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, expect, mock, test } from "bun:test";
 import Elysia from "elysia";
 import { err, ok } from "neverthrow";
 
@@ -46,7 +46,12 @@ const { credentialV1Router } =
 const now = new Date("2026-01-01");
 const expiredAt = new Date("2027-01-01");
 
-const makeApiKeyCredential = (overrides?: Partial<Credential>): Credential => ({
+type ApiKeyCredential = Extract<Credential, { type: "apiKey" }>;
+type BasicCredential = Extract<Credential, { type: "basic" }>;
+
+const makeApiKeyCredential = (
+  overrides?: Partial<Omit<ApiKeyCredential, "type">>,
+): ApiKeyCredential => ({
   id: TEST_ID,
   _version: 1,
   createdAt: now,
@@ -58,7 +63,9 @@ const makeApiKeyCredential = (overrides?: Partial<Credential>): Credential => ({
   ...overrides,
 });
 
-const makeBasicCredential = (overrides?: Partial<Credential>): Credential => ({
+const makeBasicCredential = (
+  overrides?: Partial<Omit<BasicCredential, "type">>,
+): BasicCredential => ({
   id: TEST_ID,
   _version: 1,
   createdAt: now,
@@ -94,213 +101,231 @@ const request = (method: string, path: string, body?: unknown) => {
 
 // --- Tests ---
 
-describe("POST /api/v1/credential", () => {
-  beforeEach(resetMocks);
+beforeEach(resetMocks);
 
-  it("should return okEnvelope with id on success for apiKey type", async () => {
-    const newId = "019606a0-0000-7000-8000-000000000099" as Id;
-    mockCreateCredential.mockResolvedValue(ok({ id: newId }));
+test("POST /api/v1/credential: given a valid apiKey payload, when created successfully, then returns okEnvelope with id", async () => {
+  // given
+  const newId = "019606a0-0000-7000-8000-000000000099" as Id;
+  mockCreateCredential.mockResolvedValue(ok({ id: newId }));
 
-    const response = await request("POST", "/api/v1/credential", {
+  // when
+  const response = await request("POST", "/api/v1/credential", {
+    type: "apiKey",
+    name: "New Key",
+    apiKey: "sk-new-123",
+    expiredAt: "2027-01-01T00:00:00.000Z",
+  });
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(json.data).toEqual({ id: newId });
+  expect(mockCreateCredential).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    payload: expect.objectContaining({
       type: "apiKey",
       name: "New Key",
       apiKey: "sk-new-123",
-      expiredAt: "2027-01-01T00:00:00.000Z",
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(json.data).toEqual({ id: newId });
-    expect(mockCreateCredential).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      payload: expect.objectContaining({
-        type: "apiKey",
-        name: "New Key",
-        apiKey: "sk-new-123",
-      }),
-    });
-  });
-
-  it("should return okEnvelope with id on success for basic type", async () => {
-    const newId = "019606a0-0000-7000-8000-000000000099" as Id;
-    mockCreateCredential.mockResolvedValue(ok({ id: newId }));
-
-    const response = await request("POST", "/api/v1/credential", {
-      type: "basic",
-      name: "New Basic",
-      username: "user",
-      password: "pass",
-      expiredAt: "2027-01-01T00:00:00.000Z",
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(json.data).toEqual({ id: newId });
-  });
-
-  it("should return errEnvelope on service error", async () => {
-    mockCreateCredential.mockResolvedValue(err(Err.code("unknown")));
-
-    const response = await request("POST", "/api/v1/credential", {
-      type: "apiKey",
-      name: "New Key",
-      apiKey: "sk-new-123",
-      expiredAt: "2027-01-01T00:00:00.000Z",
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+    }),
   });
 });
 
-describe("GET /api/v1/credential", () => {
-  beforeEach(resetMocks);
+test("POST /api/v1/credential: given a valid basic payload, when created successfully, then returns okEnvelope with id", async () => {
+  // given
+  const newId = "019606a0-0000-7000-8000-000000000099" as Id;
+  mockCreateCredential.mockResolvedValue(ok({ id: newId }));
 
-  it("should return list of credentials mapped to DTOs", async () => {
-    const credentials = [
-      makeApiKeyCredential(),
-      makeBasicCredential({
-        id: "019606a0-0000-7000-8000-000000000002" as Id,
-      }),
-    ];
-    mockListCredentials.mockResolvedValue(ok({ data: credentials }));
-
-    const response = await request("GET", "/api/v1/credential");
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.data).toHaveLength(2);
-    expect(json.data[0].type).toBe("apiKey");
-    expect(json.data[0].name).toBe("My API Key");
-    expect(json.data[1].type).toBe("basic");
-    expect(json.data[1].name).toBe("My Basic Credential");
-    expect(mockListCredentials).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-    });
+  // when
+  const response = await request("POST", "/api/v1/credential", {
+    type: "basic",
+    name: "New Basic",
+    username: "user",
+    password: "pass",
+    expiredAt: "2027-01-01T00:00:00.000Z",
   });
+  const json = await response.json();
 
-  it("should return errEnvelope on service error", async () => {
-    mockListCredentials.mockResolvedValue(err(Err.code("unknown")));
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(json.data).toEqual({ id: newId });
+});
 
-    const response = await request("GET", "/api/v1/credential");
-    const json = await response.json();
+test("POST /api/v1/credential: given a service failure, when called, then returns errEnvelope", async () => {
+  // given
+  mockCreateCredential.mockResolvedValue(err(Err.code("unknown")));
 
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+  // when
+  const response = await request("POST", "/api/v1/credential", {
+    type: "apiKey",
+    name: "New Key",
+    apiKey: "sk-new-123",
+    expiredAt: "2027-01-01T00:00:00.000Z",
+  });
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
+});
+
+test("GET /api/v1/credential: given credentials exist, when listed, then returns credentials mapped to DTOs", async () => {
+  // given
+  const credentials = [
+    makeApiKeyCredential(),
+    makeBasicCredential({
+      id: "019606a0-0000-7000-8000-000000000002" as Id,
+    }),
+  ];
+  mockListCredentials.mockResolvedValue(ok({ data: credentials }));
+
+  // when
+  const response = await request("GET", "/api/v1/credential");
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.data).toHaveLength(2);
+  expect(json.data[0].type).toBe("apiKey");
+  expect(json.data[0].name).toBe("My API Key");
+  expect(json.data[1].type).toBe("basic");
+  expect(json.data[1].name).toBe("My Basic Credential");
+  expect(mockListCredentials).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
   });
 });
 
-describe("GET /api/v1/credential/:id", () => {
-  beforeEach(resetMocks);
+test("GET /api/v1/credential: given a service failure, when listed, then returns errEnvelope", async () => {
+  // given
+  mockListCredentials.mockResolvedValue(err(Err.code("unknown")));
 
-  it("should return single apiKey credential mapped to DTO", async () => {
-    const credential = makeApiKeyCredential();
-    mockGetCredential.mockResolvedValue(ok({ data: credential }));
+  // when
+  const response = await request("GET", "/api/v1/credential");
+  const json = await response.json();
 
-    const response = await request("GET", `/api/v1/credential/${TEST_ID}`);
-    const json = await response.json();
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
+});
 
-    expect(json.status).toBe(200);
-    expect(json.data.type).toBe("apiKey");
-    expect(json.data.name).toBe("My API Key");
-    expect(json.data.apiKey).toBe("sk-test-123");
-    expect(json.data.id).toBe(TEST_ID);
-    expect(mockGetCredential).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-    });
-  });
+test("GET /api/v1/credential/:id: given an apiKey credential exists, when fetched by id, then returns the credential mapped to DTO", async () => {
+  // given
+  const credential = makeApiKeyCredential();
+  mockGetCredential.mockResolvedValue(ok({ data: credential }));
 
-  it("should return single basic credential mapped to DTO", async () => {
-    const credential = makeBasicCredential();
-    mockGetCredential.mockResolvedValue(ok({ data: credential }));
+  // when
+  const response = await request("GET", `/api/v1/credential/${TEST_ID}`);
+  const json = await response.json();
 
-    const response = await request("GET", `/api/v1/credential/${TEST_ID}`);
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.data.type).toBe("basic");
-    expect(json.data.username).toBe("admin");
-    expect(json.data.password).toBe("secret");
-  });
-
-  it("should return errEnvelope when not found", async () => {
-    mockGetCredential.mockResolvedValue(err(Err.code("notFound")));
-
-    const response = await request("GET", `/api/v1/credential/${TEST_ID}`);
-    const json = await response.json();
-
-    expect(json.status).toBe(404);
-    expect(json.code).toBe("notFound");
+  // then
+  expect(json.status).toBe(200);
+  expect(json.data.type).toBe("apiKey");
+  expect(json.data.name).toBe("My API Key");
+  expect(json.data.apiKey).toBe("sk-test-123");
+  expect(json.data.id).toBe(TEST_ID);
+  expect(mockGetCredential).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
   });
 });
 
-describe("PATCH /api/v1/credential/:id", () => {
-  beforeEach(resetMocks);
+test("GET /api/v1/credential/:id: given a basic credential exists, when fetched by id, then returns the credential mapped to DTO", async () => {
+  // given
+  const credential = makeBasicCredential();
+  mockGetCredential.mockResolvedValue(ok({ data: credential }));
 
-  it("should return okEnvelope on success", async () => {
-    const updated = makeApiKeyCredential({
-      name: "Updated Key",
-      _version: 2,
-    });
-    mockUpdateCredential.mockResolvedValue(ok({ data: updated }));
+  // when
+  const response = await request("GET", `/api/v1/credential/${TEST_ID}`);
+  const json = await response.json();
 
-    const response = await request("PATCH", `/api/v1/credential/${TEST_ID}`, {
-      type: "apiKey",
-      name: "Updated Key",
-    });
-    const json = await response.json();
+  // then
+  expect(json.status).toBe(200);
+  expect(json.data.type).toBe("basic");
+  expect(json.data.username).toBe("admin");
+  expect(json.data.password).toBe("secret");
+});
 
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(mockUpdateCredential).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-      data: { type: "apiKey", name: "Updated Key" },
-    });
+test("GET /api/v1/credential/:id: given the credential does not exist, when fetched by id, then returns notFound errEnvelope", async () => {
+  // given
+  mockGetCredential.mockResolvedValue(err(Err.code("notFound")));
+
+  // when
+  const response = await request("GET", `/api/v1/credential/${TEST_ID}`);
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(404);
+  expect(json.code).toBe("notFound");
+});
+
+test("PATCH /api/v1/credential/:id: given a valid update payload, when updated successfully, then returns okEnvelope", async () => {
+  // given
+  const updated = makeApiKeyCredential({
+    name: "Updated Key",
+    _version: 2,
   });
+  mockUpdateCredential.mockResolvedValue(ok({ data: updated }));
 
-  it("should return errEnvelope on service error", async () => {
-    mockUpdateCredential.mockResolvedValue(err(Err.code("notFound")));
+  // when
+  const response = await request("PATCH", `/api/v1/credential/${TEST_ID}`, {
+    type: "apiKey",
+    name: "Updated Key",
+  });
+  const json = await response.json();
 
-    const response = await request("PATCH", `/api/v1/credential/${TEST_ID}`, {
-      type: "apiKey",
-      name: "Updated",
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(404);
-    expect(json.code).toBe("notFound");
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(mockUpdateCredential).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
+    data: { type: "apiKey", name: "Updated Key" },
   });
 });
 
-describe("DELETE /api/v1/credential/:id", () => {
-  beforeEach(resetMocks);
+test("PATCH /api/v1/credential/:id: given a service failure, when updated, then returns errEnvelope", async () => {
+  // given
+  mockUpdateCredential.mockResolvedValue(err(Err.code("notFound")));
 
-  it("should return okEnvelope on success", async () => {
-    mockDeleteCredential.mockResolvedValue(ok());
-
-    const response = await request("DELETE", `/api/v1/credential/${TEST_ID}`);
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(mockDeleteCredential).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-    });
+  // when
+  const response = await request("PATCH", `/api/v1/credential/${TEST_ID}`, {
+    type: "apiKey",
+    name: "Updated",
   });
+  const json = await response.json();
 
-  it("should return errEnvelope on service error", async () => {
-    mockDeleteCredential.mockResolvedValue(err(Err.code("unknown")));
+  // then
+  expect(json.status).toBe(404);
+  expect(json.code).toBe("notFound");
+});
 
-    const response = await request("DELETE", `/api/v1/credential/${TEST_ID}`);
-    const json = await response.json();
+test("DELETE /api/v1/credential/:id: given the credential exists, when deleted successfully, then returns okEnvelope", async () => {
+  // given
+  mockDeleteCredential.mockResolvedValue(ok());
 
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+  // when
+  const response = await request("DELETE", `/api/v1/credential/${TEST_ID}`);
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(mockDeleteCredential).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
   });
+});
+
+test("DELETE /api/v1/credential/:id: given a service failure, when deleted, then returns errEnvelope", async () => {
+  // given
+  mockDeleteCredential.mockResolvedValue(err(Err.code("unknown")));
+
+  // when
+  const response = await request("DELETE", `/api/v1/credential/${TEST_ID}`);
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
 });

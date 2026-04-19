@@ -1,29 +1,40 @@
-import { describe, expect, it } from "bun:test";
+import { expect, test } from "bun:test";
 
 import { Err } from "@/shared/err/err";
 import { mapMongoError } from "@/vendor/mongo/mongo-err";
 
-describe("mapMongoError", () => {
-  it("should map a plain Error to Err with mongo message", () => {
-    const result = mapMongoError(new Error("connection lost"));
+test("mapMongoError: given a plain Error, when mapped, then returns Err with mongo message and unknown code", () => {
+  // given
+  const cause = new Error("connection lost");
 
-    expect(result).toBeInstanceOf(Err);
-    expect(result.message).toBe("Mongo database error");
-    expect(result.code).toBe("unknown");
-  });
+  // when
+  const result = mapMongoError(cause);
 
-  it("should map a non-Error value to Err with mongo message", () => {
-    const result = mapMongoError("something went wrong");
+  // then
+  expect(result).toBeInstanceOf(Err);
+  expect(result.message).toBe("Mongo database error");
+  expect(result.code).toBe("unknown");
+});
 
-    expect(result).toBeInstanceOf(Err);
-    expect(result.message).toBe("Mongo database error");
-  });
+test("mapMongoError: given a non-Error value, when mapped, then returns Err with mongo message", () => {
+  // given
+  const cause = "something went wrong";
 
-  it("should return the original Err if already an Err", () => {
-    const original = Err.code("notFound");
+  // when
+  const result = mapMongoError(cause);
 
-    const result = mapMongoError(original);
+  // then
+  expect(result).toBeInstanceOf(Err);
+  expect(result.message).toBe("Mongo database error");
+});
 
-    expect(result).toBe(original);
-  });
+test("mapMongoError: given an existing Err, when mapped, then returns the original Err unchanged", () => {
+  // given
+  const original = Err.code("notFound");
+
+  // when
+  const result = mapMongoError(original);
+
+  // then
+  expect(result).toBe(original);
 });

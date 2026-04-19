@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, expect, mock, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { AiAgent } from "@/module/ai-agent/ai-agent-model";
@@ -217,465 +217,474 @@ const setupResolveSuccess = () => {
 
 // --- Tests ---
 
-describe("syncAiAgentToExternal", () => {
-  beforeEach(resetMocks);
+beforeEach(resetMocks);
 
-  describe("new field (no existing definition)", () => {
-    it("should create issue field definition and sync to external", async () => {
-      const { credential } = setupResolveSuccess();
-      const agents = [
-        makeAiAgentFixture({ id: AGENT_ID_1, name: "Agent Alpha" }),
-        makeAiAgentFixture({ id: AGENT_ID_2, name: "Agent Beta" }),
-      ];
-      const createdDef = makeFieldDefinitionFixture({
-        integration: null,
-        options: [
-          { value: AGENT_ID_1, label: "Agent Alpha" },
-          { value: AGENT_ID_2, label: "Agent Beta" },
-        ],
-      });
-
-      mockAiAgentService.list.mockResolvedValue(ok({ data: agents }));
-      mockFieldDefService.list.mockResolvedValue(ok({ data: [] }));
-      mockFieldDefService.create.mockResolvedValue(ok({ id: FIELD_DEF_ID }));
-      mockFieldDefService.get.mockResolvedValue(ok({ data: createdDef }));
-      mockExternalProjectService.createCustomIssueField.mockResolvedValue(
-        ok({ externalId: "ext-f-1", externalKey: "cf_10001" }),
-      );
-      mockFieldDefService.update.mockResolvedValue(
-        ok({
-          data: {
-            ...createdDef,
-            integration: {
-              externalId: "ext-f-1",
-              externalKey: "cf_10001",
-              provider: "jira",
-            },
-          },
-        }),
-      );
-
-      const syncService = makeProjectSyncService(makeDeps());
-      const result = await syncService.syncAiAgentToExternal({
-        ctx,
-        payload: { projectId: PROJECT_ID },
-      });
-
-      expect(result.isOk()).toBe(true);
-
-      // Verify field definition created with correct data
-      expect(mockFieldDefService.create).toHaveBeenCalledWith({
-        ctx,
-        payload: {
-          type: "select",
-          name: "AI Agent",
-          options: [
-            { label: "Agent Alpha", value: AGENT_ID_1 },
-            { label: "Agent Beta", value: AGENT_ID_2 },
-          ],
-          integration: null,
-          project: { id: PROJECT_ID },
-        },
-      });
-
-      // Verify external field created
-      expect(
-        mockExternalProjectService.createCustomIssueField,
-      ).toHaveBeenCalledWith({
-        credential,
-        project: expect.objectContaining({ id: PROJECT_ID }),
-        projectIssueFieldDefinition: createdDef,
-      });
-
-      // Verify definition updated with external integration data
-      expect(mockFieldDefService.update).toHaveBeenCalledWith({
-        ctx,
-        id: FIELD_DEF_ID,
-        data: {
-          integration: {
-            externalId: "ext-f-1",
-            externalKey: "cf_10001",
-            provider: "jira",
-          },
-        },
-      });
-    });
+test("syncAiAgentToExternal: given no existing field definition, when synced, then creates field definition and syncs to external", async () => {
+  // given
+  const { credential } = setupResolveSuccess();
+  const agents = [
+    makeAiAgentFixture({ id: AGENT_ID_1, name: "Agent Alpha" }),
+    makeAiAgentFixture({ id: AGENT_ID_2, name: "Agent Beta" }),
+  ];
+  const createdDef = makeFieldDefinitionFixture({
+    integration: null,
+    options: [
+      { value: AGENT_ID_1, label: "Agent Alpha" },
+      { value: AGENT_ID_2, label: "Agent Beta" },
+    ],
   });
 
-  describe("existing field", () => {
-    it("should delete external field, update options, and re-sync", async () => {
-      const { credential } = setupResolveSuccess();
-      const agents = [
-        makeAiAgentFixture({ id: AGENT_ID_1, name: "Agent Alpha" }),
-        makeAiAgentFixture({ id: AGENT_ID_2, name: "Agent Beta" }),
-      ];
-      const existingDef = makeFieldDefinitionFixture();
-      const updatedDef = makeFieldDefinitionFixture({
-        _version: 2,
-        options: [
-          { value: AGENT_ID_1, label: "Agent Alpha" },
-          { value: AGENT_ID_2, label: "Agent Beta" },
-        ],
-      });
-
-      mockAiAgentService.list.mockResolvedValue(ok({ data: agents }));
-      mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
-      mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
-        ok(undefined),
-      );
-      mockFieldDefService.update
-        .mockResolvedValueOnce(ok({ data: updatedDef }))
-        .mockResolvedValueOnce(ok({ data: updatedDef }));
-      mockExternalProjectService.createCustomIssueField.mockResolvedValue(
-        ok({ externalId: "ext-f-2", externalKey: "cf_10002" }),
-      );
-
-      const syncService = makeProjectSyncService(makeDeps());
-      const result = await syncService.syncAiAgentToExternal({
-        ctx,
-        payload: { projectId: PROJECT_ID },
-      });
-
-      expect(result.isOk()).toBe(true);
-
-      // Verify external field deleted first
-      expect(
-        mockExternalProjectService.deleteCustomIssueField,
-      ).toHaveBeenCalledWith({
-        credential,
-        project: expect.objectContaining({ id: PROJECT_ID }),
-        projectIssueFieldDefinition: existingDef,
-      });
-
-      // Verify options updated
-      expect(mockFieldDefService.update).toHaveBeenCalledWith({
-        ctx,
-        id: FIELD_DEF_ID,
-        data: {
-          options: [
-            { label: "Agent Alpha", value: AGENT_ID_1 },
-            { label: "Agent Beta", value: AGENT_ID_2 },
-          ],
+  mockAiAgentService.list.mockResolvedValue(ok({ data: agents }));
+  mockFieldDefService.list.mockResolvedValue(ok({ data: [] }));
+  mockFieldDefService.create.mockResolvedValue(ok({ id: FIELD_DEF_ID }));
+  mockFieldDefService.get.mockResolvedValue(ok({ data: createdDef }));
+  mockExternalProjectService.createCustomIssueField.mockResolvedValue(
+    ok({ externalId: "ext-f-1", externalKey: "cf_10001" }),
+  );
+  mockFieldDefService.update.mockResolvedValue(
+    ok({
+      data: {
+        ...createdDef,
+        integration: {
+          externalId: "ext-f-1",
+          externalKey: "cf_10001",
+          provider: "jira",
         },
-      });
+      },
+    }),
+  );
 
-      // Verify external field re-created with updated definition
-      expect(
-        mockExternalProjectService.createCustomIssueField,
-      ).toHaveBeenCalledWith({
-        credential,
-        project: expect.objectContaining({ id: PROJECT_ID }),
-        projectIssueFieldDefinition: updatedDef,
-      });
-
-      // Verify final update with new integration data
-      expect(mockFieldDefService.update).toHaveBeenLastCalledWith({
-        ctx,
-        id: FIELD_DEF_ID,
-        data: {
-          integration: {
-            externalId: "ext-f-2",
-            externalKey: "cf_10002",
-            provider: "jira",
-          },
-        },
-      });
-    });
+  // when
+  const syncService = makeProjectSyncService(makeDeps());
+  const result = await syncService.syncAiAgentToExternal({
+    ctx,
+    payload: { projectId: PROJECT_ID },
   });
 
-  describe("error handling", () => {
-    it("should return error when project not found", async () => {
-      mockProjectService.get.mockResolvedValue(err(Err.code("notFound")));
-
-      const syncService = makeProjectSyncService(makeDeps());
-      const result = await syncService.syncAiAgentToExternal({
-        ctx,
-        payload: { projectId: PROJECT_ID },
-      });
-
-      expect(result.isErr()).toBe(true);
-      expect(result._unsafeUnwrapErr()).toHaveProperty("code", "notFound");
-    });
-
-    it("should return error when project has no integration", async () => {
-      mockProjectService.get.mockResolvedValue(
-        ok({ data: makeProject({ integration: null }) }),
-      );
-
-      const syncService = makeProjectSyncService(makeDeps());
-      const result = await syncService.syncAiAgentToExternal({
-        ctx,
-        payload: { projectId: PROJECT_ID },
-      });
-
-      expect(result.isErr()).toBe(true);
-      expect(result._unsafeUnwrapErr()).toHaveProperty("code", "badRequest");
-    });
-
-    it("should return error when credential not found", async () => {
-      mockProjectService.get.mockResolvedValue(ok({ data: makeProject() }));
-      mockCredentialService.get.mockResolvedValue(err(Err.code("notFound")));
-
-      const syncService = makeProjectSyncService(makeDeps());
-      const result = await syncService.syncAiAgentToExternal({
-        ctx,
-        payload: { projectId: PROJECT_ID },
-      });
-
-      expect(result.isErr()).toBe(true);
-      expect(result._unsafeUnwrapErr()).toHaveProperty("code", "notFound");
-    });
-
-    it("should return error when listing ai agents fails", async () => {
-      setupResolveSuccess();
-      mockAiAgentService.list.mockResolvedValue(err(Err.code("unknown")));
-
-      const syncService = makeProjectSyncService(makeDeps());
-      const result = await syncService.syncAiAgentToExternal({
-        ctx,
-        payload: { projectId: PROJECT_ID },
-      });
-
-      expect(result.isErr()).toBe(true);
-    });
-
-    it("should return error when creating external field fails", async () => {
-      setupResolveSuccess();
-      const agents = [makeAiAgentFixture()];
-      const createdDef = makeFieldDefinitionFixture({ integration: null });
-
-      mockAiAgentService.list.mockResolvedValue(ok({ data: agents }));
-      mockFieldDefService.list.mockResolvedValue(ok({ data: [] }));
-      mockFieldDefService.create.mockResolvedValue(ok({ id: FIELD_DEF_ID }));
-      mockFieldDefService.get.mockResolvedValue(ok({ data: createdDef }));
-      mockExternalProjectService.createCustomIssueField.mockResolvedValue(
-        err(Err.code("unknown", { message: "External API error" })),
-      );
-
-      const syncService = makeProjectSyncService(makeDeps());
-      const result = await syncService.syncAiAgentToExternal({
-        ctx,
-        payload: { projectId: PROJECT_ID },
-      });
-
-      expect(result.isErr()).toBe(true);
-    });
-
-    it("should return error when deleting external field fails", async () => {
-      setupResolveSuccess();
-      const agents = [makeAiAgentFixture()];
-      const existingDef = makeFieldDefinitionFixture();
-
-      mockAiAgentService.list.mockResolvedValue(ok({ data: agents }));
-      mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
-      mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
-        err(Err.code("unknown", { message: "External API error" })),
-      );
-
-      const syncService = makeProjectSyncService(makeDeps());
-      const result = await syncService.syncAiAgentToExternal({
-        ctx,
-        payload: { projectId: PROJECT_ID },
-      });
-
-      expect(result.isErr()).toBe(true);
-    });
-
-    it("should return error when update returns null data on existing field", async () => {
-      setupResolveSuccess();
-      const agents = [makeAiAgentFixture()];
-      const existingDef = makeFieldDefinitionFixture();
-
-      mockAiAgentService.list.mockResolvedValue(ok({ data: agents }));
-      mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
-      mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
-        ok(undefined),
-      );
-      mockFieldDefService.update.mockResolvedValue(ok({ data: null }));
-
-      const syncService = makeProjectSyncService(makeDeps());
-      const result = await syncService.syncAiAgentToExternal({
-        ctx,
-        payload: { projectId: PROJECT_ID },
-      });
-
-      expect(result.isErr()).toBe(true);
-      expect(result._unsafeUnwrapErr()).toHaveProperty("code", "notFound");
-    });
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockFieldDefService.create).toHaveBeenCalledWith({
+    ctx,
+    payload: {
+      type: "select",
+      name: "AI Agent",
+      options: [
+        { label: "Agent Alpha", value: AGENT_ID_1 },
+        { label: "Agent Beta", value: AGENT_ID_2 },
+      ],
+      integration: null,
+      project: { id: PROJECT_ID },
+    },
+  });
+  expect(
+    mockExternalProjectService.createCustomIssueField,
+  ).toHaveBeenCalledWith({
+    credential,
+    project: expect.objectContaining({ id: PROJECT_ID }),
+    projectIssueFieldDefinition: createdDef,
+  });
+  expect(mockFieldDefService.update).toHaveBeenCalledWith({
+    ctx,
+    id: FIELD_DEF_ID,
+    data: {
+      integration: {
+        externalId: "ext-f-1",
+        externalKey: "cf_10001",
+        provider: "jira",
+      },
+    },
   });
 });
 
-describe("syncGitRepositoryToExternal", () => {
-  beforeEach(resetMocks);
-
-  it("should create new field definition with field name 'Git Repository'", async () => {
-    const repos = [
-      makeGitRepositoryFixture({ id: REPO_ID_1, name: "frontend-repo" }),
-      makeGitRepositoryFixture({ id: REPO_ID_2, name: "backend-repo" }),
-    ];
-    const createdDef = makeFieldDefinitionFixture({
-      name: "Git Repository",
-      integration: null,
-      options: [
-        { value: REPO_ID_1, label: "frontend-repo" },
-        { value: REPO_ID_2, label: "backend-repo" },
-      ],
-    });
-
-    mockGitRepositoryService.list.mockResolvedValue(ok({ data: repos }));
-    mockFieldDefService.list.mockResolvedValue(ok({ data: [] }));
-    mockFieldDefService.create.mockResolvedValue(ok({ id: FIELD_DEF_ID }));
-    mockFieldDefService.get.mockResolvedValue(ok({ data: createdDef }));
-    mockExternalProjectService.createCustomIssueField.mockResolvedValue(
-      ok({ externalId: "ext-f-1", externalKey: "cf_10001" }),
-    );
-    mockFieldDefService.update.mockResolvedValue(ok({ data: createdDef }));
-
-    const syncService = makeProjectSyncService(makeDeps());
-    const result = await syncService.syncGitRepositoryToExternal({
-      ctx,
-      payload: { projectId: PROJECT_ID },
-    });
-
-    expect(result.isOk()).toBe(true);
-    expect(mockFieldDefService.create).toHaveBeenCalledWith({
-      ctx,
-      payload: expect.objectContaining({
-        name: "Git Repository",
-        type: "select",
-        options: [
-          { label: "frontend-repo", value: REPO_ID_1 },
-          { label: "backend-repo", value: REPO_ID_2 },
-        ],
-      }),
-    });
+test("syncAiAgentToExternal: given existing field definition, when synced, then deletes external field, updates options, and re-syncs", async () => {
+  // given
+  const { credential } = setupResolveSuccess();
+  const agents = [
+    makeAiAgentFixture({ id: AGENT_ID_1, name: "Agent Alpha" }),
+    makeAiAgentFixture({ id: AGENT_ID_2, name: "Agent Beta" }),
+  ];
+  const existingDef = makeFieldDefinitionFixture();
+  const updatedDef = makeFieldDefinitionFixture({
+    _version: 2,
+    options: [
+      { value: AGENT_ID_1, label: "Agent Alpha" },
+      { value: AGENT_ID_2, label: "Agent Beta" },
+    ],
   });
 
-  it("should update existing git repository field definition", async () => {
-    setupResolveSuccess();
-    const repos = [makeGitRepositoryFixture()];
-    const existingDef = makeFieldDefinitionFixture({ name: "Git Repository" });
-    const updatedDef = makeFieldDefinitionFixture({
-      name: "Git Repository",
-      _version: 2,
-    });
+  mockAiAgentService.list.mockResolvedValue(ok({ data: agents }));
+  mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
+  mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
+    ok(undefined),
+  );
+  mockFieldDefService.update
+    .mockResolvedValueOnce(ok({ data: updatedDef }))
+    .mockResolvedValueOnce(ok({ data: updatedDef }));
+  mockExternalProjectService.createCustomIssueField.mockResolvedValue(
+    ok({ externalId: "ext-f-2", externalKey: "cf_10002" }),
+  );
 
-    mockGitRepositoryService.list.mockResolvedValue(ok({ data: repos }));
-    mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
-    mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
-      ok(undefined),
-    );
-    mockFieldDefService.update
-      .mockResolvedValueOnce(ok({ data: updatedDef }))
-      .mockResolvedValueOnce(ok({ data: updatedDef }));
-    mockExternalProjectService.createCustomIssueField.mockResolvedValue(
-      ok({ externalId: "ext-f-2", externalKey: "cf_10002" }),
-    );
+  // when
+  const syncService = makeProjectSyncService(makeDeps());
+  const result = await syncService.syncAiAgentToExternal({
+    ctx,
+    payload: { projectId: PROJECT_ID },
+  });
 
-    const syncService = makeProjectSyncService(makeDeps());
-    const result = await syncService.syncGitRepositoryToExternal({
-      ctx,
-      payload: { projectId: PROJECT_ID },
-    });
-
-    expect(result.isOk()).toBe(true);
-    expect(mockFieldDefService.list).toHaveBeenCalledWith({
-      ctx,
-      filter: { projectId: PROJECT_ID, name: "Git Repository" },
-    });
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(
+    mockExternalProjectService.deleteCustomIssueField,
+  ).toHaveBeenCalledWith({
+    credential,
+    project: expect.objectContaining({ id: PROJECT_ID }),
+    projectIssueFieldDefinition: existingDef,
+  });
+  expect(mockFieldDefService.update).toHaveBeenCalledWith({
+    ctx,
+    id: FIELD_DEF_ID,
+    data: {
+      options: [
+        { label: "Agent Alpha", value: AGENT_ID_1 },
+        { label: "Agent Beta", value: AGENT_ID_2 },
+      ],
+    },
+  });
+  expect(
+    mockExternalProjectService.createCustomIssueField,
+  ).toHaveBeenCalledWith({
+    credential,
+    project: expect.objectContaining({ id: PROJECT_ID }),
+    projectIssueFieldDefinition: updatedDef,
+  });
+  expect(mockFieldDefService.update).toHaveBeenLastCalledWith({
+    ctx,
+    id: FIELD_DEF_ID,
+    data: {
+      integration: {
+        externalId: "ext-f-2",
+        externalKey: "cf_10002",
+        provider: "jira",
+      },
+    },
   });
 });
 
-describe("syncWorkflowDefinitionToExternal", () => {
-  beforeEach(resetMocks);
+test("syncAiAgentToExternal: given project does not exist, when synced, then returns notFound error", async () => {
+  // given
+  mockProjectService.get.mockResolvedValue(err(Err.code("notFound")));
 
-  it("should create new field definition with field name 'Workflow Definition'", async () => {
-    setupResolveSuccess();
-    const workflows = [
-      makeWorkflowDefinitionFixture({
-        id: WORKFLOW_ID_1,
-        name: "Default Workflow",
-      }),
-      makeWorkflowDefinitionFixture({
-        id: WORKFLOW_ID_2,
-        name: "Custom Workflow",
-      }),
-    ];
-    const createdDef = makeFieldDefinitionFixture({
-      name: "Workflow Definition",
-      integration: null,
-      options: [
-        { value: WORKFLOW_ID_1, label: "Default Workflow" },
-        { value: WORKFLOW_ID_2, label: "Custom Workflow" },
-      ],
-    });
-
-    mockWorkflowDefinitionService.list.mockResolvedValue(
-      ok({ data: workflows }),
-    );
-    mockFieldDefService.list.mockResolvedValue(ok({ data: [] }));
-    mockFieldDefService.create.mockResolvedValue(ok({ id: FIELD_DEF_ID }));
-    mockFieldDefService.get.mockResolvedValue(ok({ data: createdDef }));
-    mockExternalProjectService.createCustomIssueField.mockResolvedValue(
-      ok({ externalId: "ext-f-1", externalKey: "cf_10001" }),
-    );
-    mockFieldDefService.update.mockResolvedValue(ok({ data: createdDef }));
-
-    const syncService = makeProjectSyncService(makeDeps());
-    const result = await syncService.syncWorkflowDefinitionToExternal({
-      ctx,
-      payload: { projectId: PROJECT_ID },
-    });
-
-    expect(result.isOk()).toBe(true);
-    expect(mockFieldDefService.create).toHaveBeenCalledWith({
-      ctx,
-      payload: expect.objectContaining({
-        name: "Workflow Definition",
-        type: "select",
-        options: [
-          { label: "Default Workflow", value: WORKFLOW_ID_1 },
-          { label: "Custom Workflow", value: WORKFLOW_ID_2 },
-        ],
-      }),
-    });
+  // when
+  const syncService = makeProjectSyncService(makeDeps());
+  const result = await syncService.syncAiAgentToExternal({
+    ctx,
+    payload: { projectId: PROJECT_ID },
   });
 
-  it("should update existing workflow definition field definition", async () => {
-    setupResolveSuccess();
-    const workflows = [makeWorkflowDefinitionFixture()];
-    const existingDef = makeFieldDefinitionFixture({
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toHaveProperty("code", "notFound");
+});
+
+test("syncAiAgentToExternal: given project has no integration, when synced, then returns badRequest error", async () => {
+  // given
+  mockProjectService.get.mockResolvedValue(
+    ok({ data: makeProject({ integration: null }) }),
+  );
+
+  // when
+  const syncService = makeProjectSyncService(makeDeps());
+  const result = await syncService.syncAiAgentToExternal({
+    ctx,
+    payload: { projectId: PROJECT_ID },
+  });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toHaveProperty("code", "badRequest");
+});
+
+test("syncAiAgentToExternal: given credential does not exist, when synced, then returns notFound error", async () => {
+  // given
+  mockProjectService.get.mockResolvedValue(ok({ data: makeProject() }));
+  mockCredentialService.get.mockResolvedValue(err(Err.code("notFound")));
+
+  // when
+  const syncService = makeProjectSyncService(makeDeps());
+  const result = await syncService.syncAiAgentToExternal({
+    ctx,
+    payload: { projectId: PROJECT_ID },
+  });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toHaveProperty("code", "notFound");
+});
+
+test("syncAiAgentToExternal: given listing ai agents fails, when synced, then returns error", async () => {
+  // given
+  setupResolveSuccess();
+  mockAiAgentService.list.mockResolvedValue(err(Err.code("unknown")));
+
+  // when
+  const syncService = makeProjectSyncService(makeDeps());
+  const result = await syncService.syncAiAgentToExternal({
+    ctx,
+    payload: { projectId: PROJECT_ID },
+  });
+
+  // then
+  expect(result.isErr()).toBe(true);
+});
+
+test("syncAiAgentToExternal: given creating external field fails, when synced, then returns error", async () => {
+  // given
+  setupResolveSuccess();
+  const agents = [makeAiAgentFixture()];
+  const createdDef = makeFieldDefinitionFixture({ integration: null });
+
+  mockAiAgentService.list.mockResolvedValue(ok({ data: agents }));
+  mockFieldDefService.list.mockResolvedValue(ok({ data: [] }));
+  mockFieldDefService.create.mockResolvedValue(ok({ id: FIELD_DEF_ID }));
+  mockFieldDefService.get.mockResolvedValue(ok({ data: createdDef }));
+  mockExternalProjectService.createCustomIssueField.mockResolvedValue(
+    err(Err.code("unknown", { message: "External API error" })),
+  );
+
+  // when
+  const syncService = makeProjectSyncService(makeDeps());
+  const result = await syncService.syncAiAgentToExternal({
+    ctx,
+    payload: { projectId: PROJECT_ID },
+  });
+
+  // then
+  expect(result.isErr()).toBe(true);
+});
+
+test("syncAiAgentToExternal: given deleting external field fails, when synced, then returns error", async () => {
+  // given
+  setupResolveSuccess();
+  const agents = [makeAiAgentFixture()];
+  const existingDef = makeFieldDefinitionFixture();
+
+  mockAiAgentService.list.mockResolvedValue(ok({ data: agents }));
+  mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
+  mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
+    err(Err.code("unknown", { message: "External API error" })),
+  );
+
+  // when
+  const syncService = makeProjectSyncService(makeDeps());
+  const result = await syncService.syncAiAgentToExternal({
+    ctx,
+    payload: { projectId: PROJECT_ID },
+  });
+
+  // then
+  expect(result.isErr()).toBe(true);
+});
+
+test("syncAiAgentToExternal: given update returns null data on existing field, when synced, then returns notFound error", async () => {
+  // given
+  setupResolveSuccess();
+  const agents = [makeAiAgentFixture()];
+  const existingDef = makeFieldDefinitionFixture();
+
+  mockAiAgentService.list.mockResolvedValue(ok({ data: agents }));
+  mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
+  mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
+    ok(undefined),
+  );
+  mockFieldDefService.update.mockResolvedValue(ok({ data: null }));
+
+  // when
+  const syncService = makeProjectSyncService(makeDeps());
+  const result = await syncService.syncAiAgentToExternal({
+    ctx,
+    payload: { projectId: PROJECT_ID },
+  });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toHaveProperty("code", "notFound");
+});
+
+test("syncGitRepositoryToExternal: given no existing field definition, when synced, then creates field definition with name 'Git Repository'", async () => {
+  // given
+  const repos = [
+    makeGitRepositoryFixture({ id: REPO_ID_1, name: "frontend-repo" }),
+    makeGitRepositoryFixture({ id: REPO_ID_2, name: "backend-repo" }),
+  ];
+  const createdDef = makeFieldDefinitionFixture({
+    name: "Git Repository",
+    integration: null,
+    options: [
+      { value: REPO_ID_1, label: "frontend-repo" },
+      { value: REPO_ID_2, label: "backend-repo" },
+    ],
+  });
+
+  mockGitRepositoryService.list.mockResolvedValue(ok({ data: repos }));
+  mockFieldDefService.list.mockResolvedValue(ok({ data: [] }));
+  mockFieldDefService.create.mockResolvedValue(ok({ id: FIELD_DEF_ID }));
+  mockFieldDefService.get.mockResolvedValue(ok({ data: createdDef }));
+  mockExternalProjectService.createCustomIssueField.mockResolvedValue(
+    ok({ externalId: "ext-f-1", externalKey: "cf_10001" }),
+  );
+  mockFieldDefService.update.mockResolvedValue(ok({ data: createdDef }));
+
+  // when
+  const syncService = makeProjectSyncService(makeDeps());
+  const result = await syncService.syncGitRepositoryToExternal({
+    ctx,
+    payload: { projectId: PROJECT_ID },
+  });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockFieldDefService.create).toHaveBeenCalledWith({
+    ctx,
+    payload: expect.objectContaining({
+      name: "Git Repository",
+      type: "select",
+      options: [
+        { label: "frontend-repo", value: REPO_ID_1 },
+        { label: "backend-repo", value: REPO_ID_2 },
+      ],
+    }),
+  });
+});
+
+test("syncGitRepositoryToExternal: given existing field definition, when synced, then updates and re-syncs git repository field", async () => {
+  // given
+  setupResolveSuccess();
+  const repos = [makeGitRepositoryFixture()];
+  const existingDef = makeFieldDefinitionFixture({ name: "Git Repository" });
+  const updatedDef = makeFieldDefinitionFixture({
+    name: "Git Repository",
+    _version: 2,
+  });
+
+  mockGitRepositoryService.list.mockResolvedValue(ok({ data: repos }));
+  mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
+  mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
+    ok(undefined),
+  );
+  mockFieldDefService.update
+    .mockResolvedValueOnce(ok({ data: updatedDef }))
+    .mockResolvedValueOnce(ok({ data: updatedDef }));
+  mockExternalProjectService.createCustomIssueField.mockResolvedValue(
+    ok({ externalId: "ext-f-2", externalKey: "cf_10002" }),
+  );
+
+  // when
+  const syncService = makeProjectSyncService(makeDeps());
+  const result = await syncService.syncGitRepositoryToExternal({
+    ctx,
+    payload: { projectId: PROJECT_ID },
+  });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockFieldDefService.list).toHaveBeenCalledWith({
+    ctx,
+    filter: { projectId: PROJECT_ID, name: "Git Repository" },
+  });
+});
+
+test("syncWorkflowDefinitionToExternal: given no existing field definition, when synced, then creates field definition with name 'Workflow Definition'", async () => {
+  // given
+  setupResolveSuccess();
+  const workflows = [
+    makeWorkflowDefinitionFixture({
+      id: WORKFLOW_ID_1,
+      name: "Default Workflow",
+    }),
+    makeWorkflowDefinitionFixture({
+      id: WORKFLOW_ID_2,
+      name: "Custom Workflow",
+    }),
+  ];
+  const createdDef = makeFieldDefinitionFixture({
+    name: "Workflow Definition",
+    integration: null,
+    options: [
+      { value: WORKFLOW_ID_1, label: "Default Workflow" },
+      { value: WORKFLOW_ID_2, label: "Custom Workflow" },
+    ],
+  });
+
+  mockWorkflowDefinitionService.list.mockResolvedValue(
+    ok({ data: workflows }),
+  );
+  mockFieldDefService.list.mockResolvedValue(ok({ data: [] }));
+  mockFieldDefService.create.mockResolvedValue(ok({ id: FIELD_DEF_ID }));
+  mockFieldDefService.get.mockResolvedValue(ok({ data: createdDef }));
+  mockExternalProjectService.createCustomIssueField.mockResolvedValue(
+    ok({ externalId: "ext-f-1", externalKey: "cf_10001" }),
+  );
+  mockFieldDefService.update.mockResolvedValue(ok({ data: createdDef }));
+
+  // when
+  const syncService = makeProjectSyncService(makeDeps());
+  const result = await syncService.syncWorkflowDefinitionToExternal({
+    ctx,
+    payload: { projectId: PROJECT_ID },
+  });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockFieldDefService.create).toHaveBeenCalledWith({
+    ctx,
+    payload: expect.objectContaining({
       name: "Workflow Definition",
-    });
-    const updatedDef = makeFieldDefinitionFixture({
-      name: "Workflow Definition",
-      _version: 2,
-    });
+      type: "select",
+      options: [
+        { label: "Default Workflow", value: WORKFLOW_ID_1 },
+        { label: "Custom Workflow", value: WORKFLOW_ID_2 },
+      ],
+    }),
+  });
+});
 
-    mockWorkflowDefinitionService.list.mockResolvedValue(
-      ok({ data: workflows }),
-    );
-    mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
-    mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
-      ok(undefined),
-    );
-    mockFieldDefService.update
-      .mockResolvedValueOnce(ok({ data: updatedDef }))
-      .mockResolvedValueOnce(ok({ data: updatedDef }));
-    mockExternalProjectService.createCustomIssueField.mockResolvedValue(
-      ok({ externalId: "ext-f-2", externalKey: "cf_10002" }),
-    );
+test("syncWorkflowDefinitionToExternal: given existing field definition, when synced, then updates and re-syncs workflow definition field", async () => {
+  // given
+  setupResolveSuccess();
+  const workflows = [makeWorkflowDefinitionFixture()];
+  const existingDef = makeFieldDefinitionFixture({
+    name: "Workflow Definition",
+  });
+  const updatedDef = makeFieldDefinitionFixture({
+    name: "Workflow Definition",
+    _version: 2,
+  });
 
-    const syncService = makeProjectSyncService(makeDeps());
-    const result = await syncService.syncWorkflowDefinitionToExternal({
-      ctx,
-      payload: { projectId: PROJECT_ID },
-    });
+  mockWorkflowDefinitionService.list.mockResolvedValue(
+    ok({ data: workflows }),
+  );
+  mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
+  mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
+    ok(undefined),
+  );
+  mockFieldDefService.update
+    .mockResolvedValueOnce(ok({ data: updatedDef }))
+    .mockResolvedValueOnce(ok({ data: updatedDef }));
+  mockExternalProjectService.createCustomIssueField.mockResolvedValue(
+    ok({ externalId: "ext-f-2", externalKey: "cf_10002" }),
+  );
 
-    expect(result.isOk()).toBe(true);
-    expect(mockFieldDefService.list).toHaveBeenCalledWith({
-      ctx,
-      filter: { projectId: PROJECT_ID, name: "Workflow Definition" },
-    });
+  // when
+  const syncService = makeProjectSyncService(makeDeps());
+  const result = await syncService.syncWorkflowDefinitionToExternal({
+    ctx,
+    payload: { projectId: PROJECT_ID },
+  });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockFieldDefService.list).toHaveBeenCalledWith({
+    ctx,
+    filter: { projectId: PROJECT_ID, name: "Workflow Definition" },
   });
 });
