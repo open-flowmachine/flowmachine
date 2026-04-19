@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, mock } from "bun:test";
 import {
   MOCK_BETTER_AUTH_URL,
   MOCK_RESEND_FROM_ADDRESS,
-} from "@/test/test-env-mock";
+} from "@/test/env-mock.test";
 
 // --- Mock setup ---
 
