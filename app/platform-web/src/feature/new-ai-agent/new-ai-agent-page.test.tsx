@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { expect, test, vi } from "vitest";
 
 import { makeAiAgentMswHandler } from "@/test/msw/msw-ai-agent-handler";
 import { makeProjectMswHandler } from "@/test/msw/msw-project-handler";
@@ -33,126 +33,149 @@ const fillForm = async () => {
   await userEvent.type(screen.getByLabelText("Name"), "My New Agent");
 };
 
-describe("NewAiAgentPage", () => {
-  it("renders the page heading", async () => {
-    setupProjectList();
-    testRender(<NewAiAgentPage />);
+test("NewAiAgentPage: given page is rendered, when it mounts, then renders the page heading", async () => {
+  // given
+  setupProjectList();
 
-    expect(await screen.findByText("New AI Agent")).toBeVisible();
+  // when
+  testRender(<NewAiAgentPage />);
+
+  // then
+  expect(await screen.findByText("New AI Agent")).toBeVisible();
+});
+
+test("NewAiAgentPage: given page is rendered, when it mounts, then renders form field labels", async () => {
+  // given
+  setupProjectList();
+
+  // when
+  testRender(<NewAiAgentPage />);
+
+  // then
+  expect(screen.getByLabelText("Name")).toBeVisible();
+  expect(screen.getByText("Model")).toBeVisible();
+  expect(screen.getByText("Assigned projects")).toBeVisible();
+});
+
+test("NewAiAgentPage: given page is rendered, when it mounts, then renders Reset and Save buttons", async () => {
+  // given
+  setupProjectList();
+
+  // when
+  testRender(<NewAiAgentPage />);
+
+  // then
+  expect(screen.getByRole("button", { name: "Reset" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Save" })).toBeVisible();
+});
+
+test("NewAiAgentPage: given form is filled out, when user submits, then shows success toast", async () => {
+  // given
+  setupProjectList();
+  const createHandler = aiAgentHandler.create();
+  mswServer.use(createHandler);
+
+  testRender(<NewAiAgentPage />);
+  await fillForm();
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  createHandler.resolveRequest();
+
+  // then
+  expect(
+    await screen.findByText("AI Agent created successfully"),
+  ).toBeVisible();
+});
+
+test("NewAiAgentPage: given form is filled out and submitted successfully, when creation resolves, then redirects to /platform/ai-agent", async () => {
+  // given
+  setupProjectList();
+  const createHandler = aiAgentHandler.create();
+  mswServer.use(createHandler);
+
+  testRender(<NewAiAgentPage />);
+  await fillForm();
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  createHandler.resolveRequest();
+
+  // then
+  await waitFor(() => {
+    expect(mockPush).toHaveBeenCalledWith("/platform/ai-agent");
   });
+});
 
-  it("renders form field labels", async () => {
-    setupProjectList();
-    testRender(<NewAiAgentPage />);
-
-    expect(screen.getByLabelText("Name")).toBeVisible();
-    expect(screen.getByText("Model")).toBeVisible();
-    expect(screen.getByText("Assigned projects")).toBeVisible();
+test("NewAiAgentPage: given server returns error, when user submits form, then shows error toast", async () => {
+  // given
+  setupProjectList();
+  const createHandler = aiAgentHandler.create({
+    status: 500,
+    code: "error",
+    message: "error",
   });
+  mswServer.use(createHandler);
 
-  it("renders Reset and Save buttons", async () => {
-    setupProjectList();
-    testRender(<NewAiAgentPage />);
+  testRender(<NewAiAgentPage />);
+  createHandler.resolveRequest();
+  await fillForm();
 
-    expect(screen.getByRole("button", { name: "Reset" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Save" })).toBeVisible();
-  });
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-  it("submits form and shows success toast", async () => {
-    setupProjectList();
-    const createHandler = aiAgentHandler.create();
-    mswServer.use(createHandler);
+  // then
+  expect(await screen.findByText("Failed to create AI Agent")).toBeVisible();
+});
 
-    testRender(<NewAiAgentPage />);
+test("NewAiAgentPage: given form is submitted, when creation is in progress, then shows 'Saving...'", async () => {
+  // given
+  setupProjectList();
+  const createHandler = aiAgentHandler.create();
+  mswServer.use(createHandler);
 
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  testRender(<NewAiAgentPage />);
+  await fillForm();
 
-    createHandler.resolveRequest();
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    expect(
-      await screen.findByText("AI Agent created successfully"),
-    ).toBeVisible();
-  });
+  // then
+  expect(await screen.findByText("Saving...")).toBeVisible();
 
-  it("redirects to /platform/ai-agent on successful creation", async () => {
-    setupProjectList();
-    const createHandler = aiAgentHandler.create();
-    mswServer.use(createHandler);
+  createHandler.resolveRequest();
+});
 
-    testRender(<NewAiAgentPage />);
+test("NewAiAgentPage: given form is submitted, when creation is in progress, then disables form fields", async () => {
+  // given
+  setupProjectList();
+  const createHandler = aiAgentHandler.create();
+  mswServer.use(createHandler);
 
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  testRender(<NewAiAgentPage />);
+  await fillForm();
 
-    createHandler.resolveRequest();
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  await screen.findByText("Saving...");
 
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/platform/ai-agent");
-    });
-  });
+  // then
+  expect(screen.getByLabelText("Name")).toBeDisabled();
+  expect(screen.getByRole("button", { name: /Reset/ })).toBeDisabled();
 
-  it("shows error toast on creation failure", async () => {
-    setupProjectList();
-    const createHandler = aiAgentHandler.create({
-      status: 500,
-      code: "error",
-      message: "error",
-    });
-    mswServer.use(createHandler);
+  createHandler.resolveRequest();
+});
 
-    testRender(<NewAiAgentPage />);
+test("NewAiAgentPage: given Name field has been filled, when user clicks Reset, then clears the form", async () => {
+  // given
+  setupProjectList();
+  testRender(<NewAiAgentPage />);
+  await userEvent.type(screen.getByLabelText("Name"), "Some Agent");
+  expect(screen.getByLabelText("Name")).toHaveValue("Some Agent");
 
-    createHandler.resolveRequest();
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Reset" }));
 
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-    expect(await screen.findByText("Failed to create AI Agent")).toBeVisible();
-  });
-
-  it("shows 'Saving...' while submission is in progress", async () => {
-    setupProjectList();
-    const createHandler = aiAgentHandler.create();
-    mswServer.use(createHandler);
-
-    testRender(<NewAiAgentPage />);
-
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-    expect(await screen.findByText("Saving...")).toBeVisible();
-
-    createHandler.resolveRequest();
-  });
-
-  it("disables form fields while submitting", async () => {
-    setupProjectList();
-    const createHandler = aiAgentHandler.create();
-    mswServer.use(createHandler);
-
-    testRender(<NewAiAgentPage />);
-
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-    await screen.findByText("Saving...");
-
-    expect(screen.getByLabelText("Name")).toBeDisabled();
-    expect(screen.getByRole("button", { name: /Reset/ })).toBeDisabled();
-
-    createHandler.resolveRequest();
-  });
-
-  it("resets form when Reset is clicked", async () => {
-    setupProjectList();
-    testRender(<NewAiAgentPage />);
-
-    await userEvent.type(screen.getByLabelText("Name"), "Some Agent");
-    expect(screen.getByLabelText("Name")).toHaveValue("Some Agent");
-
-    await userEvent.click(screen.getByRole("button", { name: "Reset" }));
-
-    expect(screen.getByLabelText("Name")).toHaveValue("");
-  });
+  // then
+  expect(screen.getByLabelText("Name")).toHaveValue("");
 });

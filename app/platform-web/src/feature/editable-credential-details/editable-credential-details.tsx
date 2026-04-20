@@ -40,6 +40,7 @@ export function EditableCredentialDetails({
               <Button
                 size="icon-xs"
                 variant="ghost"
+                aria-label="Copy ID"
                 onClick={() => onCopy(credential.id)}
               >
                 <CopyIcon />

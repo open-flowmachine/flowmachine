@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { expect, test, vi } from "vitest";
 
 import { makeCredentialMswHandler } from "@/test/msw/msw-credential-handler";
 import { mswServer } from "@/test/msw/msw-server";
@@ -26,131 +26,156 @@ const fillApiKeyForm = async () => {
   await userEvent.type(screen.getByLabelText("API Key"), "sk-1234567890abcdef");
 };
 
-describe("NewCredentialPage", () => {
-  it("renders the page heading", async () => {
-    testRender(<NewCredentialPage />);
+test("NewCredentialPage: given the page loads, when rendered, then the page heading is visible", async () => {
+  // given
+  testRender(<NewCredentialPage />);
 
-    expect(await screen.findByText("New Credential")).toBeVisible();
+  // then
+  expect(await screen.findByText("New Credential")).toBeVisible();
+});
+
+test("NewCredentialPage: given the default apiKey type, when rendered, then Name, Type, and API Key fields are visible", async () => {
+  // given
+  testRender(<NewCredentialPage />);
+
+  // then
+  expect(screen.getByLabelText("Name")).toBeVisible();
+  expect(screen.getByText("Type")).toBeVisible();
+  expect(screen.getByLabelText("API Key")).toBeVisible();
+});
+
+test("NewCredentialPage: given the page loads, when rendered, then Reset and Save buttons are visible", async () => {
+  // given
+  testRender(<NewCredentialPage />);
+
+  // then
+  expect(screen.getByRole("button", { name: "Reset" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Save" })).toBeVisible();
+});
+
+test("NewCredentialPage: given the basic type is selected, when the type combobox is changed, then Username and Password fields are shown and API Key is hidden", async () => {
+  // given
+  testRender(<NewCredentialPage />);
+
+  // when
+  await userEvent.click(screen.getByRole("combobox"));
+  await userEvent.click(screen.getByRole("option", { name: "Basic" }));
+
+  // then
+  expect(screen.getByLabelText("Username")).toBeVisible();
+  expect(screen.getByLabelText("Password")).toBeVisible();
+  expect(screen.queryByLabelText("API Key")).toBeNull();
+});
+
+test("NewCredentialPage: given a valid form, when Save is clicked and the request succeeds, then a success toast is shown", async () => {
+  // given
+  const createHandler = credentialHandler.create();
+  mswServer.use(createHandler);
+
+  testRender(<NewCredentialPage />);
+
+  // when
+  await fillApiKeyForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+  createHandler.resolveRequest();
+
+  // then
+  expect(
+    await screen.findByText("Credential created successfully"),
+  ).toBeVisible();
+});
+
+test("NewCredentialPage: given a valid form, when Save is clicked and the request succeeds, then the router redirects to /platform/credential", async () => {
+  // given
+  const createHandler = credentialHandler.create();
+  mswServer.use(createHandler);
+
+  testRender(<NewCredentialPage />);
+
+  // when
+  await fillApiKeyForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+  createHandler.resolveRequest();
+
+  // then
+  await waitFor(() => {
+    expect(mockPush).toHaveBeenCalledWith("/platform/credential");
   });
+});
 
-  it("renders form field labels for apiKey type", async () => {
-    testRender(<NewCredentialPage />);
-
-    expect(screen.getByLabelText("Name")).toBeVisible();
-    expect(screen.getByText("Type")).toBeVisible();
-    expect(screen.getByLabelText("API Key")).toBeVisible();
+test("NewCredentialPage: given a valid form, when Save is clicked and the request fails, then an error toast is shown", async () => {
+  // given
+  const createHandler = credentialHandler.create({
+    status: 500,
+    code: "error",
+    message: "error",
   });
+  mswServer.use(createHandler);
 
-  it("renders Reset and Save buttons", async () => {
-    testRender(<NewCredentialPage />);
+  testRender(<NewCredentialPage />);
 
-    expect(screen.getByRole("button", { name: "Reset" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Save" })).toBeVisible();
-  });
+  // when
+  await fillApiKeyForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-  it("shows Username and Password fields when type is basic", async () => {
-    testRender(<NewCredentialPage />);
+  createHandler.resolveRequest();
 
-    await userEvent.click(screen.getByRole("combobox"));
-    await userEvent.click(screen.getByRole("option", { name: "Basic" }));
+  // then
+  expect(
+    await screen.findByText("Failed to create credential"),
+  ).toBeVisible();
+});
 
-    expect(screen.getByLabelText("Username")).toBeVisible();
-    expect(screen.getByLabelText("Password")).toBeVisible();
-    expect(screen.queryByLabelText("API Key")).toBeNull();
-  });
+test("NewCredentialPage: given a valid form, when Save is clicked and the request is in progress, then a Saving... label is visible", async () => {
+  // given
+  const createHandler = credentialHandler.create();
+  mswServer.use(createHandler);
 
-  it("submits form and shows success toast", async () => {
-    const createHandler = credentialHandler.create();
-    mswServer.use(createHandler);
+  testRender(<NewCredentialPage />);
 
-    testRender(<NewCredentialPage />);
+  // when
+  await fillApiKeyForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    await fillApiKeyForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  // then
+  expect(await screen.findByText("Saving...")).toBeVisible();
 
-    createHandler.resolveRequest();
+  createHandler.resolveRequest();
+});
 
-    expect(
-      await screen.findByText("Credential created successfully"),
-    ).toBeVisible();
-  });
+test("NewCredentialPage: given a valid form, when Save is clicked and the request is in progress, then form fields are disabled", async () => {
+  // given
+  const createHandler = credentialHandler.create();
+  mswServer.use(createHandler);
 
-  it("redirects to /platform/credential on successful creation", async () => {
-    const createHandler = credentialHandler.create();
-    mswServer.use(createHandler);
+  testRender(<NewCredentialPage />);
 
-    testRender(<NewCredentialPage />);
+  // when
+  await fillApiKeyForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    await fillApiKeyForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  await screen.findByText("Saving...");
 
-    createHandler.resolveRequest();
+  // then
+  expect(screen.getByLabelText("Name")).toBeDisabled();
+  expect(screen.getByLabelText("API Key")).toBeDisabled();
+  expect(screen.getByRole("button", { name: /Reset/ })).toBeDisabled();
 
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/platform/credential");
-    });
-  });
+  createHandler.resolveRequest();
+});
 
-  it("shows error toast on creation failure", async () => {
-    const createHandler = credentialHandler.create({
-      status: 500,
-      code: "error",
-      message: "error",
-    });
-    mswServer.use(createHandler);
+test("NewCredentialPage: given a filled form, when Reset is clicked, then the form is cleared", async () => {
+  // given
+  testRender(<NewCredentialPage />);
 
-    testRender(<NewCredentialPage />);
+  await userEvent.type(screen.getByLabelText("Name"), "Some Credential");
+  expect(screen.getByLabelText("Name")).toHaveValue("Some Credential");
 
-    createHandler.resolveRequest();
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Reset" }));
 
-    await fillApiKeyForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-    expect(
-      await screen.findByText("Failed to create credential"),
-    ).toBeVisible();
-  });
-
-  it("shows 'Saving...' while submission is in progress", async () => {
-    const createHandler = credentialHandler.create();
-    mswServer.use(createHandler);
-
-    testRender(<NewCredentialPage />);
-
-    await fillApiKeyForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-    expect(await screen.findByText("Saving...")).toBeVisible();
-
-    createHandler.resolveRequest();
-  });
-
-  it("disables form fields while submitting", async () => {
-    const createHandler = credentialHandler.create();
-    mswServer.use(createHandler);
-
-    testRender(<NewCredentialPage />);
-
-    await fillApiKeyForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-    await screen.findByText("Saving...");
-
-    expect(screen.getByLabelText("Name")).toBeDisabled();
-    expect(screen.getByLabelText("API Key")).toBeDisabled();
-    expect(screen.getByRole("button", { name: /Reset/ })).toBeDisabled();
-
-    createHandler.resolveRequest();
-  });
-
-  it("resets form when Reset is clicked", async () => {
-    testRender(<NewCredentialPage />);
-
-    await userEvent.type(screen.getByLabelText("Name"), "Some Credential");
-    expect(screen.getByLabelText("Name")).toHaveValue("Some Credential");
-
-    await userEvent.click(screen.getByRole("button", { name: "Reset" }));
-
-    expect(screen.getByLabelText("Name")).toHaveValue("");
-  });
+  // then
+  expect(screen.getByLabelText("Name")).toHaveValue("");
 });

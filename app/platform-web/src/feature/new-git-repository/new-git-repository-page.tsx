@@ -37,7 +37,6 @@ export function NewGitRepositoryPage() {
       toast.success("Git Repository created successfully");
       router.push("/platform/git-repository");
     } catch (error) {
-      console.error(error);
       toast.error("Failed to create Git Repository");
     }
   };

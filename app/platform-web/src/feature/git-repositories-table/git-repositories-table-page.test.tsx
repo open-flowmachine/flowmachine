@@ -1,6 +1,6 @@
 import { screen, waitForElementToBeRemoved } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 
 import type { GitRepository } from "@/module/git-repository/git-repository-type";
 
@@ -57,311 +57,301 @@ const REPO_2: GitRepository = {
   projects: [],
 };
 
-describe("GitRepositoriesTablePage", () => {
-  it("renders repository list from API", async () => {
-    const listHandler = gitRepositoryHandler.list({
-      data: [REPO_1, REPO_2],
-    });
-    mswServer.use(listHandler);
+const originalClipboard = navigator.clipboard;
 
-    testRender(<GitRepositoriesTablePage />);
+afterEach(() => {
+  Object.assign(navigator, { clipboard: originalClipboard });
+});
 
-    listHandler.resolveRequest();
+const openActionsMenu = async () => {
+  const menuButton = await screen.findByRole("button", {
+    name: "Open menu",
+  });
+  await userEvent.click(menuButton);
+  await screen.findByRole("menu");
+};
 
-    expect(await screen.findByText("alpha-repo")).toBeVisible();
-    expect(screen.getByText("beta-repo")).toBeVisible();
+test("GitRepositoriesTablePage: given a list of repositories, when the page loads, then it renders the repositories from the API", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({
+    data: [REPO_1, REPO_2],
+  });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+
+  // then
+  expect(await screen.findByText("alpha-repo")).toBeVisible();
+  expect(screen.getByText("beta-repo")).toBeVisible();
+});
+
+test("GitRepositoriesTablePage: given the page loads, when the list resolves, then it renders the page heading", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+
+  // then
+  expect(await screen.findByText("Git Repository")).toBeVisible();
+});
+
+test("GitRepositoriesTablePage: given the page loads, when the list resolves, then it renders the Add Repository button", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+
+  // then
+  expect(await screen.findByText("Add Repository")).toBeVisible();
+});
+
+test("GitRepositoriesTablePage: given an empty repository list, when the list resolves, then it shows 'No results.'", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+
+  // then
+  expect(await screen.findByText("No results.")).toBeVisible();
+});
+
+test("GitRepositoriesTablePage: given a list with one repository, when the list resolves, then it renders column headers", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("alpha-repo");
+
+  // then
+  expect(screen.getByText("Name")).toBeVisible();
+  expect(screen.getByText("URL")).toBeVisible();
+  expect(screen.getByText("Provider")).toBeVisible();
+  expect(screen.getByText("Branch")).toBeVisible();
+  expect(screen.getByText("Created")).toBeVisible();
+});
+
+test("GitRepositoriesTablePage: given a repository with a createdAt timestamp, when the list resolves, then it renders the formatted created date", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+
+  // then
+  expect(await screen.findByText("Jan 15, 2026, 10:30 AM")).toBeVisible();
+});
+
+test("GitRepositoriesTablePage: given a repository in the list, when the list resolves, then it renders the repository name as a link to the detail page", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+
+  // then
+  const link = await screen.findByRole("link", { name: "alpha-repo" });
+  expect(link).toHaveAttribute(
+    "href",
+    `/platform/git-repository/${REPO_1.id}`,
+  );
+});
+
+test("GitRepositoriesTablePage: given the page loads, when the list resolves, then the Add Repository button links to /platform/git-repository/new", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+
+  // then
+  const button = await screen.findByRole("button", {
+    name: /Add Repository/i,
+  });
+  expect(button).toHaveAttribute("href", "/platform/git-repository/new");
+});
+
+test("GitRepositoriesTablePage: given a repository in the list, when the actions menu is opened, then it shows all menu items", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
+  mswServer.use(listHandler);
+
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("alpha-repo");
+
+  // when
+  await openActionsMenu();
+
+  // then
+  expect(screen.getByText("Copy")).toBeVisible();
+  expect(screen.getByText("Edit")).toBeVisible();
+  expect(screen.getByText("Delete")).toBeVisible();
+});
+
+test("GitRepositoriesTablePage: given the clipboard is stubbed and the actions menu is open, when Copy is clicked, then it copies the repository ID to clipboard and shows a success toast", async () => {
+  // given
+  Object.assign(navigator, {
+    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
   });
 
-  it("renders the page heading", async () => {
-    const listHandler = gitRepositoryHandler.list({ data: [] });
-    mswServer.use(listHandler);
-
-    testRender(<GitRepositoriesTablePage />);
-
-    listHandler.resolveRequest();
-
-    expect(await screen.findByText("Git Repository")).toBeVisible();
-  });
-
-  it("renders the Add Repository button", async () => {
-    const listHandler = gitRepositoryHandler.list({ data: [] });
-    mswServer.use(listHandler);
-
-    testRender(<GitRepositoriesTablePage />);
-
-    listHandler.resolveRequest();
-
-    expect(await screen.findByText("Add Repository")).toBeVisible();
-  });
-
-  it("shows 'No results.' when repository list is empty", async () => {
-    const listHandler = gitRepositoryHandler.list({ data: [] });
-    mswServer.use(listHandler);
-
-    testRender(<GitRepositoriesTablePage />);
-
-    listHandler.resolveRequest();
-
-    expect(await screen.findByText("No results.")).toBeVisible();
-  });
-
-  it("renders column headers", async () => {
-    const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
-    mswServer.use(listHandler);
-
-    testRender(<GitRepositoriesTablePage />);
-
-    listHandler.resolveRequest();
-
-    await screen.findByText("alpha-repo");
-
-    expect(screen.getByText("Name")).toBeVisible();
-    expect(screen.getByText("URL")).toBeVisible();
-    expect(screen.getByText("Provider")).toBeVisible();
-    expect(screen.getByText("Branch")).toBeVisible();
-    expect(screen.getByText("Created")).toBeVisible();
-  });
-
-  it("renders formatted created date", async () => {
-    const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
-    mswServer.use(listHandler);
-
-    testRender(<GitRepositoriesTablePage />);
-
-    listHandler.resolveRequest();
-
-    expect(await screen.findByText("Jan 15, 2026, 10:30 AM")).toBeVisible();
-  });
-
-  it("renders repository name as a link to the detail page", async () => {
-    const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
-    mswServer.use(listHandler);
-
-    testRender(<GitRepositoriesTablePage />);
-
-    listHandler.resolveRequest();
-
-    const link = await screen.findByRole("link", { name: "alpha-repo" });
-    expect(link).toHaveAttribute(
-      "href",
-      `/platform/git-repository/${REPO_1.id}`,
-    );
-  });
-
-  it("renders the Add Repository button linking to /platform/git-repository/new", async () => {
-    const listHandler = gitRepositoryHandler.list({ data: [] });
-    mswServer.use(listHandler);
-
-    testRender(<GitRepositoriesTablePage />);
-
-    listHandler.resolveRequest();
-
-    const button = await screen.findByRole("button", {
-      name: /Add Repository/i,
-    });
-    expect(button).toHaveAttribute("href", "/platform/git-repository/new");
-  });
-
-  describe("actions dropdown menu", () => {
-    const openActionsMenu = async () => {
-      const menuButton = await screen.findByRole("button", {
-        name: "Open menu",
-      });
-      await userEvent.click(menuButton);
-      await screen.findByRole("menu");
-    };
-
-    it("opens the dropdown and shows all menu items", async () => {
-      const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
-      mswServer.use(listHandler);
-
-      testRender(<GitRepositoriesTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("alpha-repo");
-      await openActionsMenu();
-
-      expect(screen.getByText("Copy")).toBeVisible();
-      expect(screen.getByText("Edit")).toBeVisible();
-      expect(screen.getByText("Delete")).toBeVisible();
-    });
-  });
-
-  describe("copy action", () => {
-    const openActionsMenu = async () => {
-      const menuButton = await screen.findByRole("button", {
-        name: "Open menu",
-      });
-      await userEvent.click(menuButton);
-      await screen.findByRole("menu");
-    };
-
-    const originalClipboard = navigator.clipboard;
-
-    beforeEach(() => {
-      Object.assign(navigator, {
-        clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
-      });
-    });
-
-    afterEach(() => {
-      Object.assign(navigator, { clipboard: originalClipboard });
-    });
-
-    it("copies repository ID to clipboard and shows success toast", async () => {
-      const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
-      mswServer.use(listHandler);
-
-      testRender(<GitRepositoriesTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("alpha-repo");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Copy"));
-
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(REPO_1.id);
-      expect(await screen.findByText("Copied to clipboard")).toBeVisible();
-    });
-  });
-
-  describe("edit action", () => {
-    const openActionsMenu = async () => {
-      const menuButton = await screen.findByRole("button", {
-        name: "Open menu",
-      });
-      await userEvent.click(menuButton);
-      await screen.findByRole("menu");
-    };
-
-    it("edit menu item links to the repository detail page", async () => {
-      const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
-      mswServer.use(listHandler);
-
-      testRender(<GitRepositoriesTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("alpha-repo");
-      await openActionsMenu();
-
-      const editLink = screen.getByRole("menuitem", { name: /Edit/ });
-      expect(editLink).toHaveAttribute(
-        "href",
-        `/platform/git-repository/${REPO_1.id}`,
-      );
-    });
-  });
-
-  describe("delete action", () => {
-    const openActionsMenu = async () => {
-      const menuButton = await screen.findByRole("button", {
-        name: "Open menu",
-      });
-      await userEvent.click(menuButton);
-      await screen.findByRole("menu");
-    };
-
-    it("clicking Delete opens the confirmation dialog", async () => {
-      const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
-      mswServer.use(listHandler);
-
-      testRender(<GitRepositoriesTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("alpha-repo");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Delete"));
-
-      expect(await screen.findByText("Delete repository")).toBeVisible();
-    });
-
-    it("confirmation dialog shows repository name in description", async () => {
-      const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
-      mswServer.use(listHandler);
-
-      testRender(<GitRepositoriesTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("alpha-repo");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Delete"));
-
-      await screen.findByText("Delete repository");
-      expect(
-        screen.getByText(/Are you sure you want to delete/),
-      ).toHaveTextContent("alpha-repo");
-    });
-
-    it("confirming deletion calls API and closes dialog", async () => {
-      const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
-      const deleteHandler = gitRepositoryHandler.deleteById();
-      mswServer.use(listHandler, deleteHandler);
-
-      testRender(<GitRepositoriesTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("alpha-repo");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Delete"));
-
-      await screen.findByText("Delete repository");
-      await userEvent.click(screen.getByRole("button", { name: "Delete" }));
-
-      deleteHandler.resolveRequest();
-
-      await waitForElementToBeRemoved(() =>
-        screen.queryByText("Delete repository"),
-      );
-    });
-
-    it("canceling deletion closes the dialog", async () => {
-      const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
-      mswServer.use(listHandler);
-
-      testRender(<GitRepositoriesTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("alpha-repo");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Delete"));
-
-      await screen.findByText("Delete repository");
-      await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
-
-      expect(screen.queryByText("Delete repository")).toBeNull();
-    });
-
-    it("shows 'Deleting...' and disables buttons while deletion is in progress", async () => {
-      const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
-      const deleteHandler = gitRepositoryHandler.deleteById();
-
-      mswServer.use(listHandler, deleteHandler);
-
-      testRender(<GitRepositoriesTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("alpha-repo");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Delete"));
-
-      await screen.findByText("Delete repository");
-      await userEvent.click(screen.getByRole("button", { name: "Delete" }));
-
-      expect(await screen.findByText("Deleting...")).toBeVisible();
-      expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
-
-      deleteHandler.resolveRequest();
-
-      await waitForElementToBeRemoved(() =>
-        screen.queryByText("Delete repository"),
-      );
-    });
-  });
+  const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
+  mswServer.use(listHandler);
+
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("alpha-repo");
+  await openActionsMenu();
+
+  // when
+  await userEvent.click(screen.getByText("Copy"));
+
+  // then
+  expect(navigator.clipboard.writeText).toHaveBeenCalledWith(REPO_1.id);
+  expect(await screen.findByText("Copied to clipboard")).toBeVisible();
+});
+
+test("GitRepositoriesTablePage: given a git repository row, when the Edit menu item renders, then its href points to the edit page", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
+  mswServer.use(listHandler);
+
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("alpha-repo");
+  await openActionsMenu();
+
+  // when
+  const editLink = screen.getByRole("menuitem", { name: /Edit/ });
+
+  // then
+  expect(editLink).toHaveAttribute(
+    "href",
+    `/platform/git-repository/${REPO_1.id}`,
+  );
+});
+
+test("GitRepositoriesTablePage: given a repository in the list and the actions menu is open, when Delete is clicked, then it opens the confirmation dialog", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
+  mswServer.use(listHandler);
+
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("alpha-repo");
+  await openActionsMenu();
+
+  // when
+  await userEvent.click(screen.getByText("Delete"));
+
+  // then
+  expect(await screen.findByText("Delete repository")).toBeVisible();
+});
+
+test("GitRepositoriesTablePage: given the delete dialog is open, when it appears, then it shows the repository name in the description", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
+  mswServer.use(listHandler);
+
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("alpha-repo");
+  await openActionsMenu();
+
+  // when
+  await userEvent.click(screen.getByText("Delete"));
+  await screen.findByText("Delete repository");
+
+  // then
+  expect(
+    screen.getByText(/Are you sure you want to delete/),
+  ).toHaveTextContent("alpha-repo");
+});
+
+test("GitRepositoriesTablePage: given the delete dialog is open, when deletion is confirmed, then it calls the API and closes the dialog", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
+  const deleteHandler = gitRepositoryHandler.deleteById();
+  mswServer.use(listHandler, deleteHandler);
+
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("alpha-repo");
+  await openActionsMenu();
+  await userEvent.click(screen.getByText("Delete"));
+  await screen.findByText("Delete repository");
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+  deleteHandler.resolveRequest();
+
+  // then
+  await waitForElementToBeRemoved(() =>
+    screen.queryByText("Delete repository"),
+  );
+});
+
+test("GitRepositoriesTablePage: given the delete dialog is open, when Cancel is clicked, then it closes the dialog", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
+  mswServer.use(listHandler);
+
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("alpha-repo");
+  await openActionsMenu();
+  await userEvent.click(screen.getByText("Delete"));
+  await screen.findByText("Delete repository");
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+  // then
+  expect(screen.queryByText("Delete repository")).toBeNull();
+});
+
+test("GitRepositoriesTablePage: given the delete dialog is open, when deletion is in progress, then it shows 'Deleting...' and disables buttons", async () => {
+  // given
+  const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
+  const deleteHandler = gitRepositoryHandler.deleteById();
+  mswServer.use(listHandler, deleteHandler);
+
+  testRender(<GitRepositoriesTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("alpha-repo");
+  await openActionsMenu();
+  await userEvent.click(screen.getByText("Delete"));
+  await screen.findByText("Delete repository");
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+  // then
+  expect(await screen.findByText("Deleting...")).toBeVisible();
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+
+  deleteHandler.resolveRequest();
+
+  await waitForElementToBeRemoved(() =>
+    screen.queryByText("Delete repository"),
+  );
 });

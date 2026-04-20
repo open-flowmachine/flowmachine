@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { expect, test, vi } from "vitest";
 
 import { makeProjectMswHandler } from "@/test/msw/msw-project-handler";
 import { mswServer } from "@/test/msw/msw-server";
@@ -21,141 +21,162 @@ vi.mock("next/navigation", () => ({
 
 const projectHandler = makeProjectMswHandler();
 
+const CREDENTIAL_ID = "01961a2b-0000-7000-8000-000000000050";
+
 const fillForm = async () => {
   await userEvent.type(screen.getByLabelText("Name"), "My New Project");
   await userEvent.type(
     screen.getByLabelText("Domain"),
     "example.atlassian.net",
   );
-  await userEvent.type(
-    screen.getByLabelText("Credential ID"),
-    "01961a2b-0000-7000-8000-000000000050",
-  );
+  await userEvent.type(screen.getByLabelText("Credential ID"), CREDENTIAL_ID);
   await userEvent.type(screen.getByLabelText("External ID"), "10001");
   await userEvent.type(screen.getByLabelText("External Key"), "PROJ");
   await userEvent.type(screen.getByLabelText("Webhook Secret"), "secret-abc");
 };
 
-describe("NewProjectPage", () => {
-  it("renders the page heading", async () => {
-    testRender(<NewProjectPage />);
+test("NewProjectPage: given the page loads, when rendered, then the page heading is visible", async () => {
+  // given
+  testRender(<NewProjectPage />);
 
-    expect(await screen.findByText("New Project")).toBeVisible();
+  // then
+  expect(await screen.findByText("New Project")).toBeVisible();
+});
+
+test("NewProjectPage: given the page loads, when rendered, then all form field labels are visible", async () => {
+  // given
+  testRender(<NewProjectPage />);
+
+  // then
+  expect(screen.getByLabelText("Name")).toBeVisible();
+  expect(screen.getByText("Provider")).toBeVisible();
+  expect(screen.getByLabelText("Domain")).toBeVisible();
+  expect(screen.getByLabelText("Credential ID")).toBeVisible();
+  expect(screen.getByLabelText("External ID")).toBeVisible();
+  expect(screen.getByLabelText("External Key")).toBeVisible();
+  expect(screen.getByLabelText("Webhook Secret")).toBeVisible();
+});
+
+test("NewProjectPage: given the page loads, when rendered, then Reset and Save buttons are visible", async () => {
+  // given
+  testRender(<NewProjectPage />);
+
+  // then
+  expect(screen.getByRole("button", { name: "Reset" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Save" })).toBeVisible();
+});
+
+test("NewProjectPage: given a valid form, when Save is clicked and the request succeeds, then a success toast is shown", async () => {
+  // given
+  const projectCreateHandler = projectHandler.create();
+  mswServer.use(projectCreateHandler);
+
+  testRender(<NewProjectPage />);
+
+  // when
+  await fillForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+  projectCreateHandler.resolveRequest();
+
+  // then
+  expect(
+    await screen.findByText("Project created successfully"),
+  ).toBeVisible();
+});
+
+test("NewProjectPage: given a valid form, when Save is clicked and the request succeeds, then the router redirects to /platform/project", async () => {
+  // given
+  const projectCreateHandler = projectHandler.create();
+  mswServer.use(projectCreateHandler);
+
+  testRender(<NewProjectPage />);
+
+  // when
+  await fillForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+  projectCreateHandler.resolveRequest();
+
+  // then
+  await waitFor(() => {
+    expect(mockPush).toHaveBeenCalledWith("/platform/project");
   });
+});
 
-  it("renders form field labels", async () => {
-    testRender(<NewProjectPage />);
-
-    expect(screen.getByLabelText("Name")).toBeVisible();
-    expect(screen.getByText("Provider")).toBeVisible();
-    expect(screen.getByLabelText("Domain")).toBeVisible();
-    expect(screen.getByLabelText("Credential ID")).toBeVisible();
-    expect(screen.getByLabelText("External ID")).toBeVisible();
-    expect(screen.getByLabelText("External Key")).toBeVisible();
-    expect(screen.getByLabelText("Webhook Secret")).toBeVisible();
+test("NewProjectPage: given a valid form, when Save is clicked and the request fails, then an error toast is shown", async () => {
+  // given
+  const projectCreateHandler = projectHandler.create({
+    status: 500,
+    code: "error",
+    message: "error",
   });
+  mswServer.use(projectCreateHandler);
 
-  it("renders Reset and Save buttons", async () => {
-    testRender(<NewProjectPage />);
+  testRender(<NewProjectPage />);
 
-    expect(screen.getByRole("button", { name: "Reset" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Save" })).toBeVisible();
-  });
+  // when
+  await fillForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-  it("submits form and shows success toast", async () => {
-    const projectCreateHandler = projectHandler.create();
-    mswServer.use(projectCreateHandler);
+  projectCreateHandler.resolveRequest();
 
-    testRender(<NewProjectPage />);
+  // then
+  expect(await screen.findByText("Failed to create project")).toBeVisible();
+});
 
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+test("NewProjectPage: given a valid form, when Save is clicked and the request is in progress, then a Saving... label is visible", async () => {
+  // given
+  const projectCreateHandler = projectHandler.create();
+  mswServer.use(projectCreateHandler);
 
-    projectCreateHandler.resolveRequest();
+  testRender(<NewProjectPage />);
 
-    expect(
-      await screen.findByText("Project created successfully"),
-    ).toBeVisible();
-  });
+  // when
+  await fillForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-  it("redirects to /platform/project on successful creation", async () => {
-    const projectCreateHandler = projectHandler.create();
-    mswServer.use(projectCreateHandler);
+  // then
+  expect(await screen.findByText("Saving...")).toBeVisible();
 
-    testRender(<NewProjectPage />);
+  projectCreateHandler.resolveRequest();
+});
 
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+test("NewProjectPage: given a valid form, when Save is clicked and the request is in progress, then form fields are disabled", async () => {
+  // given
+  const projectCreateHandler = projectHandler.create();
+  mswServer.use(projectCreateHandler);
 
-    projectCreateHandler.resolveRequest();
+  testRender(<NewProjectPage />);
 
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/platform/project");
-    });
-  });
+  // when
+  await fillForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-  it("shows error toast on creation failure", async () => {
-    const projectCreateHandler = projectHandler.create({
-      status: 500,
-      code: "error",
-      message: "error",
-    });
-    mswServer.use(projectCreateHandler);
+  await screen.findByText("Saving...");
 
-    testRender(<NewProjectPage />);
+  // then
+  expect(screen.getByLabelText("Name")).toBeDisabled();
+  expect(screen.getByLabelText("Domain")).toBeDisabled();
+  expect(screen.getByLabelText("Credential ID")).toBeDisabled();
+  expect(screen.getByLabelText("External ID")).toBeDisabled();
+  expect(screen.getByLabelText("External Key")).toBeDisabled();
+  expect(screen.getByLabelText("Webhook Secret")).toBeDisabled();
+  expect(screen.getByRole("button", { name: /Reset/ })).toBeDisabled();
 
-    projectCreateHandler.resolveRequest();
+  projectCreateHandler.resolveRequest();
+});
 
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+test("NewProjectPage: given a filled form, when Reset is clicked, then the form is cleared", async () => {
+  // given
+  testRender(<NewProjectPage />);
 
-    expect(await screen.findByText("Failed to create project")).toBeVisible();
-  });
+  await userEvent.type(screen.getByLabelText("Name"), "Some Project");
+  expect(screen.getByLabelText("Name")).toHaveValue("Some Project");
 
-  it("shows 'Saving...' while submission is in progress", async () => {
-    const projectCreateHandler = projectHandler.create();
-    mswServer.use(projectCreateHandler);
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Reset" }));
 
-    testRender(<NewProjectPage />);
-
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-    expect(await screen.findByText("Saving...")).toBeVisible();
-
-    projectCreateHandler.resolveRequest();
-  });
-
-  it("disables form fields while submitting", async () => {
-    const projectCreateHandler = projectHandler.create();
-    mswServer.use(projectCreateHandler);
-
-    testRender(<NewProjectPage />);
-
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-    await screen.findByText("Saving...");
-
-    expect(screen.getByLabelText("Name")).toBeDisabled();
-    expect(screen.getByLabelText("Domain")).toBeDisabled();
-    expect(screen.getByLabelText("Credential ID")).toBeDisabled();
-    expect(screen.getByLabelText("External ID")).toBeDisabled();
-    expect(screen.getByLabelText("External Key")).toBeDisabled();
-    expect(screen.getByLabelText("Webhook Secret")).toBeDisabled();
-    expect(screen.getByRole("button", { name: /Reset/ })).toBeDisabled();
-
-    projectCreateHandler.resolveRequest();
-  });
-
-  it("resets form when Reset is clicked", async () => {
-    testRender(<NewProjectPage />);
-
-    await userEvent.type(screen.getByLabelText("Name"), "Some Project");
-    expect(screen.getByLabelText("Name")).toHaveValue("Some Project");
-
-    await userEvent.click(screen.getByRole("button", { name: "Reset" }));
-
-    expect(screen.getByLabelText("Name")).toHaveValue("");
-  });
+  // then
+  expect(screen.getByLabelText("Name")).toHaveValue("");
 });

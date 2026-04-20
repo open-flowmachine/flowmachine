@@ -75,7 +75,6 @@ export function EditableAiAgentDetailsPage({
       toast.success("AI Agent updated successfully");
       setIsEditing(false);
     } catch (error) {
-      console.error(error);
       toast.error("Failed to update AI Agent");
     }
   };

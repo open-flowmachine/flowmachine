@@ -1,6 +1,6 @@
-import { screen, waitForElementToBeRemoved } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { expect, test, vi } from "vitest";
 
 import type { GitRepository } from "@/module/git-repository/git-repository-type";
 import type { Project } from "@/module/project/project-type";
@@ -60,374 +60,341 @@ const waitForRepositoryToLoad = async () => {
   await screen.findByRole("button", { name: "Edit" });
 };
 
-describe("EditableGitRepositoryDetailsPage", () => {
-  describe("view mode", () => {
-    it("renders repository name as page heading", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      mswServer.use(getByIdHandler);
+test("EditableGitRepositoryDetailsPage: given repository data, when page loads, then renders repository name as page heading", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  mswServer.use(getByIdHandler);
 
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  // when
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
+  await waitForRepositoryToLoad();
 
-      getByIdHandler.resolveRequest();
+  // then
+  expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+    "my-repo",
+  );
+});
 
-      await waitForRepositoryToLoad();
+test("EditableGitRepositoryDetailsPage: given repository data, when page loads, then displays repository ID", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  mswServer.use(getByIdHandler);
 
-      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-        "my-repo",
-      );
-    });
+  // when
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
 
-    it("displays repository ID", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      mswServer.use(getByIdHandler);
+  // then
+  expect(await screen.findByText(GIT_REPOSITORY.id)).toBeVisible();
+});
 
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+test("EditableGitRepositoryDetailsPage: given repository data, when page loads, then displays repository name in details", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  mswServer.use(getByIdHandler);
 
-      getByIdHandler.resolveRequest();
+  // when
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
+  await waitForRepositoryToLoad();
 
-      expect(await screen.findByText(GIT_REPOSITORY.id)).toBeVisible();
-    });
+  // then
+  const nameElements = screen.getAllByText("my-repo");
+  expect(nameElements.length).toBeGreaterThanOrEqual(2);
+});
 
-    it("displays repository name in details", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      mswServer.use(getByIdHandler);
+test("EditableGitRepositoryDetailsPage: given repository data, when page loads, then displays formatted created at timestamp", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  mswServer.use(getByIdHandler);
 
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  // when
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
 
-      getByIdHandler.resolveRequest();
+  // then
+  expect(await screen.findByText("Jan 15, 2026, 10:30 AM")).toBeVisible();
+});
 
-      await waitForRepositoryToLoad();
+test("EditableGitRepositoryDetailsPage: given repository data, when page loads, then displays formatted updated at timestamp", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  mswServer.use(getByIdHandler);
 
-      const nameElements = screen.getAllByText("my-repo");
-      expect(nameElements.length).toBeGreaterThanOrEqual(2);
-    });
+  // when
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
 
-    it("displays formatted created at timestamp", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      mswServer.use(getByIdHandler);
+  // then
+  expect(await screen.findByText("Jan 20, 2026, 2:00 PM")).toBeVisible();
+});
 
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+test("EditableGitRepositoryDetailsPage: given repository data, when page loads, then renders Edit button", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  mswServer.use(getByIdHandler);
 
-      getByIdHandler.resolveRequest();
+  // when
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
 
-      expect(await screen.findByText("Jan 15, 2026, 10:30 AM")).toBeVisible();
-    });
+  // then
+  expect(await screen.findByRole("button", { name: "Edit" })).toBeVisible();
+});
 
-    it("displays formatted updated at timestamp", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      mswServer.use(getByIdHandler);
+test("EditableGitRepositoryDetailsPage: given repository data, when page loads, then displays configuration details", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  mswServer.use(getByIdHandler);
 
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  // when
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
+  await waitForRepositoryToLoad();
 
-      getByIdHandler.resolveRequest();
+  // then
+  expect(screen.getByText("main")).toBeVisible();
+  expect(screen.getByText("user@example.com")).toBeVisible();
+  expect(screen.getByText("johndoe")).toBeVisible();
+});
 
-      expect(await screen.findByText("Jan 20, 2026, 2:00 PM")).toBeVisible();
-    });
+test("EditableGitRepositoryDetailsPage: given repository data, when page loads, then displays integration details", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  mswServer.use(getByIdHandler);
 
-    it("renders Edit button", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      mswServer.use(getByIdHandler);
+  // when
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
+  await waitForRepositoryToLoad();
 
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  // then
+  expect(screen.getByText("GitHub")).toBeVisible();
+  expect(
+    screen.getByText("01961a2b-0000-7000-8000-000000000050"),
+  ).toBeVisible();
+});
 
-      getByIdHandler.resolveRequest();
+test("EditableGitRepositoryDetailsPage: given repository with assigned project, when page loads, then displays assigned project name", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  mswServer.use(getByIdHandler);
 
-      expect(await screen.findByRole("button", { name: "Edit" })).toBeVisible();
-    });
+  // when
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
+  await waitForRepositoryToLoad();
 
-    it("displays configuration details", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      mswServer.use(getByIdHandler);
+  // then
+  expect(screen.getByText("Alpha Project")).toBeVisible();
+});
 
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+test("EditableGitRepositoryDetailsPage: given repository with no projects, when page loads, then displays 'No projects assigned'", async () => {
+  // given
+  setupProjectList();
+  const repoWithoutProjects: GitRepository = {
+    ...GIT_REPOSITORY,
+    projects: [],
+  };
+  const getByIdHandler = gitRepositoryHandler.getById({
+    data: repoWithoutProjects,
+  });
+  mswServer.use(getByIdHandler);
 
-      getByIdHandler.resolveRequest();
+  // when
+  testRender(<EditableGitRepositoryDetailsPage id={repoWithoutProjects.id} />);
+  getByIdHandler.resolveRequest();
+  await waitForRepositoryToLoad();
 
-      await waitForRepositoryToLoad();
+  // then
+  expect(screen.getByText("No projects assigned")).toBeVisible();
+});
 
-      expect(screen.getByText("main")).toBeVisible();
-      expect(screen.getByText("user@example.com")).toBeVisible();
-      expect(screen.getByText("johndoe")).toBeVisible();
-    });
+test("EditableGitRepositoryDetailsPage: given API returns error, when page loads, then shows 404", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({
+    status: 500,
+    code: "error",
+    message: "error",
+  });
+  mswServer.use(getByIdHandler);
 
-    it("displays integration details", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      mswServer.use(getByIdHandler);
+  // when
+  testRender(<EditableGitRepositoryDetailsPage id="non-existent-id" />);
+  getByIdHandler.resolveRequest();
 
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  // then
+  expect(await screen.findByText("404 - Not Found")).toBeVisible();
+});
 
-      getByIdHandler.resolveRequest();
-
-      await waitForRepositoryToLoad();
-
-      expect(screen.getByText("GitHub")).toBeVisible();
-      expect(
-        screen.getByText("01961a2b-0000-7000-8000-000000000050"),
-      ).toBeVisible();
-    });
-
-    it("displays assigned project name", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      mswServer.use(getByIdHandler);
-
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
-
-      getByIdHandler.resolveRequest();
-
-      await waitForRepositoryToLoad();
-
-      expect(screen.getByText("Alpha Project")).toBeVisible();
-    });
-
-    it("displays 'No projects assigned' when projects list is empty", async () => {
-      setupProjectList();
-      const repoWithoutProjects: GitRepository = {
-        ...GIT_REPOSITORY,
-        projects: [],
-      };
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: repoWithoutProjects,
-      });
-      mswServer.use(getByIdHandler);
-
-      testRender(
-        <EditableGitRepositoryDetailsPage id={repoWithoutProjects.id} />,
-      );
-
-      getByIdHandler.resolveRequest();
-
-      await waitForRepositoryToLoad();
-
-      expect(screen.getByText("No projects assigned")).toBeVisible();
-    });
+test("EditableGitRepositoryDetailsPage: given clipboard is available, when user clicks copy, then copies repository ID to clipboard and shows toast", async () => {
+  // given
+  const originalClipboard = navigator.clipboard;
+  Object.assign(navigator, {
+    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
   });
 
-  describe("404 error", () => {
-    it("shows 404 when API returns error", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        status: 500,
-        code: "error",
-        message: "error",
-      });
-      mswServer.use(getByIdHandler);
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  mswServer.use(getByIdHandler);
 
-      testRender(<EditableGitRepositoryDetailsPage id="non-existent-id" />);
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
+  await waitForRepositoryToLoad();
 
-      getByIdHandler.resolveRequest();
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Copy ID" }));
 
-      expect(await screen.findByText("404 - Not Found")).toBeVisible();
-    });
+  // then
+  expect(navigator.clipboard.writeText).toHaveBeenCalledWith(GIT_REPOSITORY.id);
+  expect(await screen.findByText("Copied to clipboard")).toBeVisible();
+
+  Object.assign(navigator, { clipboard: originalClipboard });
+});
+
+test("EditableGitRepositoryDetailsPage: given repository data is loaded, when user clicks Edit, then switches to edit form", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  mswServer.use(getByIdHandler);
+
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
+  await waitForRepositoryToLoad();
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+
+  // then
+  expect(screen.getByLabelText("Name")).toBeVisible();
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Save" })).toBeVisible();
+});
+
+test("EditableGitRepositoryDetailsPage: given repository data is loaded, when user clicks Edit, then edit form is pre-populated with repository data", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  mswServer.use(getByIdHandler);
+
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
+  await screen.findByRole("button", { name: "Edit" });
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+
+  // then
+  expect(screen.getByLabelText("Name")).toHaveValue("my-repo");
+  expect(screen.getByLabelText("URL")).toHaveValue(
+    "https://github.com/owner/repo.git",
+  );
+  expect(screen.getByLabelText("Default Branch")).toHaveValue("main");
+  expect(screen.getByLabelText("Email")).toHaveValue("user@example.com");
+  expect(screen.getByLabelText("Username")).toHaveValue("johndoe");
+  expect(screen.getByLabelText("Credential ID")).toHaveValue(
+    "01961a2b-0000-7000-8000-000000000050",
+  );
+});
+
+test("EditableGitRepositoryDetailsPage: given edit form is open, when user clicks Cancel, then returns to view mode", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  mswServer.use(getByIdHandler);
+
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
+  await waitForRepositoryToLoad();
+  await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+  expect(screen.getByLabelText("Name")).toBeVisible();
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+  // then
+  expect(screen.getByRole("button", { name: "Edit" })).toBeVisible();
+});
+
+test("EditableGitRepositoryDetailsPage: given edit form is submitted successfully, when update resolves, then shows success toast and returns to view mode", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  const updateHandler = gitRepositoryHandler.updateById();
+  mswServer.use(getByIdHandler, updateHandler);
+
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
+  await waitForRepositoryToLoad();
+  await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+  await userEvent.clear(screen.getByLabelText("Name"));
+  await userEvent.type(screen.getByLabelText("Name"), "updated-repo");
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  updateHandler.resolveRequest();
+
+  // then
+  expect(
+    await screen.findByText("Git repository updated successfully"),
+  ).toBeVisible();
+  expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
+});
+
+test("EditableGitRepositoryDetailsPage: given edit form is submitted with server error, when update resolves with error, then shows error toast", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  const updateHandler = gitRepositoryHandler.updateById({
+    status: 500,
+    code: "error",
+    message: "error",
   });
+  mswServer.use(getByIdHandler, updateHandler);
 
-  describe("copy action", () => {
-    const originalClipboard = navigator.clipboard;
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
+  updateHandler.resolveRequest();
+  await waitForRepositoryToLoad();
+  await userEvent.click(screen.getByRole("button", { name: "Edit" }));
 
-    beforeEach(() => {
-      Object.assign(navigator, {
-        clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
-      });
-    });
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    afterEach(() => {
-      Object.assign(navigator, { clipboard: originalClipboard });
-    });
+  // then
+  expect(
+    await screen.findByText("Failed to update git repository"),
+  ).toBeVisible();
+});
 
-    it("copies repository ID to clipboard and shows toast", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      mswServer.use(getByIdHandler);
+test("EditableGitRepositoryDetailsPage: given edit form is submitted, when update is in progress, then shows 'Saving...'", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = gitRepositoryHandler.getById({ data: GIT_REPOSITORY });
+  const updateHandler = gitRepositoryHandler.updateById();
+  mswServer.use(getByIdHandler, updateHandler);
 
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
+  getByIdHandler.resolveRequest();
+  await waitForRepositoryToLoad();
+  await userEvent.click(screen.getByRole("button", { name: "Edit" }));
 
-      getByIdHandler.resolveRequest();
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-      await waitForRepositoryToLoad();
+  // then
+  expect(await screen.findByText("Saving...")).toBeVisible();
 
-      const copyButtons = screen.getAllByRole("button");
-      const copyButton = copyButtons.find((btn) =>
-        btn.querySelector(".lucide-copy"),
-      )!;
-      await userEvent.click(copyButton);
-
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-        GIT_REPOSITORY.id,
-      );
-      expect(await screen.findByText("Copied to clipboard")).toBeVisible();
-    });
-  });
-
-  describe("edit mode", () => {
-    it("clicking Edit switches to edit form", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      mswServer.use(getByIdHandler);
-
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
-
-      getByIdHandler.resolveRequest();
-
-      await waitForRepositoryToLoad();
-      await userEvent.click(screen.getByRole("button", { name: "Edit" }));
-
-      expect(screen.getByLabelText("Name")).toBeVisible();
-      expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
-      expect(screen.getByRole("button", { name: "Save" })).toBeVisible();
-    });
-
-    it("edit form is pre-populated with repository data", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      mswServer.use(getByIdHandler);
-
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
-
-      getByIdHandler.resolveRequest();
-
-      await screen.findByRole("button", { name: "Edit" });
-      await userEvent.click(screen.getByRole("button", { name: "Edit" }));
-
-      expect(screen.getByLabelText("Name")).toHaveValue("my-repo");
-      expect(screen.getByLabelText("URL")).toHaveValue(
-        "https://github.com/owner/repo.git",
-      );
-      expect(screen.getByLabelText("Default Branch")).toHaveValue("main");
-      expect(screen.getByLabelText("Email")).toHaveValue("user@example.com");
-      expect(screen.getByLabelText("Username")).toHaveValue("johndoe");
-      expect(screen.getByLabelText("Credential ID")).toHaveValue(
-        "01961a2b-0000-7000-8000-000000000050",
-      );
-    });
-
-    it("clicking Cancel returns to view mode", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      mswServer.use(getByIdHandler);
-
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
-
-      getByIdHandler.resolveRequest();
-
-      await waitForRepositoryToLoad();
-      await userEvent.click(screen.getByRole("button", { name: "Edit" }));
-
-      expect(screen.getByLabelText("Name")).toBeVisible();
-
-      await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
-
-      expect(screen.getByRole("button", { name: "Edit" })).toBeVisible();
-    });
-
-    it("successful update shows toast and returns to view mode", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      const updateHandler = gitRepositoryHandler.updateById();
-      mswServer.use(getByIdHandler, updateHandler);
-
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
-
-      getByIdHandler.resolveRequest();
-
-      await waitForRepositoryToLoad();
-      await userEvent.click(screen.getByRole("button", { name: "Edit" }));
-
-      await userEvent.clear(screen.getByLabelText("Name"));
-      await userEvent.type(screen.getByLabelText("Name"), "updated-repo");
-
-      await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-      updateHandler.resolveRequest();
-
-      expect(
-        await screen.findByText("Git repository updated successfully"),
-      ).toBeVisible();
-      expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
-    });
-
-    it("failed update shows error toast", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      const updateHandler = gitRepositoryHandler.updateById({
-        status: 500,
-        code: "error",
-        message: "error",
-      });
-      mswServer.use(getByIdHandler, updateHandler);
-
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
-
-      getByIdHandler.resolveRequest();
-      updateHandler.resolveRequest();
-
-      await waitForRepositoryToLoad();
-      await userEvent.click(screen.getByRole("button", { name: "Edit" }));
-
-      await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-      expect(
-        await screen.findByText("Failed to update git repository"),
-      ).toBeVisible();
-    });
-
-    it("shows 'Saving...' while update is in progress", async () => {
-      setupProjectList();
-      const getByIdHandler = gitRepositoryHandler.getById({
-        data: GIT_REPOSITORY,
-      });
-      const updateHandler = gitRepositoryHandler.updateById();
-      mswServer.use(getByIdHandler, updateHandler);
-
-      testRender(<EditableGitRepositoryDetailsPage id={GIT_REPOSITORY.id} />);
-
-      getByIdHandler.resolveRequest();
-
-      await waitForRepositoryToLoad();
-      await userEvent.click(screen.getByRole("button", { name: "Edit" }));
-
-      await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-      expect(await screen.findByText("Saving...")).toBeVisible();
-
-      updateHandler.resolveRequest();
-    });
-  });
+  updateHandler.resolveRequest();
 });

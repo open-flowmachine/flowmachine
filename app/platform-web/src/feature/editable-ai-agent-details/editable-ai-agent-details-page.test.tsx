@@ -1,6 +1,6 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { expect, test, vi } from "vitest";
 
 import type { AiAgent } from "@/module/ai-agent/ai-agent-type";
 import type { Project } from "@/module/project/project-type";
@@ -59,350 +59,353 @@ const waitForAgentToLoad = async () => {
   await screen.findByRole("button", { name: "Edit" });
 };
 
-describe("EditableAiAgentDetailsPage", () => {
-  describe("view mode", () => {
-    it("renders AI agent name as page heading", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      mswServer.use(getByIdHandler);
+test("EditableAiAgentDetailsPage: given an AI agent with no projects, when the page loads, then renders agent name as page heading", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
+  });
+  mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
+  // when
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
+  await waitForAgentToLoad();
 
-      getByIdHandler.resolveRequest();
+  // then
+  expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+    "Alpha Agent",
+  );
+});
 
-      await waitForAgentToLoad();
+test("EditableAiAgentDetailsPage: given an AI agent, when the page loads, then displays the agent ID", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
+  });
+  mswServer.use(getByIdHandler);
 
-      expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-        "Alpha Agent",
-      );
-    });
+  // when
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
 
-    it("displays AI agent ID", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      mswServer.use(getByIdHandler);
+  // then
+  expect(
+    await screen.findByText(AI_AGENT_WITHOUT_PROJECTS.id),
+  ).toBeVisible();
+});
 
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
+test("EditableAiAgentDetailsPage: given an AI agent, when the page loads, then displays agent name in details", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
+  });
+  mswServer.use(getByIdHandler);
 
-      getByIdHandler.resolveRequest();
+  // when
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
+  await waitForAgentToLoad();
 
-      expect(
-        await screen.findByText(AI_AGENT_WITHOUT_PROJECTS.id),
-      ).toBeVisible();
-    });
+  // then
+  const nameElements = screen.getAllByText("Alpha Agent");
+  expect(nameElements.length).toBeGreaterThanOrEqual(2);
+});
 
-    it("displays AI agent name in details", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      mswServer.use(getByIdHandler);
+test("EditableAiAgentDetailsPage: given an AI agent with no projects, when the page loads, then displays No projects assigned", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
+  });
+  mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
+  // when
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
 
-      getByIdHandler.resolveRequest();
+  // then
+  expect(await screen.findByText("No projects assigned")).toBeVisible();
+});
 
-      await waitForAgentToLoad();
+test("EditableAiAgentDetailsPage: given an AI agent, when the page loads, then displays formatted created at timestamp", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
+  });
+  mswServer.use(getByIdHandler);
 
-      const nameElements = screen.getAllByText("Alpha Agent");
-      expect(nameElements.length).toBeGreaterThanOrEqual(2);
-    });
+  // when
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
 
-    it("displays 'No projects assigned' when projects are empty", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      mswServer.use(getByIdHandler);
+  // then
+  expect(await screen.findByText("Jan 15, 2026, 10:30 AM")).toBeVisible();
+});
 
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
+test("EditableAiAgentDetailsPage: given an AI agent, when the page loads, then displays formatted updated at timestamp", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
+  });
+  mswServer.use(getByIdHandler);
 
-      getByIdHandler.resolveRequest();
+  // when
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
 
-      expect(await screen.findByText("No projects assigned")).toBeVisible();
-    });
+  // then
+  expect(await screen.findByText("Jan 20, 2026, 2:00 PM")).toBeVisible();
+});
 
-    it("displays formatted created at timestamp", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      mswServer.use(getByIdHandler);
+test("EditableAiAgentDetailsPage: given an AI agent, when the page loads, then renders Edit button", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
+  });
+  mswServer.use(getByIdHandler);
 
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
+  // when
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
 
-      getByIdHandler.resolveRequest();
+  // then
+  expect(await screen.findByRole("button", { name: "Edit" })).toBeVisible();
+});
 
-      expect(await screen.findByText("Jan 15, 2026, 10:30 AM")).toBeVisible();
-    });
+test("EditableAiAgentDetailsPage: given an AI agent with assigned projects, when the page loads, then displays assigned project name", async () => {
+  // given
+  setupProjectList([PROJECT_1]);
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITH_PROJECTS,
+  });
+  mswServer.use(getByIdHandler);
 
-    it("displays formatted updated at timestamp", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      mswServer.use(getByIdHandler);
+  // when
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITH_PROJECTS.id} />);
+  getByIdHandler.resolveRequest();
+  await waitForAgentToLoad();
 
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
+  // then
+  expect(screen.getByText("Test Project")).toBeVisible();
+});
 
-      getByIdHandler.resolveRequest();
+test("EditableAiAgentDetailsPage: given a non-existent agent ID, when the API returns an error, then shows 404 Not Found", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    status: 500,
+    code: "error",
+    message: "error",
+  });
+  mswServer.use(getByIdHandler);
 
-      expect(await screen.findByText("Jan 20, 2026, 2:00 PM")).toBeVisible();
-    });
+  // when
+  testRender(<EditableAiAgentDetailsPage id="non-existent-id" />);
+  getByIdHandler.resolveRequest();
 
-    it("renders Edit button", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      mswServer.use(getByIdHandler);
+  // then
+  expect(await screen.findByText("404 - Not Found")).toBeVisible();
+});
 
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
-
-      getByIdHandler.resolveRequest();
-
-      expect(await screen.findByRole("button", { name: "Edit" })).toBeVisible();
-    });
-
-    it("displays assigned project name when projects are present", async () => {
-      setupProjectList([PROJECT_1]);
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITH_PROJECTS,
-      });
-      mswServer.use(getByIdHandler);
-
-      testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITH_PROJECTS.id} />);
-
-      getByIdHandler.resolveRequest();
-
-      await waitForAgentToLoad();
-
-      expect(screen.getByText("Test Project")).toBeVisible();
-    });
+test("EditableAiAgentDetailsPage: given clipboard is available and the page has loaded, when the copy button is clicked, then copies agent ID to clipboard and shows toast", async () => {
+  // given
+  const originalClipboard = navigator.clipboard;
+  Object.assign(navigator, {
+    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
   });
 
-  describe("404 error", () => {
-    it("shows 404 when API returns error", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        status: 500,
-        code: "error",
-        message: "error",
-      });
-      mswServer.use(getByIdHandler);
-
-      testRender(<EditableAiAgentDetailsPage id="non-existent-id" />);
-
-      getByIdHandler.resolveRequest();
-
-      expect(await screen.findByText("404 - Not Found")).toBeVisible();
-    });
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
   });
+  mswServer.use(getByIdHandler);
 
-  describe("copy action", () => {
-    const originalClipboard = navigator.clipboard;
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
+  await waitForAgentToLoad();
 
-    beforeEach(() => {
-      Object.assign(navigator, {
-        clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
-      });
-    });
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Copy ID" }));
 
-    afterEach(() => {
-      Object.assign(navigator, { clipboard: originalClipboard });
-    });
+  // then
+  expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+    AI_AGENT_WITHOUT_PROJECTS.id,
+  );
+  expect(await screen.findByText("Copied to clipboard")).toBeVisible();
 
-    it("copies AI agent ID to clipboard and shows toast", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      mswServer.use(getByIdHandler);
+  Object.assign(navigator, { clipboard: originalClipboard });
+});
 
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
-
-      getByIdHandler.resolveRequest();
-
-      await waitForAgentToLoad();
-
-      const copyButtons = screen.getAllByRole("button");
-      const copyButton = copyButtons.find((btn) =>
-        btn.querySelector(".lucide-copy"),
-      )!;
-      await userEvent.click(copyButton);
-
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-        AI_AGENT_WITHOUT_PROJECTS.id,
-      );
-      expect(await screen.findByText("Copied to clipboard")).toBeVisible();
-    });
+test("EditableAiAgentDetailsPage: given the page has loaded, when Edit is clicked, then switches to edit form", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
   });
+  mswServer.use(getByIdHandler);
 
-  describe("edit mode", () => {
-    it("clicking Edit switches to edit form", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      mswServer.use(getByIdHandler);
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
+  await waitForAgentToLoad();
 
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Edit" }));
 
-      getByIdHandler.resolveRequest();
+  // then
+  expect(screen.getByLabelText("Name")).toBeVisible();
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Save" })).toBeVisible();
+});
 
-      await waitForAgentToLoad();
-      await userEvent.click(screen.getByRole("button", { name: "Edit" }));
-
-      expect(screen.getByLabelText("Name")).toBeVisible();
-      expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
-      expect(screen.getByRole("button", { name: "Save" })).toBeVisible();
-    });
-
-    it("edit form is pre-populated with AI agent data", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      mswServer.use(getByIdHandler);
-
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
-
-      getByIdHandler.resolveRequest();
-
-      await screen.findByRole("button", { name: "Edit" });
-      await userEvent.click(screen.getByRole("button", { name: "Edit" }));
-
-      expect(screen.getByLabelText("Name")).toHaveValue("Alpha Agent");
-    });
-
-    it("clicking Cancel returns to view mode", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      mswServer.use(getByIdHandler);
-
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
-
-      getByIdHandler.resolveRequest();
-
-      await waitForAgentToLoad();
-      await userEvent.click(screen.getByRole("button", { name: "Edit" }));
-
-      expect(screen.getByLabelText("Name")).toBeVisible();
-
-      await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
-
-      expect(screen.getByRole("button", { name: "Edit" })).toBeVisible();
-    });
-
-    it("successful update shows toast and returns to view mode", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      const updateHandler = aiAgentHandler.updateById();
-      mswServer.use(getByIdHandler, updateHandler);
-
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
-
-      getByIdHandler.resolveRequest();
-
-      await waitForAgentToLoad();
-      await userEvent.click(screen.getByRole("button", { name: "Edit" }));
-
-      await userEvent.clear(screen.getByLabelText("Name"));
-      await userEvent.type(screen.getByLabelText("Name"), "Updated Agent");
-
-      await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-      updateHandler.resolveRequest();
-
-      expect(
-        await screen.findByText("AI Agent updated successfully"),
-      ).toBeVisible();
-      expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
-    });
-
-    it("failed update shows error toast", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      const updateHandler = aiAgentHandler.updateById({
-        status: 500,
-        code: "error",
-        message: "error",
-      });
-      mswServer.use(getByIdHandler, updateHandler);
-
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
-
-      getByIdHandler.resolveRequest();
-      updateHandler.resolveRequest();
-
-      await waitForAgentToLoad();
-      await userEvent.click(screen.getByRole("button", { name: "Edit" }));
-
-      await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-      expect(
-        await screen.findByText("Failed to update AI Agent"),
-      ).toBeVisible();
-    });
-
-    it("shows 'Saving...' while update is in progress", async () => {
-      setupProjectList();
-      const getByIdHandler = aiAgentHandler.getById({
-        data: AI_AGENT_WITHOUT_PROJECTS,
-      });
-      const updateHandler = aiAgentHandler.updateById();
-      mswServer.use(getByIdHandler, updateHandler);
-
-      testRender(
-        <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-      );
-
-      getByIdHandler.resolveRequest();
-
-      await waitForAgentToLoad();
-      await userEvent.click(screen.getByRole("button", { name: "Edit" }));
-
-      await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-      expect(await screen.findByText("Saving...")).toBeVisible();
-
-      updateHandler.resolveRequest();
-    });
+test("EditableAiAgentDetailsPage: given the edit form is open, when rendered, then is pre-populated with AI agent data", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
   });
+  mswServer.use(getByIdHandler);
+
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
+  await screen.findByRole("button", { name: "Edit" });
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+
+  // then
+  expect(screen.getByLabelText("Name")).toHaveValue("Alpha Agent");
+});
+
+test("EditableAiAgentDetailsPage: given the edit form is open, when Cancel is clicked, then returns to view mode", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
+  });
+  mswServer.use(getByIdHandler);
+
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
+  await waitForAgentToLoad();
+  await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+  expect(screen.getByLabelText("Name")).toBeVisible();
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+  // then
+  expect(screen.getByRole("button", { name: "Edit" })).toBeVisible();
+});
+
+test("EditableAiAgentDetailsPage: given a valid update, when Save is clicked and succeeds, then shows toast and returns to view mode", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
+  });
+  const updateHandler = aiAgentHandler.updateById();
+  mswServer.use(getByIdHandler, updateHandler);
+
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
+  await waitForAgentToLoad();
+  await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+  await userEvent.clear(screen.getByLabelText("Name"));
+  await userEvent.type(screen.getByLabelText("Name"), "Updated Agent");
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  updateHandler.resolveRequest();
+
+  // then
+  expect(
+    await screen.findByText("AI Agent updated successfully"),
+  ).toBeVisible();
+  expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
+});
+
+test("EditableAiAgentDetailsPage: given an update that fails, when Save is clicked, then shows error toast", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
+  });
+  const updateHandler = aiAgentHandler.updateById({
+    status: 500,
+    code: "error",
+    message: "error",
+  });
+  mswServer.use(getByIdHandler, updateHandler);
+
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
+  await waitForAgentToLoad();
+  await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+  updateHandler.resolveRequest();
+
+  // then
+  expect(
+    await screen.findByText("Failed to update AI Agent"),
+  ).toBeVisible();
+});
+
+test("EditableAiAgentDetailsPage: given Save is clicked, when update is in progress, then shows Saving...", async () => {
+  // given
+  setupProjectList();
+  const getByIdHandler = aiAgentHandler.getById({
+    data: AI_AGENT_WITHOUT_PROJECTS,
+  });
+  const updateHandler = aiAgentHandler.updateById();
+  mswServer.use(getByIdHandler, updateHandler);
+
+  testRender(
+    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
+  );
+  getByIdHandler.resolveRequest();
+  await waitForAgentToLoad();
+  await userEvent.click(screen.getByRole("button", { name: "Edit" }));
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+  // then
+  expect(await screen.findByText("Saving...")).toBeVisible();
+
+  updateHandler.resolveRequest();
 });
