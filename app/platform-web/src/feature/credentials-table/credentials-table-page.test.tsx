@@ -29,6 +29,7 @@ const CREDENTIAL_API_KEY: Credential = {
   name: "Production API Token",
   apiKey: "sk-1234567890abcdef",
   expiredAt: "2027-01-15T10:30:00.000Z",
+  tenant: { id: "01961a2b-0000-7000-8000-000000000100", type: "organization" },
 };
 
 const CREDENTIAL_BASIC: Credential = {
@@ -40,6 +41,7 @@ const CREDENTIAL_BASIC: Credential = {
   username: "admin-user",
   password: "secret-password",
   expiredAt: "2027-02-20T14:00:00.000Z",
+  tenant: { id: "01961a2b-0000-7000-8000-000000000100", type: "organization" },
 };
 
 const originalClipboard = navigator.clipboard;
@@ -199,8 +201,9 @@ test("CredentialsTablePage: given a credential in the list, when the actions men
 
 test("CredentialsTablePage: given the clipboard is stubbed and the actions menu is open, when Copy is clicked, then it copies the credential ID to clipboard and shows a success toast", async () => {
   // given
+  const writeText = vi.fn().mockResolvedValue(undefined);
   Object.assign(navigator, {
-    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    clipboard: { writeText },
   });
 
   const listHandler = credentialHandler.list({
@@ -217,9 +220,7 @@ test("CredentialsTablePage: given the clipboard is stubbed and the actions menu 
   await userEvent.click(screen.getByText("Copy"));
 
   // then
-  expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-    CREDENTIAL_API_KEY.id,
-  );
+  expect(writeText).toHaveBeenCalledWith(CREDENTIAL_API_KEY.id);
   expect(await screen.findByText("Copied to clipboard")).toBeVisible();
 });
 

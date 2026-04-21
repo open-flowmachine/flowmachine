@@ -87,7 +87,7 @@ export function EditableWorkflowDefinitionDetailsPage({
       });
       toast.success("Workflow updated successfully");
       setIsEditing(false);
-    } catch (error) {
+    } catch {
       toast.error("Failed to update workflow");
     }
   };

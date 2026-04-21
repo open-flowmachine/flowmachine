@@ -34,7 +34,7 @@ export function NewAiAgentPage() {
       form.reset();
       toast.success("AI Agent created successfully");
       router.push("/platform/ai-agent");
-    } catch (error) {
+    } catch {
       toast.error("Failed to create AI Agent");
     }
   };

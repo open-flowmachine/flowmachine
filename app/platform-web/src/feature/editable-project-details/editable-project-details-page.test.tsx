@@ -219,8 +219,9 @@ test("EditableProjectDetailsPage: given API returns error, when page loads, then
 test("EditableProjectDetailsPage: given clipboard is available, when user clicks copy, then copies project ID to clipboard and shows toast", async () => {
   // given
   const originalClipboard = navigator.clipboard;
+  const writeText = vi.fn().mockResolvedValue(undefined);
   Object.assign(navigator, {
-    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    clipboard: { writeText },
   });
 
   const projectGetByIdHandler = projectHandler.getById({
@@ -238,9 +239,7 @@ test("EditableProjectDetailsPage: given clipboard is available, when user clicks
   await userEvent.click(screen.getByRole("button", { name: "Copy ID" }));
 
   // then
-  expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-    PROJECT_WITHOUT_INTEGRATION.id,
-  );
+  expect(writeText).toHaveBeenCalledWith(PROJECT_WITHOUT_INTEGRATION.id);
   expect(await screen.findByText("Copied to clipboard")).toBeVisible();
 
   Object.assign(navigator, { clipboard: originalClipboard });

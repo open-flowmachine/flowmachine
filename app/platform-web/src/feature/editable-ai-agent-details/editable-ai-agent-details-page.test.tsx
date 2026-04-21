@@ -230,8 +230,9 @@ test("EditableAiAgentDetailsPage: given a non-existent agent ID, when the API re
 test("EditableAiAgentDetailsPage: given clipboard is available and the page has loaded, when the copy button is clicked, then copies agent ID to clipboard and shows toast", async () => {
   // given
   const originalClipboard = navigator.clipboard;
+  const writeText = vi.fn().mockResolvedValue(undefined);
   Object.assign(navigator, {
-    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    clipboard: { writeText },
   });
 
   setupProjectList();
@@ -250,9 +251,7 @@ test("EditableAiAgentDetailsPage: given clipboard is available and the page has 
   await userEvent.click(screen.getByRole("button", { name: "Copy ID" }));
 
   // then
-  expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-    AI_AGENT_WITHOUT_PROJECTS.id,
-  );
+  expect(writeText).toHaveBeenCalledWith(AI_AGENT_WITHOUT_PROJECTS.id);
   expect(await screen.findByText("Copied to clipboard")).toBeVisible();
 
   Object.assign(navigator, { clipboard: originalClipboard });

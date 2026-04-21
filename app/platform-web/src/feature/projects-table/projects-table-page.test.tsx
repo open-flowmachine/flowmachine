@@ -186,8 +186,9 @@ test("ProjectsTablePage: given a project exists, when the actions menu is opened
 test("ProjectsTablePage: given clipboard is available and the actions menu is open, when Copy is clicked, then copies project ID to clipboard and shows toast", async () => {
   // given
   const originalClipboard = navigator.clipboard;
+  const writeText = vi.fn().mockResolvedValue(undefined);
   Object.assign(navigator, {
-    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    clipboard: { writeText },
   });
 
   const listHandler = projectHandler.list({ data: [PROJECT_1] });
@@ -202,7 +203,7 @@ test("ProjectsTablePage: given clipboard is available and the actions menu is op
   await userEvent.click(screen.getByText("Copy"));
 
   // then
-  expect(navigator.clipboard.writeText).toHaveBeenCalledWith(PROJECT_1.id);
+  expect(writeText).toHaveBeenCalledWith(PROJECT_1.id);
   expect(await screen.findByText("Copied to clipboard")).toBeVisible();
 
   Object.assign(navigator, { clipboard: originalClipboard });

@@ -30,6 +30,7 @@ const CREDENTIAL_API_KEY: Credential = {
   name: "Production API Token",
   apiKey: "sk-1234567890abcdef",
   expiredAt: "2027-01-15T10:30:00.000Z",
+  tenant: { id: "01961a2b-0000-7000-8000-000000000100", type: "organization" },
 };
 
 const CREDENTIAL_BASIC: Credential = {
@@ -41,6 +42,7 @@ const CREDENTIAL_BASIC: Credential = {
   username: "admin-user",
   password: "secret-password",
   expiredAt: "2027-02-20T14:00:00.000Z",
+  tenant: { id: "01961a2b-0000-7000-8000-000000000100", type: "organization" },
 };
 
 const waitForCredentialToLoad = async () => {
@@ -244,8 +246,9 @@ test("EditableCredentialDetailsPage: given a non-existent credential ID, when th
 test("EditableCredentialDetailsPage: given clipboard is available and the page has loaded, when the copy button is clicked, then copies credential ID to clipboard and shows toast", async () => {
   // given
   const originalClipboard = navigator.clipboard;
+  const writeText = vi.fn().mockResolvedValue(undefined);
   Object.assign(navigator, {
-    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    clipboard: { writeText },
   });
 
   const getByIdHandler = credentialHandler.getById({
@@ -261,9 +264,7 @@ test("EditableCredentialDetailsPage: given clipboard is available and the page h
   await userEvent.click(screen.getByRole("button", { name: "Copy ID" }));
 
   // then
-  expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-    CREDENTIAL_API_KEY.id,
-  );
+  expect(writeText).toHaveBeenCalledWith(CREDENTIAL_API_KEY.id);
   expect(await screen.findByText("Copied to clipboard")).toBeVisible();
 
   Object.assign(navigator, { clipboard: originalClipboard });

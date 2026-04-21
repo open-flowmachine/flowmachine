@@ -2,7 +2,7 @@ import { screen, waitForElementToBeRemoved } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
-import type { GitRepository } from "@/module/git-repository/git-repository-type";
+import type { GitRepository, GitRepositoryProject } from "@/module/git-repository/git-repository-type";
 
 import { makeGitRepositoryMswHandler } from "@/test/msw/msw-git-repository-handler";
 import { mswServer } from "@/test/msw/msw-server";
@@ -36,7 +36,8 @@ const REPO_1: GitRepository = {
     provider: "github",
     credentialId: "01961a2b-0000-7000-8000-000000000050",
   },
-  projects: [],
+  projects: [] as GitRepositoryProject[],
+  tenant: { id: "01961a2b-0000-7000-8000-000000000100", type: "organization" },
 };
 
 const REPO_2: GitRepository = {
@@ -54,7 +55,8 @@ const REPO_2: GitRepository = {
     provider: "gitlab",
     credentialId: "01961a2b-0000-7000-8000-000000000051",
   },
-  projects: [],
+  projects: [] as GitRepositoryProject[],
+  tenant: { id: "01961a2b-0000-7000-8000-000000000100", type: "organization" },
 };
 
 const originalClipboard = navigator.clipboard;
@@ -210,8 +212,9 @@ test("GitRepositoriesTablePage: given a repository in the list, when the actions
 
 test("GitRepositoriesTablePage: given the clipboard is stubbed and the actions menu is open, when Copy is clicked, then it copies the repository ID to clipboard and shows a success toast", async () => {
   // given
+  const writeText = vi.fn().mockResolvedValue(undefined);
   Object.assign(navigator, {
-    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    clipboard: { writeText },
   });
 
   const listHandler = gitRepositoryHandler.list({ data: [REPO_1] });
@@ -226,7 +229,7 @@ test("GitRepositoriesTablePage: given the clipboard is stubbed and the actions m
   await userEvent.click(screen.getByText("Copy"));
 
   // then
-  expect(navigator.clipboard.writeText).toHaveBeenCalledWith(REPO_1.id);
+  expect(writeText).toHaveBeenCalledWith(REPO_1.id);
   expect(await screen.findByText("Copied to clipboard")).toBeVisible();
 });
 

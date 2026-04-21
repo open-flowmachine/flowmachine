@@ -25,7 +25,7 @@ export const useCreateAiAgent = (options?: UseCreateAiAgentOptions) => {
     },
     ...options,
     onSuccess: (...args) => {
-      queryClient.invalidateQueries({ queryKey: makeListAiAgentsQueryKey() });
+      void queryClient.invalidateQueries({ queryKey: makeListAiAgentsQueryKey() });
       options?.onSuccess?.(...args);
     },
   });

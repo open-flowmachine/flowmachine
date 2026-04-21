@@ -39,7 +39,7 @@ export function NewWorkflowDefinitionPage() {
       form.reset();
       toast.success("Workflow created successfully");
       router.push("/platform/workflow");
-    } catch (error) {
+    } catch {
       toast.error("Failed to create workflow");
     }
   };

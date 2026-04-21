@@ -32,7 +32,7 @@ export const useCreateWorkflowDefinition = (
     },
     ...options,
     onSuccess: (...args) => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: makeListWorkflowDefinitionsQueryKey(),
       });
       options?.onSuccess?.(...args);

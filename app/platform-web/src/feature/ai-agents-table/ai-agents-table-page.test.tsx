@@ -187,8 +187,9 @@ test("AiAgentsTablePage: given an AI agent in the list, when the actions menu is
 
 test("AiAgentsTablePage: given the clipboard is stubbed and the actions menu is open, when Copy is clicked, then it copies the AI agent ID to clipboard and shows a success toast", async () => {
   // given
+  const writeText = vi.fn().mockResolvedValue(undefined);
   Object.assign(navigator, {
-    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    clipboard: { writeText },
   });
 
   const listHandler = aiAgentHandler.list({ data: [AI_AGENT_1] });
@@ -203,7 +204,7 @@ test("AiAgentsTablePage: given the clipboard is stubbed and the actions menu is 
   await userEvent.click(screen.getByText("Copy"));
 
   // then
-  expect(navigator.clipboard.writeText).toHaveBeenCalledWith(AI_AGENT_1.id);
+  expect(writeText).toHaveBeenCalledWith(AI_AGENT_1.id);
   expect(await screen.findByText("Copied to clipboard")).toBeVisible();
 });
 

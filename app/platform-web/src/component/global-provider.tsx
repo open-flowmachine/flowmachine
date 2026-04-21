@@ -18,8 +18,8 @@ export function GlobalProvider({ children }: PropsWithChildren) {
       authClient={authClient}
       credentials={false}
       emailOTP
-      navigate={router.push}
-      replace={router.replace}
+      navigate={(href) => router.push(href)}
+      replace={(href) => router.replace(href)}
       onSessionChange={() => router.refresh()}
       Link={Link}
     >

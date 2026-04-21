@@ -27,7 +27,7 @@ export const useCreateGitRepository = (
     },
     ...options,
     onSuccess: (...args) => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: makeListGitRepositoriesQueryKey(),
       });
       options?.onSuccess?.(...args);

@@ -36,10 +36,10 @@ export const useDeleteWorkflowDefinition = (
     ...options,
     onSuccess: (...args) => {
       const [, variables] = args;
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: makeListWorkflowDefinitionsQueryKey(),
       });
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: makeGetWorkflowDefinitionQueryKey(variables.params.id),
       });
       options?.onSuccess?.(...args);

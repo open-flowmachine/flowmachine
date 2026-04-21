@@ -48,6 +48,7 @@ const GIT_REPOSITORY: GitRepository = {
     credentialId: "01961a2b-0000-7000-8000-000000000050",
   },
   projects: [{ id: PROJECT.id }],
+  tenant: { id: "01961a2b-0000-7000-8000-000000000100", type: "organization" },
 };
 
 const setupProjectList = () => {
@@ -241,8 +242,9 @@ test("EditableGitRepositoryDetailsPage: given API returns error, when page loads
 test("EditableGitRepositoryDetailsPage: given clipboard is available, when user clicks copy, then copies repository ID to clipboard and shows toast", async () => {
   // given
   const originalClipboard = navigator.clipboard;
+  const writeText = vi.fn().mockResolvedValue(undefined);
   Object.assign(navigator, {
-    clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    clipboard: { writeText },
   });
 
   setupProjectList();
@@ -257,7 +259,7 @@ test("EditableGitRepositoryDetailsPage: given clipboard is available, when user 
   await userEvent.click(screen.getByRole("button", { name: "Copy ID" }));
 
   // then
-  expect(navigator.clipboard.writeText).toHaveBeenCalledWith(GIT_REPOSITORY.id);
+  expect(writeText).toHaveBeenCalledWith(GIT_REPOSITORY.id);
   expect(await screen.findByText("Copied to clipboard")).toBeVisible();
 
   Object.assign(navigator, { clipboard: originalClipboard });
