@@ -15,7 +15,6 @@ export function JsonEditorTextarea({
 
   const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) => {
     if (lineNumberEl.current) {
-      console.log(e.currentTarget.scrollTop);
       lineNumberEl.current.scrollTop = e.currentTarget.scrollTop;
     }
   };

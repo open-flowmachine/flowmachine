@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, expect, mock, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { ProjectIssueFieldDefinition } from "@/module/project/project-issue-field-definition-model";
@@ -69,84 +69,100 @@ const resetMocks = () => {
 
 // --- Tests ---
 
-describe("listProjectIssueFieldDefinitions", () => {
-  beforeEach(resetMocks);
+beforeEach(resetMocks);
 
-  it("should return all field definitions for the tenant", async () => {
-    const definitions = [makeFieldDefinition()];
-    mockRepository.findMany.mockResolvedValue(ok({ data: definitions }));
+test("list: given repository returns definitions, when listed, then returns all field definitions for the tenant", async () => {
+  // given
+  const definitions = [makeFieldDefinition()];
+  mockRepository.findMany.mockResolvedValue(ok({ data: definitions }));
 
-    const result = await service.list({ ctx });
+  // when
+  const result = await service.list({ ctx });
 
-    expect(result.isOk()).toBe(true);
-    expect(result._unsafeUnwrap()).toEqual({ data: definitions } as never);
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(result._unsafeUnwrap()).toEqual({ data: definitions } as never);
+});
+
+test("list: given a projectId filter, when listed, then passes project.id to repository", async () => {
+  // given
+  mockRepository.findMany.mockResolvedValue(ok({ data: [] }));
+
+  // when
+  const result = await service.list({
+    ctx,
+    filter: { projectId: PROJECT_ID },
   });
 
-  it("should pass projectId filter as project.id", async () => {
-    mockRepository.findMany.mockResolvedValue(ok({ data: [] }));
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockRepository.findMany).toHaveBeenCalledWith({
+    ctx,
+    filter: { "project.id": PROJECT_ID },
+  });
+});
 
-    const result = await service.list({
-      ctx,
-      filter: { projectId: PROJECT_ID },
-    });
+test("list: given a name filter, when listed, then passes name to repository", async () => {
+  // given
+  mockRepository.findMany.mockResolvedValue(ok({ data: [] }));
 
-    expect(result.isOk()).toBe(true);
-    expect(mockRepository.findMany).toHaveBeenCalledWith({
-      ctx,
-      filter: { "project.id": PROJECT_ID },
-    });
+  // when
+  const result = await service.list({
+    ctx,
+    filter: { name: "AI Agent" },
   });
 
-  it("should pass name filter", async () => {
-    mockRepository.findMany.mockResolvedValue(ok({ data: [] }));
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockRepository.findMany).toHaveBeenCalledWith({
+    ctx,
+    filter: { name: "AI Agent" },
+  });
+});
 
-    const result = await service.list({
-      ctx,
-      filter: { name: "AI Agent" },
-    });
+test("list: given projectId and name filters, when listed, then passes both to repository", async () => {
+  // given
+  mockRepository.findMany.mockResolvedValue(ok({ data: [] }));
 
-    expect(result.isOk()).toBe(true);
-    expect(mockRepository.findMany).toHaveBeenCalledWith({
-      ctx,
-      filter: { name: "AI Agent" },
-    });
+  // when
+  const result = await service.list({
+    ctx,
+    filter: { projectId: PROJECT_ID, name: "Git Repository" },
   });
 
-  it("should combine projectId and name filters", async () => {
-    mockRepository.findMany.mockResolvedValue(ok({ data: [] }));
-
-    const result = await service.list({
-      ctx,
-      filter: { projectId: PROJECT_ID, name: "Git Repository" },
-    });
-
-    expect(result.isOk()).toBe(true);
-    expect(mockRepository.findMany).toHaveBeenCalledWith({
-      ctx,
-      filter: { "project.id": PROJECT_ID, name: "Git Repository" },
-    });
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockRepository.findMany).toHaveBeenCalledWith({
+    ctx,
+    filter: { "project.id": PROJECT_ID, name: "Git Repository" },
   });
+});
 
-  it("should pass no filter when filter is omitted", async () => {
-    mockRepository.findMany.mockResolvedValue(ok({ data: [] }));
+test("list: given no filter, when listed, then passes undefined filter to repository", async () => {
+  // given
+  mockRepository.findMany.mockResolvedValue(ok({ data: [] }));
 
-    const result = await service.list({ ctx });
+  // when
+  const result = await service.list({ ctx });
 
-    expect(result.isOk()).toBe(true);
-    expect(mockRepository.findMany).toHaveBeenCalledWith({
-      ctx,
-      filter: undefined,
-    });
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockRepository.findMany).toHaveBeenCalledWith({
+    ctx,
+    filter: undefined,
   });
+});
 
-  it("should return err when repository fails", async () => {
-    mockRepository.findMany.mockResolvedValue(
-      err(Err.code("unknown", { message: "Mongo database error" })),
-    );
+test("list: given repository fails, when listed, then returns err", async () => {
+  // given
+  mockRepository.findMany.mockResolvedValue(
+    err(Err.code("unknown", { message: "Mongo database error" })),
+  );
 
-    const result = await service.list({ ctx });
+  // when
+  const result = await service.list({ ctx });
 
-    expect(result.isErr()).toBe(true);
-    expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
-  });
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
 });

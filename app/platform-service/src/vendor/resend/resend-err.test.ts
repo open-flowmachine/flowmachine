@@ -1,29 +1,40 @@
-import { describe, expect, it } from "bun:test";
+import { expect, test } from "bun:test";
 
 import { Err } from "@/shared/err/err";
 import { mapResendError } from "@/vendor/resend/resend-err";
 
-describe("mapResendError", () => {
-  it("should map a plain Error to Err with resend message", () => {
-    const result = mapResendError(new Error("API timeout"));
+test("mapResendError: given a plain Error, when mapped, then returns Err with resend message and unknown code", () => {
+  // given
+  const cause = new Error("API timeout");
 
-    expect(result).toBeInstanceOf(Err);
-    expect(result.message).toBe("Resend email service error");
-    expect(result.code).toBe("unknown");
-  });
+  // when
+  const result = mapResendError(cause);
 
-  it("should map a non-Error value to Err with resend message", () => {
-    const result = mapResendError("something went wrong");
+  // then
+  expect(result).toBeInstanceOf(Err);
+  expect(result.message).toBe("Resend email service error");
+  expect(result.code).toBe("unknown");
+});
 
-    expect(result).toBeInstanceOf(Err);
-    expect(result.message).toBe("Resend email service error");
-  });
+test("mapResendError: given a non-Error value, when mapped, then returns Err with resend message", () => {
+  // given
+  const cause = "something went wrong";
 
-  it("should return the original Err if already an Err", () => {
-    const original = Err.code("notFound");
+  // when
+  const result = mapResendError(cause);
 
-    const result = mapResendError(original);
+  // then
+  expect(result).toBeInstanceOf(Err);
+  expect(result.message).toBe("Resend email service error");
+});
 
-    expect(result).toBe(original);
-  });
+test("mapResendError: given an existing Err, when mapped, then returns the original Err unchanged", () => {
+  // given
+  const original = Err.code("notFound");
+
+  // when
+  const result = mapResendError(original);
+
+  // then
+  expect(result).toBe(original);
 });

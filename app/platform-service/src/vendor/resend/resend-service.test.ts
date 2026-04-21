@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, expect, mock, test } from "bun:test";
 
 import { Err } from "@/shared/err/err";
 
@@ -32,41 +32,51 @@ const makePayload = (
 
 // --- Tests ---
 
-describe("sendEmail", () => {
-  beforeEach(() => {
-    mockSend.mockClear();
-    mockSend.mockResolvedValue(undefined);
+beforeEach(() => {
+  mockSend.mockClear();
+  mockSend.mockResolvedValue(undefined);
+});
+
+test("sendEmail: given a valid payload, when sent, then calls resend client with correct parameters", async () => {
+  // given
+  const payload = makePayload();
+
+  // when
+  await resendService.sendEmail({ payload });
+
+  // then
+  expect(mockSend).toHaveBeenCalledWith({
+    from: "noreply@example.com",
+    to: "user@example.com",
+    subject: "Test Subject",
+    html: "<p>Hello</p>",
   });
+});
 
-  it("should call resend client with correct parameters", async () => {
-    const payload = makePayload();
+test("sendEmail: given a valid payload, when sent successfully, then returns ok result", async () => {
+  // given
+  const payload = makePayload();
 
-    await resendService.sendEmail({ payload });
+  // when
+  const result = await resendService.sendEmail({ payload });
 
-    expect(mockSend).toHaveBeenCalledWith({
-      from: "noreply@example.com",
-      to: "user@example.com",
-      subject: "Test Subject",
-      html: "<p>Hello</p>",
-    });
-  });
+  // then
+  expect(result.isOk()).toBe(true);
+});
 
-  it("should return ok on success", async () => {
-    const result = await resendService.sendEmail({ payload: makePayload() });
+test("sendEmail: given resend client throws, when sent, then returns err result with resend message", async () => {
+  // given
+  mockSend.mockRejectedValueOnce(new Error("Resend API error"));
+  const payload = makePayload();
 
-    expect(result.isOk()).toBe(true);
-  });
+  // when
+  const result = await resendService.sendEmail({ payload });
 
-  it("should return err on failure", async () => {
-    mockSend.mockRejectedValueOnce(new Error("Resend API error"));
-
-    const result = await resendService.sendEmail({ payload: makePayload() });
-
-    expect(result.isErr()).toBe(true);
-    expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
-    expect(result._unsafeUnwrapErr()).toHaveProperty(
-      "message",
-      "Resend email service error",
-    );
-  });
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  expect(result._unsafeUnwrapErr()).toHaveProperty(
+    "message",
+    "Resend email service error",
+  );
 });

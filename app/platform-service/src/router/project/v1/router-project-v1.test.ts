@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, expect, mock, test } from "bun:test";
 import Elysia from "elysia";
 import { err, ok } from "neverthrow";
 
@@ -78,166 +78,178 @@ const request = (method: string, path: string, body?: unknown) => {
 
 // --- Tests ---
 
-describe("POST /api/v1/project", () => {
-  beforeEach(resetMocks);
+beforeEach(resetMocks);
 
-  it("should return okEnvelope with id on success", async () => {
-    const newId = "019606a0-0000-7000-8000-000000000099" as Id;
-    mockCreateProject.mockResolvedValue(ok({ id: newId }));
+test("POST /api/v1/project: given a valid payload, when created successfully, then returns okEnvelope with id", async () => {
+  // given
+  const newId = "019606a0-0000-7000-8000-000000000099" as Id;
+  mockCreateProject.mockResolvedValue(ok({ id: newId }));
 
-    const response = await request("POST", "/api/v1/project", {
-      name: "New Project",
-      integration: null,
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(json.data).toEqual({ id: newId });
-    expect(mockCreateProject).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      payload: { name: "New Project", integration: null },
-    });
+  // when
+  const response = await request("POST", "/api/v1/project", {
+    name: "New Project",
+    integration: null,
   });
+  const json = await response.json();
 
-  it("should return errEnvelope on service error", async () => {
-    mockCreateProject.mockResolvedValue(err(Err.code("unknown")));
-
-    const response = await request("POST", "/api/v1/project", {
-      name: "New Project",
-      integration: null,
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(json.data).toEqual({ id: newId });
+  expect(mockCreateProject).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    payload: { name: "New Project", integration: null },
   });
 });
 
-describe("GET /api/v1/project", () => {
-  beforeEach(resetMocks);
+test("POST /api/v1/project: given a service failure, when called, then returns errEnvelope", async () => {
+  // given
+  mockCreateProject.mockResolvedValue(err(Err.code("unknown")));
 
-  it("should return list of projects mapped to DTOs", async () => {
-    const projects = [
-      makeProject(),
-      makeProject({
-        name: "Second",
-        id: "019606a0-0000-7000-8000-000000000002" as Id,
-      }),
-    ];
-    mockListProjects.mockResolvedValue(ok({ data: projects }));
-
-    const response = await request("GET", "/api/v1/project");
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.data).toHaveLength(2);
-    expect(json.data[0].name).toBe("My Project");
-    expect(json.data[1].name).toBe("Second");
-    expect(mockListProjects).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-    });
+  // when
+  const response = await request("POST", "/api/v1/project", {
+    name: "New Project",
+    integration: null,
   });
+  const json = await response.json();
 
-  it("should return errEnvelope on service error", async () => {
-    mockListProjects.mockResolvedValue(err(Err.code("unknown")));
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
+});
 
-    const response = await request("GET", "/api/v1/project");
-    const json = await response.json();
+test("GET /api/v1/project: given projects exist, when listed, then returns projects mapped to DTOs", async () => {
+  // given
+  const projects = [
+    makeProject(),
+    makeProject({
+      name: "Second",
+      id: "019606a0-0000-7000-8000-000000000002" as Id,
+    }),
+  ];
+  mockListProjects.mockResolvedValue(ok({ data: projects }));
 
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+  // when
+  const response = await request("GET", "/api/v1/project");
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.data).toHaveLength(2);
+  expect(json.data[0].name).toBe("My Project");
+  expect(json.data[1].name).toBe("Second");
+  expect(mockListProjects).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
   });
 });
 
-describe("GET /api/v1/project/:id", () => {
-  beforeEach(resetMocks);
+test("GET /api/v1/project: given a service failure, when listed, then returns errEnvelope", async () => {
+  // given
+  mockListProjects.mockResolvedValue(err(Err.code("unknown")));
 
-  it("should return single project mapped to DTO", async () => {
-    const project = makeProject();
-    mockGetProject.mockResolvedValue(ok({ data: project }));
+  // when
+  const response = await request("GET", "/api/v1/project");
+  const json = await response.json();
 
-    const response = await request("GET", `/api/v1/project/${TEST_ID}`);
-    const json = await response.json();
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
+});
 
-    expect(json.status).toBe(200);
-    expect(json.data.name).toBe("My Project");
-    expect(json.data.id).toBe(TEST_ID);
-    expect(mockGetProject).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-    });
-  });
+test("GET /api/v1/project/:id: given a project exists, when fetched by id, then returns the project mapped to DTO", async () => {
+  // given
+  const project = makeProject();
+  mockGetProject.mockResolvedValue(ok({ data: project }));
 
-  it("should return errEnvelope when not found", async () => {
-    mockGetProject.mockResolvedValue(err(Err.code("notFound")));
+  // when
+  const response = await request("GET", `/api/v1/project/${TEST_ID}`);
+  const json = await response.json();
 
-    const response = await request("GET", `/api/v1/project/${TEST_ID}`);
-    const json = await response.json();
-
-    expect(json.status).toBe(404);
-    expect(json.code).toBe("notFound");
+  // then
+  expect(json.status).toBe(200);
+  expect(json.data.name).toBe("My Project");
+  expect(json.data.id).toBe(TEST_ID);
+  expect(mockGetProject).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
   });
 });
 
-describe("PATCH /api/v1/project/:id", () => {
-  beforeEach(resetMocks);
+test("GET /api/v1/project/:id: given the project does not exist, when fetched by id, then returns notFound errEnvelope", async () => {
+  // given
+  mockGetProject.mockResolvedValue(err(Err.code("notFound")));
 
-  it("should return okEnvelope on success", async () => {
-    const updated = makeProject({ name: "Updated", _version: 2 });
-    mockUpdateProject.mockResolvedValue(ok({ data: updated }));
+  // when
+  const response = await request("GET", `/api/v1/project/${TEST_ID}`);
+  const json = await response.json();
 
-    const response = await request("PATCH", `/api/v1/project/${TEST_ID}`, {
-      name: "Updated",
-    });
-    const json = await response.json();
+  // then
+  expect(json.status).toBe(404);
+  expect(json.code).toBe("notFound");
+});
 
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(mockUpdateProject).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-      data: { name: "Updated" },
-    });
+test("PATCH /api/v1/project/:id: given a valid update payload, when updated successfully, then returns okEnvelope", async () => {
+  // given
+  const updated = makeProject({ name: "Updated", _version: 2 });
+  mockUpdateProject.mockResolvedValue(ok({ data: updated }));
+
+  // when
+  const response = await request("PATCH", `/api/v1/project/${TEST_ID}`, {
+    name: "Updated",
   });
+  const json = await response.json();
 
-  it("should return errEnvelope on service error", async () => {
-    mockUpdateProject.mockResolvedValue(err(Err.code("notFound")));
-
-    const response = await request("PATCH", `/api/v1/project/${TEST_ID}`, {
-      name: "Updated",
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(404);
-    expect(json.code).toBe("notFound");
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(mockUpdateProject).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
+    data: { name: "Updated" },
   });
 });
 
-describe("DELETE /api/v1/project/:id", () => {
-  beforeEach(resetMocks);
+test("PATCH /api/v1/project/:id: given a service failure, when updated, then returns errEnvelope", async () => {
+  // given
+  mockUpdateProject.mockResolvedValue(err(Err.code("notFound")));
 
-  it("should return okEnvelope on success", async () => {
-    mockDeleteProject.mockResolvedValue(ok());
-
-    const response = await request("DELETE", `/api/v1/project/${TEST_ID}`);
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(mockDeleteProject).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-    });
+  // when
+  const response = await request("PATCH", `/api/v1/project/${TEST_ID}`, {
+    name: "Updated",
   });
+  const json = await response.json();
 
-  it("should return errEnvelope on service error", async () => {
-    mockDeleteProject.mockResolvedValue(err(Err.code("unknown")));
+  // then
+  expect(json.status).toBe(404);
+  expect(json.code).toBe("notFound");
+});
 
-    const response = await request("DELETE", `/api/v1/project/${TEST_ID}`);
-    const json = await response.json();
+test("DELETE /api/v1/project/:id: given the project exists, when deleted successfully, then returns okEnvelope", async () => {
+  // given
+  mockDeleteProject.mockResolvedValue(ok());
 
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+  // when
+  const response = await request("DELETE", `/api/v1/project/${TEST_ID}`);
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(mockDeleteProject).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
   });
+});
+
+test("DELETE /api/v1/project/:id: given a service failure, when deleted, then returns errEnvelope", async () => {
+  // given
+  mockDeleteProject.mockResolvedValue(err(Err.code("unknown")));
+
+  // when
+  const response = await request("DELETE", `/api/v1/project/${TEST_ID}`);
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
 });

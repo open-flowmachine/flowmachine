@@ -80,8 +80,7 @@ export function EditableGitRepositoryDetailsPage({
       });
       toast.success("Git repository updated successfully");
       setIsEditing(false);
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast.error("Failed to update git repository");
     }
   };

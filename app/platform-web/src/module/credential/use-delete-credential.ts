@@ -29,10 +29,10 @@ export const useDeleteCredential = (options?: UseDeleteCredentialOptions) => {
     ...options,
     onSuccess: (...args) => {
       const [, variables] = args;
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: makeListCredentialsQueryKey(),
       });
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: makeGetCredentialQueryKey(variables.params.id),
       });
       options?.onSuccess?.(...args);

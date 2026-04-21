@@ -44,6 +44,7 @@ export function EditableAiAgentDetails({
               <Button
                 size="icon-xs"
                 variant="ghost"
+                aria-label="Copy ID"
                 onClick={() => onCopy(aiAgent.id)}
               >
                 <CopyIcon />

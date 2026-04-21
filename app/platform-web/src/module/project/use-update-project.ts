@@ -25,7 +25,7 @@ export const useUpdateProject = (options?: UseUpdateProjectOptions) => {
     },
     ...options,
     onSuccess: (...args) => {
-      queryClient.invalidateQueries({ queryKey: makeListProjectsQueryKey() });
+      void queryClient.invalidateQueries({ queryKey: makeListProjectsQueryKey() });
       options?.onSuccess?.(...args);
     },
   });

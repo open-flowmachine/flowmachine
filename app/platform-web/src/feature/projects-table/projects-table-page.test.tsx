@@ -4,8 +4,7 @@ import {
   waitForElementToBeRemoved,
 } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { HttpResponse, http } from "msw";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { expect, test, vi } from "vitest";
 
 import type { Project } from "@/module/project/project-type";
 
@@ -48,381 +47,351 @@ const PROJECT_2: Project = {
   },
 };
 
-describe("ProjectsTablePage", () => {
-  it("renders project list from API", async () => {
-    const listHandler = projectHandler.list({ data: [PROJECT_1, PROJECT_2] });
-    mswServer.use(listHandler);
+const openActionsMenu = async () => {
+  const menuButton = await screen.findByRole("button", { name: "Open menu" });
+  await userEvent.click(menuButton);
+  await screen.findByRole("menu");
+};
 
-    testRender(<ProjectsTablePage />);
+test("ProjectsTablePage: given a list of projects, when the page loads, then renders all project names", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [PROJECT_1, PROJECT_2] });
+  mswServer.use(listHandler);
 
-    listHandler.resolveRequest();
+  // when
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
 
-    expect(await screen.findByText("Alpha Project")).toBeVisible();
-    expect(screen.getByText("Beta Project")).toBeVisible();
+  // then
+  expect(await screen.findByText("Alpha Project")).toBeVisible();
+  expect(screen.getByText("Beta Project")).toBeVisible();
+});
+
+test("ProjectsTablePage: given the page loads, when rendered, then shows the page heading", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+
+  // then
+  await waitFor(() => {
+    expect(screen.getByText("Project")).toBeVisible();
+  });
+});
+
+test("ProjectsTablePage: given the page loads, when rendered, then shows the New Project button", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+
+  // then
+  expect(await screen.findByText("New Project")).toBeVisible();
+});
+
+test("ProjectsTablePage: given an empty project list, when the page loads, then shows No results.", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+
+  // then
+  expect(await screen.findByText("No results.")).toBeVisible();
+});
+
+test("ProjectsTablePage: given a project exists, when the page loads, then renders column headers", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [PROJECT_1] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("Alpha Project");
+
+  // then
+  expect(screen.getByText("Name")).toBeVisible();
+  expect(screen.getByText("Created")).toBeVisible();
+});
+
+test("ProjectsTablePage: given a project exists, when the page loads, then renders formatted created date", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [PROJECT_1] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+
+  // then
+  expect(await screen.findByText("Jan 15, 2026, 10:30 AM")).toBeVisible();
+});
+
+test("ProjectsTablePage: given a project exists, when the page loads, then renders project name as link to detail page", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [PROJECT_1] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+
+  // then
+  const link = await screen.findByRole("link", { name: "Alpha Project" });
+  expect(link).toHaveAttribute("href", `/platform/project/${PROJECT_1.id}`);
+});
+
+test("ProjectsTablePage: given the page loads, when rendered, then New Project button links to /platform/project/new", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [] });
+  mswServer.use(listHandler);
+
+  // when
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+
+  // then
+  const button = await screen.findByRole("button", { name: /New Project/i });
+  expect(button).toHaveAttribute("href", "/platform/project/new");
+});
+
+test("ProjectsTablePage: given a project exists, when the actions menu is opened, then shows all menu items", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [PROJECT_1] });
+  mswServer.use(listHandler);
+
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("Alpha Project");
+
+  // when
+  await openActionsMenu();
+
+  // then
+  expect(screen.getByText("Copy")).toBeVisible();
+  expect(screen.getByText("Edit")).toBeVisible();
+  expect(screen.getByText("Sync")).toBeVisible();
+  expect(screen.getByText("Delete")).toBeVisible();
+});
+
+test("ProjectsTablePage: given clipboard is available and the actions menu is open, when Copy is clicked, then copies project ID to clipboard and shows toast", async () => {
+  // given
+  const originalClipboard = navigator.clipboard;
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  Object.assign(navigator, {
+    clipboard: { writeText },
   });
 
-  it("renders the page heading", async () => {
-    const listHandler = projectHandler.list({ data: [] });
-    mswServer.use(listHandler);
+  const listHandler = projectHandler.list({ data: [PROJECT_1] });
+  mswServer.use(listHandler);
 
-    testRender(<ProjectsTablePage />);
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("Alpha Project");
+  await openActionsMenu();
 
-    listHandler.resolveRequest();
+  // when
+  await userEvent.click(screen.getByText("Copy"));
 
-    await waitFor(() => {
-      expect(screen.getByText("Project")).toBeVisible();
-    });
+  // then
+  expect(writeText).toHaveBeenCalledWith(PROJECT_1.id);
+  expect(await screen.findByText("Copied to clipboard")).toBeVisible();
+
+  Object.assign(navigator, { clipboard: originalClipboard });
+});
+
+test("ProjectsTablePage: given a project exists and the actions menu is open, when Edit is clicked, then the menu item links to the project detail page", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [PROJECT_1] });
+  mswServer.use(listHandler);
+
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("Alpha Project");
+
+  // when
+  await openActionsMenu();
+
+  // then
+  const editLink = screen.getByRole("menuitem", { name: /Edit/ });
+  expect(editLink).toHaveAttribute("href", `/platform/project/${PROJECT_1.id}`);
+});
+
+test("ProjectsTablePage: given a project exists, when Sync is clicked, then shows success toast", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [PROJECT_1] });
+  const syncHandler = projectHandler.syncById();
+  mswServer.use(listHandler, syncHandler);
+
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("Alpha Project");
+  await openActionsMenu();
+
+  // when
+  await userEvent.click(screen.getByText("Sync"));
+  syncHandler.resolveRequest();
+
+  // then
+  expect(await screen.findByText("Project synced successfully")).toBeVisible();
+});
+
+test("ProjectsTablePage: given a sync failure, when Sync is clicked, then shows error toast", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [PROJECT_1] });
+  const syncHandler = projectHandler.syncById({
+    status: 500,
+    code: "error",
+    message: "error",
   });
+  mswServer.use(listHandler, syncHandler);
 
-  it("renders the New Project button", async () => {
-    const listHandler = projectHandler.list({ data: [] });
-    mswServer.use(listHandler);
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("Alpha Project");
+  await openActionsMenu();
 
-    testRender(<ProjectsTablePage />);
+  // when
+  await userEvent.click(screen.getByText("Sync"));
+  syncHandler.resolveRequest();
 
-    listHandler.resolveRequest();
+  // then
+  expect(await screen.findByText("Failed to sync project")).toBeVisible();
+});
 
-    expect(await screen.findByText("New Project")).toBeVisible();
+test("ProjectsTablePage: given sync is in progress, when the menu is reopened, then shows Syncing... loading state", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [PROJECT_1] });
+  const syncHandler = projectHandler.syncById();
+  mswServer.use(listHandler, syncHandler);
+
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("Alpha Project");
+  await openActionsMenu();
+
+  // when
+  await userEvent.click(screen.getByText("Sync"));
+
+  // Wait for menu to close, then reopen to check loading state
+  await waitFor(() => {
+    const menu = screen.queryByRole("menu");
+    if (menu) expect(menu).not.toBeVisible();
   });
+  await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+
+  // then
+  expect(await screen.findByText("Syncing...")).toBeVisible();
+
+  syncHandler.resolveRequest();
+});
+
+test("ProjectsTablePage: given a project exists and the actions menu is open, when Delete is clicked, then opens confirmation dialog", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [PROJECT_1] });
+  mswServer.use(listHandler);
+
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("Alpha Project");
+  await openActionsMenu();
+
+  // when
+  await userEvent.click(screen.getByText("Delete"));
+
+  // then
+  expect(await screen.findByText("Delete project")).toBeVisible();
+});
+
+test("ProjectsTablePage: given the delete dialog is open, when shown, then shows project name in description", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [PROJECT_1] });
+  mswServer.use(listHandler);
+
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("Alpha Project");
+  await openActionsMenu();
+
+  // when
+  await userEvent.click(screen.getByText("Delete"));
+  await screen.findByText("Delete project");
+
+  // then
+  expect(
+    screen.getByText(/Are you sure you want to delete/),
+  ).toHaveTextContent("Alpha Project");
+});
+
+test("ProjectsTablePage: given the delete dialog is open, when deletion is confirmed, then calls API and closes dialog", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [PROJECT_1] });
+  const deleteHandler = projectHandler.deleteById();
+  mswServer.use(listHandler, deleteHandler);
+
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("Alpha Project");
+  await openActionsMenu();
+  await userEvent.click(screen.getByText("Delete"));
+  await screen.findByText("Delete project");
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+  deleteHandler.resolveRequest();
+
+  // then
+  await waitForElementToBeRemoved(() => screen.queryByText("Delete project"));
+});
+
+test("ProjectsTablePage: given the delete dialog is open, when Cancel is clicked, then closes the dialog", async () => {
+  // given
+  const listHandler = projectHandler.list({ data: [PROJECT_1] });
+  mswServer.use(listHandler);
+
+  testRender(<ProjectsTablePage />);
+  listHandler.resolveRequest();
+  await screen.findByText("Alpha Project");
+  await openActionsMenu();
+  await userEvent.click(screen.getByText("Delete"));
+  await screen.findByText("Delete project");
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+  // then
+  expect(screen.queryByText("Delete project")).toBeNull();
+});
+
+test("ProjectsTablePage: given the delete dialog is open and deletion is confirmed, when deletion is in progress, then shows Deleting... and disables buttons", async () => {
+  // given
+  const projectListHandler = projectHandler.list({ data: [PROJECT_1] });
+  const deleteProjectHandler = projectHandler.deleteById();
+  mswServer.use(projectListHandler, deleteProjectHandler);
+
+  testRender(<ProjectsTablePage />);
+  projectListHandler.resolveRequest();
+  await screen.findByText("Alpha Project");
+  await openActionsMenu();
+  await userEvent.click(screen.getByText("Delete"));
+  await screen.findByText("Delete project");
+
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Delete" }));
+
+  // then
+  expect(await screen.findByText("Deleting...")).toBeVisible();
+  expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
 
-  it("shows 'No results.' when project list is empty", async () => {
-    const listHandler = projectHandler.list({ data: [] });
-    mswServer.use(listHandler);
-
-    testRender(<ProjectsTablePage />);
-
-    listHandler.resolveRequest();
-
-    expect(await screen.findByText("No results.")).toBeVisible();
-  });
-
-  it("renders column headers", async () => {
-    const listHandler = projectHandler.list({ data: [PROJECT_1] });
-    mswServer.use(listHandler);
-
-    testRender(<ProjectsTablePage />);
-
-    listHandler.resolveRequest();
-
-    await screen.findByText("Alpha Project");
-
-    expect(screen.getByText("Name")).toBeVisible();
-    expect(screen.getByText("Created")).toBeVisible();
-  });
-
-  it("renders formatted created date", async () => {
-    const listHandler = projectHandler.list({ data: [PROJECT_1] });
-    mswServer.use(listHandler);
-
-    testRender(<ProjectsTablePage />);
-
-    listHandler.resolveRequest();
-
-    expect(await screen.findByText("Jan 15, 2026, 10:30 AM")).toBeVisible();
-  });
-
-  it("renders project name as a link to the project detail page", async () => {
-    const listHandler = projectHandler.list({ data: [PROJECT_1] });
-    mswServer.use(listHandler);
-
-    testRender(<ProjectsTablePage />);
-
-    listHandler.resolveRequest();
-
-    const link = await screen.findByRole("link", { name: "Alpha Project" });
-    expect(link).toHaveAttribute("href", `/platform/project/${PROJECT_1.id}`);
-  });
-
-  it("renders the New Project button linking to /platform/project/new", async () => {
-    const listHandler = projectHandler.list({ data: [] });
-    mswServer.use(listHandler);
-
-    testRender(<ProjectsTablePage />);
-
-    listHandler.resolveRequest();
-
-    const button = await screen.findByRole("button", { name: /New Project/i });
-    expect(button).toHaveAttribute("href", "/platform/project/new");
-  });
-
-  describe("actions dropdown menu", () => {
-    const openActionsMenu = async () => {
-      const menuButton = await screen.findByRole("button", {
-        name: "Open menu",
-      });
-      await userEvent.click(menuButton);
-      await screen.findByRole("menu");
-    };
-
-    it("opens the dropdown and shows all menu items", async () => {
-      const listHandler = projectHandler.list({ data: [PROJECT_1] });
-      mswServer.use(listHandler);
-
-      testRender(<ProjectsTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("Alpha Project");
-      await openActionsMenu();
-
-      expect(screen.getByText("Copy")).toBeVisible();
-      expect(screen.getByText("Edit")).toBeVisible();
-      expect(screen.getByText("Sync")).toBeVisible();
-      expect(screen.getByText("Delete")).toBeVisible();
-    });
-  });
-
-  describe("copy action", () => {
-    const openActionsMenu = async () => {
-      const menuButton = await screen.findByRole("button", {
-        name: "Open menu",
-      });
-      await userEvent.click(menuButton);
-      await screen.findByRole("menu");
-    };
-
-    const originalClipboard = navigator.clipboard;
-
-    beforeEach(() => {
-      Object.assign(navigator, {
-        clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
-      });
-    });
-
-    afterEach(() => {
-      Object.assign(navigator, { clipboard: originalClipboard });
-    });
-
-    it("copies project ID to clipboard and shows success toast", async () => {
-      const listHandler = projectHandler.list({ data: [PROJECT_1] });
-      mswServer.use(listHandler);
-
-      testRender(<ProjectsTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("Alpha Project");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Copy"));
-
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(PROJECT_1.id);
-      expect(await screen.findByText("Copied to clipboard")).toBeVisible();
-    });
-  });
-
-  describe("edit action", () => {
-    const openActionsMenu = async () => {
-      const menuButton = await screen.findByRole("button", {
-        name: "Open menu",
-      });
-      await userEvent.click(menuButton);
-      await screen.findByRole("menu");
-    };
-
-    it("edit menu item links to the project detail page", async () => {
-      const listHandler = projectHandler.list({ data: [PROJECT_1] });
-      mswServer.use(listHandler);
-
-      testRender(<ProjectsTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("Alpha Project");
-      await openActionsMenu();
-
-      const editLink = screen.getByRole("menuitem", { name: /Edit/ });
-      expect(editLink).toHaveAttribute(
-        "href",
-        `/platform/project/${PROJECT_1.id}`,
-      );
-    });
-  });
-
-  describe("sync action", () => {
-    const openActionsMenu = async () => {
-      const menuButton = await screen.findByRole("button", {
-        name: "Open menu",
-      });
-      await userEvent.click(menuButton);
-      await screen.findByRole("menu");
-    };
-
-    it("shows success toast on sync", async () => {
-      const listHandler = projectHandler.list({ data: [PROJECT_1] });
-      const syncHandler = projectHandler.syncById();
-      mswServer.use(listHandler, syncHandler);
-
-      testRender(<ProjectsTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("Alpha Project");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Sync"));
-
-      syncHandler.resolveRequest();
-
-      expect(
-        await screen.findByText("Project synced successfully"),
-      ).toBeVisible();
-    });
-
-    it("shows error toast when sync fails", async () => {
-      const listHandler = projectHandler.list({ data: [PROJECT_1] });
-      mswServer.use(
-        listHandler,
-        http.post("http://localhost:8000/api/v1/project/:id/sync", () =>
-          HttpResponse.json(
-            { status: 500, code: "error", message: "error" },
-            { status: 500 },
-          ),
-        ),
-      );
-
-      testRender(<ProjectsTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("Alpha Project");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Sync"));
-
-      expect(await screen.findByText("Failed to sync project")).toBeVisible();
-    });
-
-    it("shows 'Syncing...' while sync is in progress", async () => {
-      const listHandler = projectHandler.list({ data: [PROJECT_1] });
-      const syncHandler = projectHandler.syncById();
-      mswServer.use(listHandler, syncHandler);
-
-      testRender(<ProjectsTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("Alpha Project");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Sync"));
-
-      // Wait for menu to close, then reopen to check loading state
-      await waitFor(() => {
-        const menu = screen.queryByRole("menu");
-        if (menu) expect(menu).not.toBeVisible();
-      });
-      await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
-      expect(await screen.findByText("Syncing...")).toBeVisible();
-
-      syncHandler.resolveRequest();
-    });
-  });
-
-  describe("delete action", () => {
-    const openActionsMenu = async () => {
-      const menuButton = await screen.findByRole("button", {
-        name: "Open menu",
-      });
-      await userEvent.click(menuButton);
-      await screen.findByRole("menu");
-    };
-
-    it("clicking Delete opens the confirmation dialog", async () => {
-      const listHandler = projectHandler.list({ data: [PROJECT_1] });
-      mswServer.use(listHandler);
-
-      testRender(<ProjectsTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("Alpha Project");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Delete"));
-
-      expect(await screen.findByText("Delete project")).toBeVisible();
-    });
-
-    it("confirmation dialog shows project name in description", async () => {
-      const listHandler = projectHandler.list({ data: [PROJECT_1] });
-      mswServer.use(listHandler);
-
-      testRender(<ProjectsTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("Alpha Project");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Delete"));
-
-      await screen.findByText("Delete project");
-      expect(
-        screen.getByText(/Are you sure you want to delete/),
-      ).toHaveTextContent("Alpha Project");
-    });
-
-    it("confirming deletion calls API and closes dialog", async () => {
-      const listHandler = projectHandler.list({ data: [PROJECT_1] });
-      const deleteHandler = projectHandler.deleteById();
-      mswServer.use(listHandler, deleteHandler);
-
-      testRender(<ProjectsTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("Alpha Project");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Delete"));
-
-      await screen.findByText("Delete project");
-      await userEvent.click(screen.getByRole("button", { name: "Delete" }));
-
-      deleteHandler.resolveRequest();
-
-      await waitForElementToBeRemoved(() =>
-        screen.queryByText("Delete project"),
-      );
-    });
-
-    it("canceling deletion closes the dialog", async () => {
-      const listHandler = projectHandler.list({ data: [PROJECT_1] });
-      mswServer.use(listHandler);
-
-      testRender(<ProjectsTablePage />);
-
-      listHandler.resolveRequest();
-
-      await screen.findByText("Alpha Project");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Delete"));
-
-      await screen.findByText("Delete project");
-      await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
-
-      expect(screen.queryByText("Delete project")).toBeNull();
-    });
-
-    it("shows 'Deleting...' and disables buttons while deletion is in progress", async () => {
-      const projectListHandler = projectHandler.list({ data: [PROJECT_1] });
-      const deleteProjectHandler = projectHandler.deleteById();
-
-      mswServer.use(projectListHandler, deleteProjectHandler);
-
-      testRender(<ProjectsTablePage />);
-
-      projectListHandler.resolveRequest();
-
-      await screen.findByText("Alpha Project");
-      await openActionsMenu();
-      await userEvent.click(screen.getByText("Delete"));
-
-      await screen.findByText("Delete project");
-      await userEvent.click(screen.getByRole("button", { name: "Delete" }));
-
-      expect(await screen.findByText("Deleting...")).toBeVisible();
-      expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
-
-      deleteProjectHandler.resolveRequest();
-
-      await waitForElementToBeRemoved(() =>
-        screen.queryByText("Delete project"),
-      );
-    });
-  });
+  deleteProjectHandler.resolveRequest();
+  await waitForElementToBeRemoved(() => screen.queryByText("Delete project"));
 });

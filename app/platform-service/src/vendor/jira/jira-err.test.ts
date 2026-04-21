@@ -1,29 +1,40 @@
-import { describe, expect, it } from "bun:test";
+import { expect, test } from "bun:test";
 
 import { Err } from "@/shared/err/err";
 import { mapJiraError } from "@/vendor/jira/jira-err";
 
-describe("mapJiraError", () => {
-  it("should map a plain Error to Err with jira message", () => {
-    const result = mapJiraError(new Error("timeout"));
+test("mapJiraError: given a plain Error, when mapped, then returns Err with jira message and unknown code", () => {
+  // given
+  const cause = new Error("timeout");
 
-    expect(result).toBeInstanceOf(Err);
-    expect(result.message).toBe("Jira API error");
-    expect(result.code).toBe("unknown");
-  });
+  // when
+  const result = mapJiraError(cause);
 
-  it("should map a non-Error value to Err with jira message", () => {
-    const result = mapJiraError("something went wrong");
+  // then
+  expect(result).toBeInstanceOf(Err);
+  expect(result.message).toBe("Jira API error");
+  expect(result.code).toBe("unknown");
+});
 
-    expect(result).toBeInstanceOf(Err);
-    expect(result.message).toBe("Jira API error");
-  });
+test("mapJiraError: given a non-Error value, when mapped, then returns Err with jira message", () => {
+  // given
+  const cause = "something went wrong";
 
-  it("should return the original Err if already an Err", () => {
-    const original = Err.code("notFound");
+  // when
+  const result = mapJiraError(cause);
 
-    const result = mapJiraError(original);
+  // then
+  expect(result).toBeInstanceOf(Err);
+  expect(result.message).toBe("Jira API error");
+});
 
-    expect(result).toBe(original);
-  });
+test("mapJiraError: given an existing Err, when mapped, then returns the original Err unchanged", () => {
+  // given
+  const original = Err.code("notFound");
+
+  // when
+  const result = mapJiraError(original);
+
+  // then
+  expect(result).toBe(original);
 });

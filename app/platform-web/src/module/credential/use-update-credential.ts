@@ -25,7 +25,7 @@ export const useUpdateCredential = (options?: UseUpdateCredentialOptions) => {
     },
     ...options,
     onSuccess: (...args) => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: makeListCredentialsQueryKey(),
       });
       options?.onSuccess?.(...args);

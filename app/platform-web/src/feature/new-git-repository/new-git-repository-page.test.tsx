@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { expect, test, vi } from "vitest";
 
 import { makeGitRepositoryMswHandler } from "@/test/msw/msw-git-repository-handler";
 import { makeProjectMswHandler } from "@/test/msw/msw-project-handler";
@@ -23,6 +23,8 @@ vi.mock("next/navigation", () => ({
 const gitRepositoryHandler = makeGitRepositoryMswHandler();
 const projectHandler = makeProjectMswHandler();
 
+const CREDENTIAL_ID = "01961a2b-0000-7000-8000-000000000050";
+
 const setupProjectList = () => {
   const handler = projectHandler.list({ data: [] });
   mswServer.use(handler);
@@ -39,138 +41,162 @@ const fillForm = async () => {
   await userEvent.type(screen.getByLabelText("Default Branch"), "main");
   await userEvent.type(screen.getByLabelText("Email"), "user@example.com");
   await userEvent.type(screen.getByLabelText("Username"), "johndoe");
-  await userEvent.type(
-    screen.getByLabelText("Credential ID"),
-    "01961a2b-0000-7000-8000-000000000050",
-  );
+  await userEvent.type(screen.getByLabelText("Credential ID"), CREDENTIAL_ID);
 };
 
-describe("NewGitRepositoryPage", () => {
-  beforeEach(() => {
-    setupProjectList();
+test("NewGitRepositoryPage: given the page loads, when rendered, then the page heading is visible", async () => {
+  // given
+  setupProjectList();
+  testRender(<NewGitRepositoryPage />);
+
+  // then
+  expect(await screen.findByText("New Git Repository")).toBeVisible();
+});
+
+test("NewGitRepositoryPage: given the page loads, when rendered, then all form field labels are visible", async () => {
+  // given
+  setupProjectList();
+  testRender(<NewGitRepositoryPage />);
+
+  // then
+  expect(screen.getByLabelText("Name")).toBeVisible();
+  expect(screen.getByLabelText("URL")).toBeVisible();
+  expect(screen.getByLabelText("Default Branch")).toBeVisible();
+  expect(screen.getByLabelText("Email")).toBeVisible();
+  expect(screen.getByLabelText("Username")).toBeVisible();
+  expect(screen.getByText("Provider")).toBeVisible();
+  expect(screen.getByLabelText("Credential ID")).toBeVisible();
+});
+
+test("NewGitRepositoryPage: given the page loads, when rendered, then Reset and Save buttons are visible", async () => {
+  // given
+  setupProjectList();
+  testRender(<NewGitRepositoryPage />);
+
+  // then
+  expect(screen.getByRole("button", { name: "Reset" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Save" })).toBeVisible();
+});
+
+test("NewGitRepositoryPage: given a valid form, when Save is clicked and the request succeeds, then a success toast is shown", async () => {
+  // given
+  setupProjectList();
+  const createHandler = gitRepositoryHandler.create();
+  mswServer.use(createHandler);
+
+  testRender(<NewGitRepositoryPage />);
+
+  // when
+  await fillForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+  createHandler.resolveRequest();
+
+  // then
+  expect(
+    await screen.findByText("Git Repository created successfully"),
+  ).toBeVisible();
+});
+
+test("NewGitRepositoryPage: given a valid form, when Save is clicked and the request succeeds, then the router redirects to /platform/git-repository", async () => {
+  // given
+  setupProjectList();
+  const createHandler = gitRepositoryHandler.create();
+  mswServer.use(createHandler);
+
+  testRender(<NewGitRepositoryPage />);
+
+  // when
+  await fillForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+  createHandler.resolveRequest();
+
+  await screen.findByText("Git Repository created successfully");
+
+  // then
+  expect(mockPush).toHaveBeenCalledWith("/platform/git-repository");
+});
+
+test("NewGitRepositoryPage: given a valid form, when Save is clicked and the request fails, then an error toast is shown", async () => {
+  // given
+  setupProjectList();
+  const createHandler = gitRepositoryHandler.create({
+    status: 500,
+    code: "error",
+    message: "error",
   });
+  mswServer.use(createHandler);
 
-  it("renders the page heading", async () => {
-    testRender(<NewGitRepositoryPage />);
+  testRender(<NewGitRepositoryPage />);
 
-    expect(await screen.findByText("New Git Repository")).toBeVisible();
-  });
+  // when
+  await fillForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-  it("renders form field labels", async () => {
-    testRender(<NewGitRepositoryPage />);
+  createHandler.resolveRequest();
 
-    expect(screen.getByLabelText("Name")).toBeVisible();
-    expect(screen.getByLabelText("URL")).toBeVisible();
-    expect(screen.getByLabelText("Default Branch")).toBeVisible();
-    expect(screen.getByLabelText("Email")).toBeVisible();
-    expect(screen.getByLabelText("Username")).toBeVisible();
-    expect(screen.getByText("Provider")).toBeVisible();
-    expect(screen.getByLabelText("Credential ID")).toBeVisible();
-  });
+  // then
+  expect(
+    await screen.findByText("Failed to create Git Repository"),
+  ).toBeVisible();
+});
 
-  it("renders Reset and Save buttons", async () => {
-    testRender(<NewGitRepositoryPage />);
+test("NewGitRepositoryPage: given a valid form, when Save is clicked and the request is in progress, then a Saving... label is visible", async () => {
+  // given
+  setupProjectList();
+  const createHandler = gitRepositoryHandler.create();
+  mswServer.use(createHandler);
 
-    expect(screen.getByRole("button", { name: "Reset" })).toBeVisible();
-    expect(screen.getByRole("button", { name: "Save" })).toBeVisible();
-  });
+  testRender(<NewGitRepositoryPage />);
 
-  it("submits form and shows success toast", async () => {
-    const createHandler = gitRepositoryHandler.create();
-    mswServer.use(createHandler);
+  // when
+  await fillForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    testRender(<NewGitRepositoryPage />);
+  // then
+  expect(await screen.findByText("Saving...")).toBeVisible();
 
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  createHandler.resolveRequest();
+});
 
-    createHandler.resolveRequest();
+test("NewGitRepositoryPage: given a valid form, when Save is clicked and the request is in progress, then form fields are disabled", async () => {
+  // given
+  setupProjectList();
+  const createHandler = gitRepositoryHandler.create();
+  mswServer.use(createHandler);
 
-    expect(
-      await screen.findByText("Git Repository created successfully"),
-    ).toBeVisible();
-  });
+  testRender(<NewGitRepositoryPage />);
 
-  it("redirects to /platform/git-repository on successful creation", async () => {
-    const createHandler = gitRepositoryHandler.create();
-    mswServer.use(createHandler);
+  // when
+  await fillForm();
+  await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
-    testRender(<NewGitRepositoryPage />);
+  await screen.findByText("Saving...");
 
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  // then
+  expect(screen.getByLabelText("Name")).toBeDisabled();
+  expect(screen.getByLabelText("URL")).toBeDisabled();
+  expect(screen.getByLabelText("Default Branch")).toBeDisabled();
+  expect(screen.getByLabelText("Email")).toBeDisabled();
+  expect(screen.getByLabelText("Username")).toBeDisabled();
+  expect(screen.getByLabelText("Credential ID")).toBeDisabled();
+  expect(screen.getByRole("button", { name: /Reset/ })).toBeDisabled();
 
-    createHandler.resolveRequest();
+  createHandler.resolveRequest();
+});
 
-    await screen.findByText("Git Repository created successfully");
+test("NewGitRepositoryPage: given a filled form, when Reset is clicked, then the form is cleared", async () => {
+  // given
+  setupProjectList();
+  testRender(<NewGitRepositoryPage />);
 
-    expect(mockPush).toHaveBeenCalledWith("/platform/git-repository");
-  });
+  await userEvent.type(screen.getByLabelText("Name"), "Some Repo");
+  expect(screen.getByLabelText("Name")).toHaveValue("Some Repo");
 
-  it("shows error toast on creation failure", async () => {
-    const createHandler = gitRepositoryHandler.create({
-      status: 500,
-      code: "error",
-      message: "error",
-    });
-    mswServer.use(createHandler);
+  // when
+  await userEvent.click(screen.getByRole("button", { name: "Reset" }));
 
-    testRender(<NewGitRepositoryPage />);
-
-    createHandler.resolveRequest();
-
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-    expect(
-      await screen.findByText("Failed to create Git Repository"),
-    ).toBeVisible();
-  });
-
-  it("shows 'Saving...' while submission is in progress", async () => {
-    const createHandler = gitRepositoryHandler.create();
-    mswServer.use(createHandler);
-
-    testRender(<NewGitRepositoryPage />);
-
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-    expect(await screen.findByText("Saving...")).toBeVisible();
-
-    createHandler.resolveRequest();
-  });
-
-  it("disables form fields while submitting", async () => {
-    const createHandler = gitRepositoryHandler.create();
-    mswServer.use(createHandler);
-
-    testRender(<NewGitRepositoryPage />);
-
-    await fillForm();
-    await userEvent.click(screen.getByRole("button", { name: "Save" }));
-
-    await screen.findByText("Saving...");
-
-    expect(screen.getByLabelText("Name")).toBeDisabled();
-    expect(screen.getByLabelText("URL")).toBeDisabled();
-    expect(screen.getByLabelText("Default Branch")).toBeDisabled();
-    expect(screen.getByLabelText("Email")).toBeDisabled();
-    expect(screen.getByLabelText("Username")).toBeDisabled();
-    expect(screen.getByLabelText("Credential ID")).toBeDisabled();
-    expect(screen.getByRole("button", { name: /Reset/ })).toBeDisabled();
-
-    createHandler.resolveRequest();
-  });
-
-  it("resets form when Reset is clicked", async () => {
-    testRender(<NewGitRepositoryPage />);
-
-    await userEvent.type(screen.getByLabelText("Name"), "Some Repo");
-    expect(screen.getByLabelText("Name")).toHaveValue("Some Repo");
-
-    await userEvent.click(screen.getByRole("button", { name: "Reset" }));
-
-    expect(screen.getByLabelText("Name")).toHaveValue("");
-  });
+  // then
+  expect(screen.getByLabelText("Name")).toHaveValue("");
 });

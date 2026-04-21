@@ -1,6 +1,6 @@
 import type { Document } from "mongodb";
 
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, expect, mock, test } from "bun:test";
 
 import type { Model } from "@/shared/model/model";
 import type { Id } from "@/shared/model/model-id";
@@ -76,331 +76,368 @@ const resetMocks = () => {
 
 // --- makeMongoRepository ---
 
-describe("makeMongoRepository", () => {
-  const repo = makeMongoRepository<Model<TestDoc>>({
-    collectionName: "test-collection",
-    collectionIndexes: [{ key: { name: 1 } }],
+const repo = makeMongoRepository<Model<TestDoc>>({
+  collectionName: "test-collection",
+  collectionIndexes: [{ key: { name: 1 } }],
+});
+
+beforeEach(resetMocks);
+
+test("makeMongoRepository findMany: given documents in the collection, when called, then returns all documents mapped to models with id instead of _id", async () => {
+  // given
+  const mongoDocs = [makeMongoDoc(), makeMongoDoc({ name: "second" })];
+  mockCollection.find.mockReturnValue({
+    toArray: mock(() => Promise.resolve(mongoDocs)),
   });
 
-  beforeEach(resetMocks);
+  // when
+  const result = await repo.findMany();
 
-  describe("findMany", () => {
-    it("should return all documents mapped to models (with id instead of _id)", async () => {
-      const mongoDocs = [makeMongoDoc(), makeMongoDoc({ name: "second" })];
-      mockCollection.find.mockReturnValue({
-        toArray: mock(() => Promise.resolve(mongoDocs)),
-      });
+  // then
+  expect(result.isOk()).toBe(true);
+  const { data } = result._unsafeUnwrap();
+  expect(data).toHaveLength(2);
+  expect(data[0]).toHaveProperty("id", TEST_ID);
+  expect(data[0]).not.toHaveProperty("_id");
+  expect(data[1]).toHaveProperty("name", "second");
+});
 
-      const result = await repo.findMany();
+test("makeMongoRepository findMany: given a collection with configured indexes, when called, then creates indexes on the collection", async () => {
+  // given
 
-      expect(result.isOk()).toBe(true);
-      const { data } = result._unsafeUnwrap();
-      expect(data).toHaveLength(2);
-      expect(data[0]).toHaveProperty("id", TEST_ID);
-      expect(data[0]).not.toHaveProperty("_id");
-      expect(data[1]).toHaveProperty("name", "second");
-    });
+  // when
+  await repo.findMany();
 
-    it("should create indexes on the collection", async () => {
-      await repo.findMany();
+  // then
+  expect(mockCollection.createIndexes).toHaveBeenCalledWith([
+    { key: { name: 1 } },
+  ]);
+});
 
-      expect(mockCollection.createIndexes).toHaveBeenCalledWith([
-        { key: { name: 1 } },
-      ]);
-    });
-
-    it("should return err on failure", async () => {
-      mockCollection.find.mockReturnValue({
-        toArray: mock(() => Promise.reject(new Error("connection lost"))),
-      });
-
-      const result = await repo.findMany();
-
-      expect(result.isErr()).toBe(true);
-      expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
-      expect(result._unsafeUnwrapErr()).toHaveProperty(
-        "message",
-        "Mongo database error",
-      );
-    });
+test("makeMongoRepository findMany: given a database error, when called, then returns err with Mongo database error message", async () => {
+  // given
+  mockCollection.find.mockReturnValue({
+    toArray: mock(() => Promise.reject(new Error("connection lost"))),
   });
 
-  describe("findById", () => {
-    it("should query by _id and return the document mapped to model", async () => {
-      const mongoDoc = makeMongoDoc();
-      mockCollection.findOne.mockResolvedValue(mongoDoc);
+  // when
+  const result = await repo.findMany();
 
-      const result = await repo.findById({ id: TEST_ID });
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  expect(result._unsafeUnwrapErr()).toHaveProperty(
+    "message",
+    "Mongo database error",
+  );
+});
 
-      expect(result.isOk()).toBe(true);
-      const { data } = result._unsafeUnwrap();
-      expect(data).toHaveProperty("id", TEST_ID);
-      expect(data).not.toHaveProperty("_id");
-      expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: TEST_ID });
-    });
+test("makeMongoRepository findById: given an existing document, when called, then queries by _id and returns model with id instead of _id", async () => {
+  // given
+  const mongoDoc = makeMongoDoc();
+  mockCollection.findOne.mockResolvedValue(mongoDoc);
 
-    it("should return null data when document not found", async () => {
-      mockCollection.findOne.mockResolvedValue(null);
+  // when
+  const result = await repo.findById({ id: TEST_ID });
 
-      const result = await repo.findById({ id: TEST_ID });
+  // then
+  expect(result.isOk()).toBe(true);
+  const { data } = result._unsafeUnwrap();
+  expect(data).toHaveProperty("id", TEST_ID);
+  expect(data).not.toHaveProperty("_id");
+  expect(mockCollection.findOne).toHaveBeenCalledWith({ _id: TEST_ID });
+});
 
-      expect(result.isOk()).toBe(true);
-      expect(result._unsafeUnwrap()).toEqual({ data: null });
-    });
+test("makeMongoRepository findById: given no matching document, when called, then returns ok with null data", async () => {
+  // given
+  mockCollection.findOne.mockResolvedValue(null);
 
-    it("should return err on failure", async () => {
-      mockCollection.findOne.mockRejectedValue(new Error("timeout"));
+  // when
+  const result = await repo.findById({ id: TEST_ID });
 
-      const result = await repo.findById({ id: TEST_ID });
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(result._unsafeUnwrap()).toEqual({ data: null });
+});
 
-      expect(result.isErr()).toBe(true);
-      expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
-      expect(result._unsafeUnwrapErr()).toHaveProperty(
-        "message",
-        "Mongo database error",
-      );
-    });
+test("makeMongoRepository findById: given a database error, when called, then returns err with Mongo database error message", async () => {
+  // given
+  mockCollection.findOne.mockRejectedValue(new Error("timeout"));
+
+  // when
+  const result = await repo.findById({ id: TEST_ID });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  expect(result._unsafeUnwrapErr()).toHaveProperty(
+    "message",
+    "Mongo database error",
+  );
+});
+
+test("makeMongoRepository insert: given a model, when called, then maps model to mongo document before inserting", async () => {
+  // given
+  const model = makeTestModel();
+
+  // when
+  const result = await repo.insert({ data: model });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockCollection.insertOne).toHaveBeenCalledWith(
+    expect.objectContaining({
+      _id: TEST_ID,
+      name: "test",
+      _version: 1,
+    }),
+  );
+});
+
+test("makeMongoRepository insert: given a database error, when called, then returns err with Mongo database error message", async () => {
+  // given
+  mockCollection.insertOne.mockRejectedValueOnce(
+    new Error("duplicate key"),
+  );
+
+  // when
+  const result = await repo.insert({ data: makeTestModel() });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  expect(result._unsafeUnwrapErr()).toHaveProperty(
+    "message",
+    "Mongo database error",
+  );
+});
+
+test("makeMongoRepository update: given a model with _version, when called, then uses optimistic concurrency and strips id from $set", async () => {
+  // given
+  const updatedMongoDoc = {
+    ...makeMongoDoc(),
+    name: "updated",
+    _version: 2,
+  };
+  mockCollection.findOneAndUpdate.mockResolvedValue(updatedMongoDoc);
+
+  // when
+  const result = await repo.update({
+    id: TEST_ID,
+    data: { id: TEST_ID, name: "updated", _version: 1 } as Partial<
+      Model<TestDoc>
+    >,
   });
 
-  describe("insert", () => {
-    it("should map model to mongo document before inserting", async () => {
-      const model = makeTestModel();
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockCollection.findOneAndUpdate).toHaveBeenCalledWith(
+    { _id: TEST_ID, _version: 1 },
+    {
+      $set: { name: "updated" },
+      $inc: { _version: 1 },
+    },
+    { returnDocument: "after" },
+  );
+  const { data } = result._unsafeUnwrap();
+  expect(data).toHaveProperty("id", TEST_ID);
+  expect(data).not.toHaveProperty("_id");
+});
 
-      const result = await repo.insert({ data: model });
+test("makeMongoRepository update: given a version mismatch, when called, then returns ok with null data", async () => {
+  // given
+  mockCollection.findOneAndUpdate.mockResolvedValue(null);
 
-      expect(result.isOk()).toBe(true);
-      expect(mockCollection.insertOne).toHaveBeenCalledWith(
-        expect.objectContaining({
-          _id: TEST_ID,
-          name: "test",
-          _version: 1,
-        }),
-      );
-    });
-
-    it("should return err on failure", async () => {
-      mockCollection.insertOne.mockRejectedValueOnce(
-        new Error("duplicate key"),
-      );
-
-      const result = await repo.insert({ data: makeTestModel() });
-
-      expect(result.isErr()).toBe(true);
-      expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
-      expect(result._unsafeUnwrapErr()).toHaveProperty(
-        "message",
-        "Mongo database error",
-      );
-    });
+  // when
+  const result = await repo.update({
+    id: TEST_ID,
+    data: { _version: 1 } as Partial<Model<TestDoc>>,
   });
 
-  describe("update", () => {
-    it("should use optimistic concurrency with _version and strip id from $set", async () => {
-      const updatedMongoDoc = {
-        ...makeMongoDoc(),
-        name: "updated",
-        _version: 2,
-      };
-      mockCollection.findOneAndUpdate.mockResolvedValue(updatedMongoDoc);
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(result._unsafeUnwrap()).toEqual({ data: null });
+});
 
-      const result = await repo.update({
-        id: TEST_ID,
-        data: { id: TEST_ID, name: "updated", _version: 1 } as Partial<
-          Model<TestDoc>
-        >,
-      });
+test("makeMongoRepository update: given a database error, when called, then returns err with Mongo database error message", async () => {
+  // given
+  mockCollection.findOneAndUpdate.mockRejectedValue(new Error("fail"));
 
-      expect(result.isOk()).toBe(true);
-      expect(mockCollection.findOneAndUpdate).toHaveBeenCalledWith(
-        { _id: TEST_ID, _version: 1 },
-        {
-          $set: { name: "updated" },
-          $inc: { _version: 1 },
-        },
-        { returnDocument: "after" },
-      );
-      // Result should be mapped back to model (id, not _id)
-      const { data } = result._unsafeUnwrap();
-      expect(data).toHaveProperty("id", TEST_ID);
-      expect(data).not.toHaveProperty("_id");
-    });
-
-    it("should return null data when document not found (version mismatch)", async () => {
-      mockCollection.findOneAndUpdate.mockResolvedValue(null);
-
-      const result = await repo.update({
-        id: TEST_ID,
-        data: { _version: 1 } as Partial<Model<TestDoc>>,
-      });
-
-      expect(result.isOk()).toBe(true);
-      expect(result._unsafeUnwrap()).toEqual({ data: null });
-    });
-
-    it("should return err on failure", async () => {
-      mockCollection.findOneAndUpdate.mockRejectedValue(new Error("fail"));
-
-      const result = await repo.update({
-        id: TEST_ID,
-        data: { _version: 1 } as Partial<Model<TestDoc>>,
-      });
-
-      expect(result.isErr()).toBe(true);
-      expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
-      expect(result._unsafeUnwrapErr()).toHaveProperty(
-        "message",
-        "Mongo database error",
-      );
-    });
+  // when
+  const result = await repo.update({
+    id: TEST_ID,
+    data: { _version: 1 } as Partial<Model<TestDoc>>,
   });
 
-  describe("deleteById", () => {
-    it("should delete by _id", async () => {
-      const result = await repo.deleteById({ id: TEST_ID });
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  expect(result._unsafeUnwrapErr()).toHaveProperty(
+    "message",
+    "Mongo database error",
+  );
+});
 
-      expect(result.isOk()).toBe(true);
-      expect(mockCollection.deleteOne).toHaveBeenCalledWith({ _id: TEST_ID });
-    });
+test("makeMongoRepository deleteById: given an existing document, when called, then deletes by _id and returns ok", async () => {
+  // given
 
-    it("should return err on failure", async () => {
-      mockCollection.deleteOne.mockRejectedValueOnce(new Error("fail"));
+  // when
+  const result = await repo.deleteById({ id: TEST_ID });
 
-      const result = await repo.deleteById({ id: TEST_ID });
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockCollection.deleteOne).toHaveBeenCalledWith({ _id: TEST_ID });
+});
 
-      expect(result.isErr()).toBe(true);
-      expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
-      expect(result._unsafeUnwrapErr()).toHaveProperty(
-        "message",
-        "Mongo database error",
-      );
-    });
-  });
+test("makeMongoRepository deleteById: given a database error, when called, then returns err with Mongo database error message", async () => {
+  // given
+  mockCollection.deleteOne.mockRejectedValueOnce(new Error("fail"));
+
+  // when
+  const result = await repo.deleteById({ id: TEST_ID });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  expect(result._unsafeUnwrapErr()).toHaveProperty(
+    "message",
+    "Mongo database error",
+  );
 });
 
 // --- makeTenantAwareMongoRepository ---
 
-describe("makeTenantAwareMongoRepository", () => {
-  type TenantDoc = TestDoc & { tenant: Tenant };
+type TenantDoc = TestDoc & { tenant: Tenant };
 
-  const tenant: Tenant = { id: TEST_ID, type: "organization" };
-  const ctx = { tenant };
+const tenant: Tenant = { id: TEST_ID, type: "organization" };
+const ctx = { tenant };
 
-  const repo = makeTenantAwareMongoRepository<Model<TenantDoc>>({
-    collectionName: "tenant-collection",
+const tenantRepo = makeTenantAwareMongoRepository<Model<TenantDoc>>({
+  collectionName: "tenant-collection",
+});
+
+test("makeTenantAwareMongoRepository findMany: given a tenant ctx, when called, then filters by tenant and returns mapped models", async () => {
+  // given
+  const mongoDocs = [makeMongoDoc()];
+  mockCollection.find.mockReturnValue({
+    toArray: mock(() => Promise.resolve(mongoDocs)),
   });
 
-  beforeEach(resetMocks);
+  // when
+  const result = await tenantRepo.findMany({ ctx });
 
-  describe("findMany", () => {
-    it("should filter by tenant and return mapped models", async () => {
-      const mongoDocs = [makeMongoDoc()];
-      mockCollection.find.mockReturnValue({
-        toArray: mock(() => Promise.resolve(mongoDocs)),
-      });
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockCollection.find).toHaveBeenCalledWith({ _tenant: tenant });
+  const { data } = result._unsafeUnwrap();
+  expect(data[0]).toHaveProperty("id", TEST_ID);
+  expect(data[0]).not.toHaveProperty("_id");
+});
 
-      const result = await repo.findMany({ ctx });
-
-      expect(result.isOk()).toBe(true);
-      expect(mockCollection.find).toHaveBeenCalledWith({ _tenant: tenant });
-      const { data } = result._unsafeUnwrap();
-      expect(data[0]).toHaveProperty("id", TEST_ID);
-      expect(data[0]).not.toHaveProperty("_id");
-    });
-
-    it("should merge optional filter into tenant query", async () => {
-      const mongoDocs = [makeMongoDoc()];
-      mockCollection.find.mockReturnValue({
-        toArray: mock(() => Promise.resolve(mongoDocs)),
-      });
-
-      const result = await repo.findMany({
-        ctx,
-        filter: { "projects.id": "some-project-id" },
-      });
-
-      expect(result.isOk()).toBe(true);
-      expect(mockCollection.find).toHaveBeenCalledWith({
-        _tenant: tenant,
-        "projects.id": "some-project-id",
-      });
-    });
-
-    it("should create tenant index plus any custom indexes", async () => {
-      await repo.findMany({ ctx });
-
-      expect(mockCollection.createIndexes).toHaveBeenCalledWith([
-        { key: { "tenant.id": 1, "tenant.type": 1 } },
-      ]);
-    });
+test("makeTenantAwareMongoRepository findMany: given a tenant ctx and optional filter, when called, then merges filter into tenant query", async () => {
+  // given
+  const mongoDocs = [makeMongoDoc()];
+  mockCollection.find.mockReturnValue({
+    toArray: mock(() => Promise.resolve(mongoDocs)),
   });
 
-  describe("findById", () => {
-    it("should filter by _id and tenant", async () => {
-      const mongoDoc = makeMongoDoc();
-      mockCollection.findOne.mockResolvedValue(mongoDoc);
-
-      const result = await repo.findById({ ctx, id: TEST_ID });
-
-      expect(result.isOk()).toBe(true);
-      expect(mockCollection.findOne).toHaveBeenCalledWith({
-        _id: TEST_ID,
-        _tenant: tenant,
-      });
-    });
+  // when
+  const result = await tenantRepo.findMany({
+    ctx,
+    filter: { "projects.id": "some-project-id" },
   });
 
-  describe("insert", () => {
-    it("should map model to mongo document and attach _tenant", async () => {
-      const model = makeTestModel() as unknown as Model<TenantDoc>;
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockCollection.find).toHaveBeenCalledWith({
+    _tenant: tenant,
+    "projects.id": "some-project-id",
+  });
+});
 
-      const result = await repo.insert({ ctx, data: model });
+test("makeTenantAwareMongoRepository findMany: given a tenant ctx, when called, then creates tenant index plus any custom indexes", async () => {
+  // given
 
-      expect(result.isOk()).toBe(true);
-      const insertedDoc = (
-        mockCollection.insertOne.mock.calls as unknown[][]
-      )[0]![0] as Record<string, unknown>;
-      expect(insertedDoc).toHaveProperty("_id", TEST_ID);
-      expect(insertedDoc).toHaveProperty("_tenant", tenant);
-      expect(insertedDoc).not.toHaveProperty("id");
-    });
+  // when
+  await tenantRepo.findMany({ ctx });
+
+  // then
+  expect(mockCollection.createIndexes).toHaveBeenCalledWith([
+    { key: { "tenant.id": 1, "tenant.type": 1 } },
+  ]);
+});
+
+test("makeTenantAwareMongoRepository findById: given a tenant ctx and id, when called, then filters by _id and tenant", async () => {
+  // given
+  const mongoDoc = makeMongoDoc();
+  mockCollection.findOne.mockResolvedValue(mongoDoc);
+
+  // when
+  const result = await tenantRepo.findById({ ctx, id: TEST_ID });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockCollection.findOne).toHaveBeenCalledWith({
+    _id: TEST_ID,
+    _tenant: tenant,
+  });
+});
+
+test("makeTenantAwareMongoRepository insert: given a tenant ctx and model, when called, then attaches _tenant to the inserted document", async () => {
+  // given
+  const model = makeTestModel() as unknown as Model<TenantDoc>;
+
+  // when
+  const result = await tenantRepo.insert({ ctx, data: model });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  const insertedDoc = (
+    mockCollection.insertOne.mock.calls as unknown[][]
+  )[0]![0] as Record<string, unknown>;
+  expect(insertedDoc).toHaveProperty("_id", TEST_ID);
+  expect(insertedDoc).toHaveProperty("_tenant", tenant);
+  expect(insertedDoc).not.toHaveProperty("id");
+});
+
+test("makeTenantAwareMongoRepository update: given a tenant ctx, when called, then includes tenant in the filter for optimistic concurrency", async () => {
+  // given
+  const updatedMongoDoc = {
+    ...makeMongoDoc(),
+    name: "updated",
+    _version: 2,
+  };
+  mockCollection.findOneAndUpdate.mockResolvedValue(updatedMongoDoc);
+
+  // when
+  const result = await tenantRepo.update({
+    ctx,
+    id: TEST_ID,
+    data: { name: "updated", _version: 1 } as Partial<Model<TenantDoc>>,
   });
 
-  describe("update", () => {
-    it("should include tenant in the filter for optimistic concurrency", async () => {
-      const updatedMongoDoc = {
-        ...makeMongoDoc(),
-        name: "updated",
-        _version: 2,
-      };
-      mockCollection.findOneAndUpdate.mockResolvedValue(updatedMongoDoc);
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockCollection.findOneAndUpdate).toHaveBeenCalledWith(
+    { _id: TEST_ID, _version: 1, _tenant: tenant },
+    {
+      $set: { name: "updated" },
+      $inc: { _version: 1 },
+    },
+    { returnDocument: "after" },
+  );
+});
 
-      const result = await repo.update({
-        ctx,
-        id: TEST_ID,
-        data: { name: "updated", _version: 1 } as Partial<Model<TenantDoc>>,
-      });
+test("makeTenantAwareMongoRepository deleteById: given a tenant ctx and id, when called, then filters by _id and tenant", async () => {
+  // given
 
-      expect(result.isOk()).toBe(true);
-      expect(mockCollection.findOneAndUpdate).toHaveBeenCalledWith(
-        { _id: TEST_ID, _version: 1, _tenant: tenant },
-        {
-          $set: { name: "updated" },
-          $inc: { _version: 1 },
-        },
-        { returnDocument: "after" },
-      );
-    });
-  });
+  // when
+  const result = await tenantRepo.deleteById({ ctx, id: TEST_ID });
 
-  describe("deleteById", () => {
-    it("should filter by _id and tenant", async () => {
-      const result = await repo.deleteById({ ctx, id: TEST_ID });
-
-      expect(result.isOk()).toBe(true);
-      expect(mockCollection.deleteOne).toHaveBeenCalledWith({
-        _id: TEST_ID,
-        _tenant: tenant,
-      });
-    });
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockCollection.deleteOne).toHaveBeenCalledWith({
+    _id: TEST_ID,
+    _tenant: tenant,
   });
 });

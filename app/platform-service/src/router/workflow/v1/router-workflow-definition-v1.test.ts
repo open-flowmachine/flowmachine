@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, expect, mock, test } from "bun:test";
 import Elysia from "elysia";
 import { err, ok } from "neverthrow";
 
@@ -84,194 +84,206 @@ const request = (method: string, path: string, body?: unknown) => {
 
 // --- Tests ---
 
-describe("POST /api/v1/workflow-definition", () => {
-  beforeEach(resetMocks);
+beforeEach(resetMocks);
 
-  it("should return okEnvelope with id on success", async () => {
-    const newId = "019606a0-0000-7000-8000-000000000099" as Id;
-    mockCreateWorkflowDefinition.mockResolvedValue(ok({ id: newId }));
+test("POST /api/v1/workflow-definition: given a valid payload, when created successfully, then returns okEnvelope with id", async () => {
+  // given
+  const newId = "019606a0-0000-7000-8000-000000000099" as Id;
+  mockCreateWorkflowDefinition.mockResolvedValue(ok({ id: newId }));
 
-    const response = await request("POST", "/api/v1/workflow-definition", {
+  // when
+  const response = await request("POST", "/api/v1/workflow-definition", {
+    name: "New Workflow",
+    projects: [],
+    actions: [],
+    edges: [],
+    isActive: true,
+  });
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(json.data).toEqual({ id: newId });
+  expect(mockCreateWorkflowDefinition).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    payload: {
       name: "New Workflow",
       projects: [],
       actions: [],
       edges: [],
       isActive: true,
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(json.data).toEqual({ id: newId });
-    expect(mockCreateWorkflowDefinition).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      payload: {
-        name: "New Workflow",
-        projects: [],
-        actions: [],
-        edges: [],
-        isActive: true,
-      },
-    });
-  });
-
-  it("should return errEnvelope on service error", async () => {
-    mockCreateWorkflowDefinition.mockResolvedValue(err(Err.code("unknown")));
-
-    const response = await request("POST", "/api/v1/workflow-definition", {
-      name: "New Workflow",
-      projects: [],
-      actions: [],
-      edges: [],
-      isActive: true,
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+    },
   });
 });
 
-describe("GET /api/v1/workflow-definition", () => {
-  beforeEach(resetMocks);
+test("POST /api/v1/workflow-definition: given a service failure, when called, then returns errEnvelope", async () => {
+  // given
+  mockCreateWorkflowDefinition.mockResolvedValue(err(Err.code("unknown")));
 
-  it("should return list of workflow definitions mapped to DTOs", async () => {
-    const definitions = [
-      makeWorkflowDefinition(),
-      makeWorkflowDefinition({
-        name: "Second",
-        id: "019606a0-0000-7000-8000-000000000002" as Id,
-      }),
-    ];
-    mockListWorkflowDefinitions.mockResolvedValue(ok({ data: definitions }));
-
-    const response = await request("GET", "/api/v1/workflow-definition");
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.data).toHaveLength(2);
-    expect(json.data[0].name).toBe("My Workflow");
-    expect(json.data[1].name).toBe("Second");
-    expect(mockListWorkflowDefinitions).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-    });
+  // when
+  const response = await request("POST", "/api/v1/workflow-definition", {
+    name: "New Workflow",
+    projects: [],
+    actions: [],
+    edges: [],
+    isActive: true,
   });
+  const json = await response.json();
 
-  it("should return errEnvelope on service error", async () => {
-    mockListWorkflowDefinitions.mockResolvedValue(err(Err.code("unknown")));
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
+});
 
-    const response = await request("GET", "/api/v1/workflow-definition");
-    const json = await response.json();
+test("GET /api/v1/workflow-definition: given definitions exist, when listed, then returns definitions mapped to DTOs", async () => {
+  // given
+  const definitions = [
+    makeWorkflowDefinition(),
+    makeWorkflowDefinition({
+      name: "Second",
+      id: "019606a0-0000-7000-8000-000000000002" as Id,
+    }),
+  ];
+  mockListWorkflowDefinitions.mockResolvedValue(ok({ data: definitions }));
 
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+  // when
+  const response = await request("GET", "/api/v1/workflow-definition");
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.data).toHaveLength(2);
+  expect(json.data[0].name).toBe("My Workflow");
+  expect(json.data[1].name).toBe("Second");
+  expect(mockListWorkflowDefinitions).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
   });
 });
 
-describe("GET /api/v1/workflow-definition/:id", () => {
-  beforeEach(resetMocks);
+test("GET /api/v1/workflow-definition: given a service failure, when listed, then returns errEnvelope", async () => {
+  // given
+  mockListWorkflowDefinitions.mockResolvedValue(err(Err.code("unknown")));
 
-  it("should return single workflow definition mapped to DTO", async () => {
-    const definition = makeWorkflowDefinition();
-    mockGetWorkflowDefinition.mockResolvedValue(ok({ data: definition }));
+  // when
+  const response = await request("GET", "/api/v1/workflow-definition");
+  const json = await response.json();
 
-    const response = await request(
-      "GET",
-      `/api/v1/workflow-definition/${TEST_ID}`,
-    );
-    const json = await response.json();
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
+});
 
-    expect(json.status).toBe(200);
-    expect(json.data.name).toBe("My Workflow");
-    expect(json.data.id).toBe(TEST_ID);
-    expect(mockGetWorkflowDefinition).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-    });
-  });
+test("GET /api/v1/workflow-definition/:id: given a definition exists, when fetched by id, then returns the definition mapped to DTO", async () => {
+  // given
+  const definition = makeWorkflowDefinition();
+  mockGetWorkflowDefinition.mockResolvedValue(ok({ data: definition }));
 
-  it("should return errEnvelope when not found", async () => {
-    mockGetWorkflowDefinition.mockResolvedValue(err(Err.code("notFound")));
+  // when
+  const response = await request(
+    "GET",
+    `/api/v1/workflow-definition/${TEST_ID}`,
+  );
+  const json = await response.json();
 
-    const response = await request(
-      "GET",
-      `/api/v1/workflow-definition/${TEST_ID}`,
-    );
-    const json = await response.json();
-
-    expect(json.status).toBe(404);
-    expect(json.code).toBe("notFound");
+  // then
+  expect(json.status).toBe(200);
+  expect(json.data.name).toBe("My Workflow");
+  expect(json.data.id).toBe(TEST_ID);
+  expect(mockGetWorkflowDefinition).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
   });
 });
 
-describe("PATCH /api/v1/workflow-definition/:id", () => {
-  beforeEach(resetMocks);
+test("GET /api/v1/workflow-definition/:id: given the definition does not exist, when fetched by id, then returns notFound errEnvelope", async () => {
+  // given
+  mockGetWorkflowDefinition.mockResolvedValue(err(Err.code("notFound")));
 
-  it("should return okEnvelope on success", async () => {
-    const updated = makeWorkflowDefinition({ name: "Updated", _version: 2 });
-    mockUpdateWorkflowDefinition.mockResolvedValue(ok({ data: updated }));
+  // when
+  const response = await request(
+    "GET",
+    `/api/v1/workflow-definition/${TEST_ID}`,
+  );
+  const json = await response.json();
 
-    const response = await request(
-      "PATCH",
-      `/api/v1/workflow-definition/${TEST_ID}`,
-      { name: "Updated" },
-    );
-    const json = await response.json();
+  // then
+  expect(json.status).toBe(404);
+  expect(json.code).toBe("notFound");
+});
 
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(mockUpdateWorkflowDefinition).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-      data: { name: "Updated" },
-    });
-  });
+test("PATCH /api/v1/workflow-definition/:id: given a valid update payload, when updated successfully, then returns okEnvelope", async () => {
+  // given
+  const updated = makeWorkflowDefinition({ name: "Updated", _version: 2 });
+  mockUpdateWorkflowDefinition.mockResolvedValue(ok({ data: updated }));
 
-  it("should return errEnvelope on service error", async () => {
-    mockUpdateWorkflowDefinition.mockResolvedValue(err(Err.code("notFound")));
+  // when
+  const response = await request(
+    "PATCH",
+    `/api/v1/workflow-definition/${TEST_ID}`,
+    { name: "Updated" },
+  );
+  const json = await response.json();
 
-    const response = await request(
-      "PATCH",
-      `/api/v1/workflow-definition/${TEST_ID}`,
-      { name: "Updated" },
-    );
-    const json = await response.json();
-
-    expect(json.status).toBe(404);
-    expect(json.code).toBe("notFound");
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(mockUpdateWorkflowDefinition).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
+    data: { name: "Updated" },
   });
 });
 
-describe("DELETE /api/v1/workflow-definition/:id", () => {
-  beforeEach(resetMocks);
+test("PATCH /api/v1/workflow-definition/:id: given a service failure, when updated, then returns errEnvelope", async () => {
+  // given
+  mockUpdateWorkflowDefinition.mockResolvedValue(err(Err.code("notFound")));
 
-  it("should return okEnvelope on success", async () => {
-    mockDeleteWorkflowDefinition.mockResolvedValue(ok());
+  // when
+  const response = await request(
+    "PATCH",
+    `/api/v1/workflow-definition/${TEST_ID}`,
+    { name: "Updated" },
+  );
+  const json = await response.json();
 
-    const response = await request(
-      "DELETE",
-      `/api/v1/workflow-definition/${TEST_ID}`,
-    );
-    const json = await response.json();
+  // then
+  expect(json.status).toBe(404);
+  expect(json.code).toBe("notFound");
+});
 
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(mockDeleteWorkflowDefinition).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-    });
+test("DELETE /api/v1/workflow-definition/:id: given the definition exists, when deleted successfully, then returns okEnvelope", async () => {
+  // given
+  mockDeleteWorkflowDefinition.mockResolvedValue(ok());
+
+  // when
+  const response = await request(
+    "DELETE",
+    `/api/v1/workflow-definition/${TEST_ID}`,
+  );
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(mockDeleteWorkflowDefinition).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
   });
+});
 
-  it("should return errEnvelope on service error", async () => {
-    mockDeleteWorkflowDefinition.mockResolvedValue(err(Err.code("unknown")));
+test("DELETE /api/v1/workflow-definition/:id: given a service failure, when deleted, then returns errEnvelope", async () => {
+  // given
+  mockDeleteWorkflowDefinition.mockResolvedValue(err(Err.code("unknown")));
 
-    const response = await request(
-      "DELETE",
-      `/api/v1/workflow-definition/${TEST_ID}`,
-    );
-    const json = await response.json();
+  // when
+  const response = await request(
+    "DELETE",
+    `/api/v1/workflow-definition/${TEST_ID}`,
+  );
+  const json = await response.json();
 
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
-  });
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
 });

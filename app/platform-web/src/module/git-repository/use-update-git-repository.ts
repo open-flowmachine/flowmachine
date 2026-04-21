@@ -31,10 +31,10 @@ export const useUpdateGitRepository = (
     ...options,
     onSuccess: (...args) => {
       const [, variables] = args;
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: makeListGitRepositoriesQueryKey(),
       });
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: makeGetGitRepositoryQueryKey(variables.params.id),
       });
       options?.onSuccess?.(...args);

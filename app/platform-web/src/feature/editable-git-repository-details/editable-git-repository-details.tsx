@@ -46,6 +46,7 @@ export function EditableGitRepositoryDetails({
               <Button
                 size="icon-xs"
                 variant="ghost"
+                aria-label="Copy ID"
                 onClick={() => onCopy(gitRepository.id)}
               >
                 <CopyIcon />

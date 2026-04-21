@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, expect, mock, test } from "bun:test";
 import Elysia from "elysia";
 import { err, ok } from "neverthrow";
 
@@ -79,172 +79,184 @@ const request = (method: string, path: string, body?: unknown) => {
 
 // --- Tests ---
 
-describe("POST /api/v1/ai-agent", () => {
-  beforeEach(resetMocks);
+beforeEach(resetMocks);
 
-  it("should return okEnvelope with id on success", async () => {
-    const newId = "019606a0-0000-7000-8000-000000000099" as Id;
-    mockCreateAiAgent.mockResolvedValue(ok({ id: newId }));
+test("POST /api/v1/ai-agent: given a valid payload, when created successfully, then returns okEnvelope with id", async () => {
+  // given
+  const newId = "019606a0-0000-7000-8000-000000000099" as Id;
+  mockCreateAiAgent.mockResolvedValue(ok({ id: newId }));
 
-    const response = await request("POST", "/api/v1/ai-agent", {
+  // when
+  const response = await request("POST", "/api/v1/ai-agent", {
+    name: "New Agent",
+    model: "anthropic/claude-sonnet-4.6",
+    projects: [],
+  });
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(json.data).toEqual({ id: newId });
+  expect(mockCreateAiAgent).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    payload: {
       name: "New Agent",
       model: "anthropic/claude-sonnet-4.6",
       projects: [],
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(json.data).toEqual({ id: newId });
-    expect(mockCreateAiAgent).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      payload: {
-        name: "New Agent",
-        model: "anthropic/claude-sonnet-4.6",
-        projects: [],
-      },
-    });
-  });
-
-  it("should return errEnvelope on service error", async () => {
-    mockCreateAiAgent.mockResolvedValue(err(Err.code("unknown")));
-
-    const response = await request("POST", "/api/v1/ai-agent", {
-      name: "New Agent",
-      model: "anthropic/claude-sonnet-4.6",
-      projects: [],
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+    },
   });
 });
 
-describe("GET /api/v1/ai-agent", () => {
-  beforeEach(resetMocks);
+test("POST /api/v1/ai-agent: given a service failure, when called, then returns errEnvelope", async () => {
+  // given
+  mockCreateAiAgent.mockResolvedValue(err(Err.code("unknown")));
 
-  it("should return list of ai agents mapped to DTOs", async () => {
-    const aiAgents = [
-      makeAiAgent(),
-      makeAiAgent({
-        name: "Second",
-        id: "019606a0-0000-7000-8000-000000000002" as Id,
-      }),
-    ];
-    mockListAiAgents.mockResolvedValue(ok({ data: aiAgents }));
-
-    const response = await request("GET", "/api/v1/ai-agent");
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.data).toHaveLength(2);
-    expect(json.data[0].name).toBe("My Agent");
-    expect(json.data[1].name).toBe("Second");
-    expect(mockListAiAgents).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-    });
+  // when
+  const response = await request("POST", "/api/v1/ai-agent", {
+    name: "New Agent",
+    model: "anthropic/claude-sonnet-4.6",
+    projects: [],
   });
+  const json = await response.json();
 
-  it("should return errEnvelope on service error", async () => {
-    mockListAiAgents.mockResolvedValue(err(Err.code("unknown")));
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
+});
 
-    const response = await request("GET", "/api/v1/ai-agent");
-    const json = await response.json();
+test("GET /api/v1/ai-agent: given agents exist, when listed, then returns agents mapped to DTOs", async () => {
+  // given
+  const aiAgents = [
+    makeAiAgent(),
+    makeAiAgent({
+      name: "Second",
+      id: "019606a0-0000-7000-8000-000000000002" as Id,
+    }),
+  ];
+  mockListAiAgents.mockResolvedValue(ok({ data: aiAgents }));
 
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+  // when
+  const response = await request("GET", "/api/v1/ai-agent");
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.data).toHaveLength(2);
+  expect(json.data[0].name).toBe("My Agent");
+  expect(json.data[1].name).toBe("Second");
+  expect(mockListAiAgents).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
   });
 });
 
-describe("GET /api/v1/ai-agent/:id", () => {
-  beforeEach(resetMocks);
+test("GET /api/v1/ai-agent: given a service failure, when listed, then returns errEnvelope", async () => {
+  // given
+  mockListAiAgents.mockResolvedValue(err(Err.code("unknown")));
 
-  it("should return single ai agent mapped to DTO", async () => {
-    const aiAgent = makeAiAgent();
-    mockGetAiAgent.mockResolvedValue(ok({ data: aiAgent }));
+  // when
+  const response = await request("GET", "/api/v1/ai-agent");
+  const json = await response.json();
 
-    const response = await request("GET", `/api/v1/ai-agent/${TEST_ID}`);
-    const json = await response.json();
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
+});
 
-    expect(json.status).toBe(200);
-    expect(json.data.name).toBe("My Agent");
-    expect(json.data.id).toBe(TEST_ID);
-    expect(mockGetAiAgent).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-    });
-  });
+test("GET /api/v1/ai-agent/:id: given an agent exists, when fetched by id, then returns the agent mapped to DTO", async () => {
+  // given
+  const aiAgent = makeAiAgent();
+  mockGetAiAgent.mockResolvedValue(ok({ data: aiAgent }));
 
-  it("should return errEnvelope when not found", async () => {
-    mockGetAiAgent.mockResolvedValue(err(Err.code("notFound")));
+  // when
+  const response = await request("GET", `/api/v1/ai-agent/${TEST_ID}`);
+  const json = await response.json();
 
-    const response = await request("GET", `/api/v1/ai-agent/${TEST_ID}`);
-    const json = await response.json();
-
-    expect(json.status).toBe(404);
-    expect(json.code).toBe("notFound");
+  // then
+  expect(json.status).toBe(200);
+  expect(json.data.name).toBe("My Agent");
+  expect(json.data.id).toBe(TEST_ID);
+  expect(mockGetAiAgent).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
   });
 });
 
-describe("PATCH /api/v1/ai-agent/:id", () => {
-  beforeEach(resetMocks);
+test("GET /api/v1/ai-agent/:id: given the agent does not exist, when fetched by id, then returns notFound errEnvelope", async () => {
+  // given
+  mockGetAiAgent.mockResolvedValue(err(Err.code("notFound")));
 
-  it("should return okEnvelope on success", async () => {
-    const updated = makeAiAgent({ name: "Updated", _version: 2 });
-    mockUpdateAiAgent.mockResolvedValue(ok({ data: updated }));
+  // when
+  const response = await request("GET", `/api/v1/ai-agent/${TEST_ID}`);
+  const json = await response.json();
 
-    const response = await request("PATCH", `/api/v1/ai-agent/${TEST_ID}`, {
-      name: "Updated",
-    });
-    const json = await response.json();
+  // then
+  expect(json.status).toBe(404);
+  expect(json.code).toBe("notFound");
+});
 
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(mockUpdateAiAgent).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-      data: { name: "Updated" },
-    });
+test("PATCH /api/v1/ai-agent/:id: given a valid update payload, when updated successfully, then returns okEnvelope", async () => {
+  // given
+  const updated = makeAiAgent({ name: "Updated", _version: 2 });
+  mockUpdateAiAgent.mockResolvedValue(ok({ data: updated }));
+
+  // when
+  const response = await request("PATCH", `/api/v1/ai-agent/${TEST_ID}`, {
+    name: "Updated",
   });
+  const json = await response.json();
 
-  it("should return errEnvelope on service error", async () => {
-    mockUpdateAiAgent.mockResolvedValue(err(Err.code("notFound")));
-
-    const response = await request("PATCH", `/api/v1/ai-agent/${TEST_ID}`, {
-      name: "Updated",
-    });
-    const json = await response.json();
-
-    expect(json.status).toBe(404);
-    expect(json.code).toBe("notFound");
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(mockUpdateAiAgent).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
+    data: { name: "Updated" },
   });
 });
 
-describe("DELETE /api/v1/ai-agent/:id", () => {
-  beforeEach(resetMocks);
+test("PATCH /api/v1/ai-agent/:id: given a service failure, when updated, then returns errEnvelope", async () => {
+  // given
+  mockUpdateAiAgent.mockResolvedValue(err(Err.code("notFound")));
 
-  it("should return okEnvelope on success", async () => {
-    mockDeleteAiAgent.mockResolvedValue(ok());
-
-    const response = await request("DELETE", `/api/v1/ai-agent/${TEST_ID}`);
-    const json = await response.json();
-
-    expect(json.status).toBe(200);
-    expect(json.code).toBe("ok");
-    expect(mockDeleteAiAgent).toHaveBeenCalledWith({
-      ctx: { tenant: TENANT },
-      id: TEST_ID,
-    });
+  // when
+  const response = await request("PATCH", `/api/v1/ai-agent/${TEST_ID}`, {
+    name: "Updated",
   });
+  const json = await response.json();
 
-  it("should return errEnvelope on service error", async () => {
-    mockDeleteAiAgent.mockResolvedValue(err(Err.code("unknown")));
+  // then
+  expect(json.status).toBe(404);
+  expect(json.code).toBe("notFound");
+});
 
-    const response = await request("DELETE", `/api/v1/ai-agent/${TEST_ID}`);
-    const json = await response.json();
+test("DELETE /api/v1/ai-agent/:id: given the agent exists, when deleted successfully, then returns okEnvelope", async () => {
+  // given
+  mockDeleteAiAgent.mockResolvedValue(ok());
 
-    expect(json.status).toBe(500);
-    expect(json.code).toBe("unknown");
+  // when
+  const response = await request("DELETE", `/api/v1/ai-agent/${TEST_ID}`);
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.code).toBe("ok");
+  expect(mockDeleteAiAgent).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: TEST_ID,
   });
+});
+
+test("DELETE /api/v1/ai-agent/:id: given a service failure, when deleted, then returns errEnvelope", async () => {
+  // given
+  mockDeleteAiAgent.mockResolvedValue(err(Err.code("unknown")));
+
+  // when
+  const response = await request("DELETE", `/api/v1/ai-agent/${TEST_ID}`);
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(500);
+  expect(json.code).toBe("unknown");
 });
