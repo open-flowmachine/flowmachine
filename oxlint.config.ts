@@ -1,6 +1,16 @@
 import { defineConfig } from "oxlint";
 
 export default defineConfig({
+  categories: {
+    correctness: "error",
+    suspicious: "error",
+    pedantic: "error",
+    perf: "warn",
+    style: "warn",
+    restriction: "warn",
+    nursery: "off",
+  },
+
   plugins: [
     "eslint",
     "import",
