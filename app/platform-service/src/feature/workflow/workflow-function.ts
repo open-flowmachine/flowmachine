@@ -7,10 +7,14 @@ import {
   WORKFLOW_EXECUTION_TRIGGERED_EVENT,
 } from "@/feature/workflow/workflow-constant";
 import { workflowEngine } from "@/feature/workflow/workflow-engine";
+import { makeWorkflowExecutionService } from "@/module/workflow/workflow-execution-service";
+import { Err } from "@/shared/err/err";
 import { idSchema } from "@/shared/model/model-id";
 import { tenantSchema } from "@/shared/model/model-tenant";
 import { validate } from "@/shared/schema/schema-validation";
 import { inngestClient } from "@/vendor/inngest/inngest-client";
+
+const workflowExecutionService = makeWorkflowExecutionService();
 
 const initializeWorkflowExecutionEventDataSchema = z.object({
   tenant: tenantSchema,
@@ -37,11 +41,35 @@ const initializeWorkflowExecution = inngestClient.createFunction(
     const { tenant, workflowDefinitionId, title, summary } =
       validationResult.value;
 
+    const workflowExecutionId = await step.run(
+      "create-workflow-execution",
+      async () => {
+        const result = await workflowExecutionService.create({
+          ctx: { tenant },
+          payload: {
+            integration: {
+              externalId: event.id ?? "",
+              provider: "inngest",
+            },
+            workflowDefinition: {
+              id: workflowDefinitionId,
+              raw: {},
+            },
+          },
+        });
+        if (result.isErr()) {
+          throw Err.from(result.error);
+        }
+        return result.value.id;
+      },
+    );
+
     await step.sendEvent(`send-${WORKFLOW_EXECUTION_INITIALIZED_EVENT}`, {
       name: WORKFLOW_EXECUTION_INITIALIZED_EVENT,
       data: {
         tenant,
         workflowDefinitionId,
+        workflowExecutionId,
         title,
         summary,
       },
