@@ -9,8 +9,8 @@ import {
 } from "@/router/webhook/v1/router-webhook-v1-dto";
 import { Err } from "@/shared/err/err";
 import { okEnvelope } from "@/shared/http/http-envelope";
-import { tenantSchema } from "@/shared/model/model-tenant";
 import { validate } from "@/shared/schema/schema-validation";
+import { decodeTenant } from "@/shared/tenant/tenant-encoding";
 import { verifyWebhookSignature } from "@/shared/webhook/webhook-signature";
 import { inngestClient } from "@/vendor/inngest/inngest-client";
 
@@ -26,16 +26,9 @@ const webhookV1Router = new Elysia({ name: "webhookV1Router" }).group(
         const rawBody = typeof body === "string" ? body : JSON.stringify(body);
 
         // 1. Decode tenant from URL-encoded query parameter
-        let tenantJson: unknown;
-        try {
-          tenantJson = JSON.parse(decodeURIComponent(query.tenant));
-        } catch {
-          throw Err.code("badRequest", { message: "Invalid tenant encoding" });
-        }
-
-        const tenantResult = validate(tenantSchema, tenantJson);
+        const tenantResult = decodeTenant(query.tenant);
         if (tenantResult.isErr()) {
-          throw Err.code("badRequest", { message: "Invalid tenant data" });
+          throw tenantResult.error;
         }
         const tenant = tenantResult.value;
 
