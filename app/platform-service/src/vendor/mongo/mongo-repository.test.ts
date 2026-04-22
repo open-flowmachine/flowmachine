@@ -244,6 +244,33 @@ test("makeMongoRepository update: given a model with _version, when called, then
   expect(data).not.toHaveProperty("_id");
 });
 
+test("makeMongoRepository update: given data without _version, when called, then omits _version from the filter", async () => {
+  // given
+  const updatedMongoDoc = {
+    ...makeMongoDoc(),
+    name: "updated",
+    _version: 2,
+  };
+  mockCollection.findOneAndUpdate.mockResolvedValue(updatedMongoDoc);
+
+  // when
+  const result = await repo.update({
+    id: TEST_ID,
+    data: { name: "updated" } as Partial<Model<TestDoc>>,
+  });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockCollection.findOneAndUpdate).toHaveBeenCalledWith(
+    { _id: TEST_ID },
+    {
+      $set: { name: "updated" },
+      $inc: { _version: 1 },
+    },
+    { returnDocument: "after" },
+  );
+});
+
 test("makeMongoRepository update: given a version mismatch, when called, then returns ok with null data", async () => {
   // given
   mockCollection.findOneAndUpdate.mockResolvedValue(null);
@@ -420,6 +447,34 @@ test("makeTenantAwareMongoRepository update: given a tenant ctx, when called, th
   expect(result.isOk()).toBe(true);
   expect(mockCollection.findOneAndUpdate).toHaveBeenCalledWith(
     { _id: TEST_ID, _version: 1, _tenant: tenant },
+    {
+      $set: { name: "updated" },
+      $inc: { _version: 1 },
+    },
+    { returnDocument: "after" },
+  );
+});
+
+test("makeTenantAwareMongoRepository update: given data without _version, when called, then omits _version from the filter but keeps tenant", async () => {
+  // given
+  const updatedMongoDoc = {
+    ...makeMongoDoc(),
+    name: "updated",
+    _version: 2,
+  };
+  mockCollection.findOneAndUpdate.mockResolvedValue(updatedMongoDoc);
+
+  // when
+  const result = await tenantRepo.update({
+    ctx,
+    id: TEST_ID,
+    data: { name: "updated" } as Partial<Model<TenantDoc>>,
+  });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockCollection.findOneAndUpdate).toHaveBeenCalledWith(
+    { _id: TEST_ID, _tenant: tenant },
     {
       $set: { name: "updated" },
       $inc: { _version: 1 },
