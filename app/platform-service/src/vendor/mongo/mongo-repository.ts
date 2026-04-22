@@ -89,7 +89,10 @@ const makeMongoRepository = <T extends Model<Document>>(input: {
 
       const col = await collection();
       const updatedData = await col.findOneAndUpdate(
-        { _id: id, _version },
+        {
+          _id: id,
+          ...(_version !== undefined ? { _version } : {}),
+        },
         { $set: rest, $inc: { _version: 1 } },
         { returnDocument: "after" },
       );
@@ -184,7 +187,11 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
       const { id: _, _version, ...rest } = data;
       const col = await collection();
       const updatedData = await col.findOneAndUpdate(
-        { _id: id, _version, _tenant: ctx.tenant },
+        {
+          _id: id,
+          _tenant: ctx.tenant,
+          ...(_version !== undefined ? { _version } : {}),
+        },
         { $set: rest, $inc: { _version: 1 } },
         { returnDocument: "after" },
       );
