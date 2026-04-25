@@ -43,13 +43,14 @@ const aiAgentConversationRun = inngestClient.createFunction(
   { event: AI_AGENT_RUN_STARTED_EVENT },
   async ({ event, step }) => {
     const validationResult = validate(runStartedEventDataSchema, event.data);
+
     if (validationResult.isErr()) {
       log.error({ error: validationResult.error }, "invalid event data");
       return;
     }
     const { tenant, aiAgentId, aiAgentRunId } = validationResult.value;
-    const ctx = { tenant };
 
+    const ctx = { tenant };
     const idleTimeoutDays = getEnv().AI_AGENT_RUN_IDLE_TIMEOUT_DAYS;
 
     const { volumeId } = await step.run("provision-volume", async () => {
@@ -72,7 +73,9 @@ const aiAgentConversationRun = inngestClient.createFunction(
     let sessionId: string | null = null;
     let iteration = 0;
 
-    const terminate = async (reason: "user_stop" | "idle_timeout" | "error") => {
+    const terminate = async (
+      reason: "user_stop" | "idle_timeout" | "error",
+    ) => {
       await step.run(`cleanup-${iteration}`, async () => {
         await destroyVolume({ aiAgentRunId });
         await markRunStatus({
@@ -115,11 +118,11 @@ const aiAgentConversationRun = inngestClient.createFunction(
         await terminate("idle_timeout");
         return;
       }
-
       const messageValidation = validate(
         messageReceivedEventDataSchema,
         messageEvent.data,
       );
+
       if (messageValidation.isErr()) {
         log.error(
           { error: messageValidation.error },

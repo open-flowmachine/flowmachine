@@ -1,7 +1,7 @@
 import { aiAgentConversationEventBus } from "@/feature/ai-agent-conversation/ai-agent-conversation-event";
-import { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
-import { makeAiAgentRunService } from "@/module/ai-agent-run/ai-agent-run-service";
 import { makeAiAgentRunMessageService } from "@/module/ai-agent-run-message/ai-agent-run-message-service";
+import { makeAiAgentRunService } from "@/module/ai-agent-run/ai-agent-run-service";
+import { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
 import { Err } from "@/shared/err/err";
 import { type Id } from "@/shared/model/model-id";
 import { type Tenant } from "@/shared/model/model-tenant";
@@ -33,7 +33,10 @@ const destroyVolume = async (input: { aiAgentRunId: Id }) => {
     );
     await daytonaClient.volume.delete(volume);
   } catch (error) {
-    log.warn({ error, aiAgentRunId: input.aiAgentRunId }, "volume delete skipped");
+    log.warn(
+      { error, aiAgentRunId: input.aiAgentRunId },
+      "volume delete skipped",
+    );
   }
 };
 
@@ -135,6 +138,7 @@ const appendMessages = async (input: {
         toolResult: message.toolResult ?? null,
       },
     });
+
     if (appendResult.isErr()) {
       throw Err.from(appendResult.error);
     }
@@ -146,50 +150,67 @@ const appendMessages = async (input: {
   }
 };
 
+type StreamJsonContentBlock = NonNullable<
+  NonNullable<StreamJsonEvent["message"]>["content"]
+>[number];
+
+const mapAssistantBlocks = (
+  blocks: StreamJsonContentBlock[],
+): AppendInput | null => {
+  const toolUseBlock = blocks.find((b) => b.type === "tool_use");
+
+  if (toolUseBlock) {
+    return {
+      role: "tool_use",
+      content: toolUseBlock.name ?? "",
+      toolName: toolUseBlock.name,
+      toolInput: toolUseBlock.input,
+    };
+  }
+  const textBlocks = blocks
+    .filter((b) => b.type === "text" && typeof b.text === "string")
+    .map((b) => b.text ?? "")
+    .filter((text) => text.length > 0);
+
+  if (textBlocks.length > 0) {
+    return { role: "assistant", content: textBlocks.join("\n") };
+  }
+  return null;
+};
+
+const mapUserBlocks = (
+  blocks: StreamJsonContentBlock[],
+): AppendInput | null => {
+  const toolResultBlock = blocks.find((b) => b.type === "tool_result");
+
+  if (!toolResultBlock) {
+    return null;
+  }
+  const raw = toolResultBlock.content;
+  const content = typeof raw === "string" ? raw : JSON.stringify(raw ?? null);
+
+  return {
+    role: "tool_result",
+    content,
+    toolInput: toolResultBlock.tool_use_id
+      ? { tool_use_id: toolResultBlock.tool_use_id }
+      : undefined,
+    toolResult:
+      typeof raw === "object" && raw !== null
+        ? (raw as Record<string, unknown>)
+        : undefined,
+  };
+};
+
 const mapEventToAppendInput = (event: StreamJsonEvent): AppendInput | null => {
   const blocks = event.message?.content ?? [];
 
   if (event.type === "assistant") {
-    const textBlocks = blocks
-      .filter((b) => b.type === "text" && typeof b.text === "string")
-      .map((b) => b.text ?? "")
-      .filter((text) => text.length > 0);
-    const toolUseBlock = blocks.find((b) => b.type === "tool_use");
-
-    if (toolUseBlock) {
-      return {
-        role: "tool_use",
-        content: toolUseBlock.name ?? "",
-        toolName: toolUseBlock.name,
-        toolInput: toolUseBlock.input,
-      };
-    }
-    if (textBlocks.length > 0) {
-      return { role: "assistant", content: textBlocks.join("\n") };
-    }
-    return null;
+    return mapAssistantBlocks(blocks);
   }
-
   if (event.type === "user") {
-    const toolResultBlock = blocks.find((b) => b.type === "tool_result");
-    if (toolResultBlock) {
-      const raw = toolResultBlock.content;
-      const content =
-        typeof raw === "string" ? raw : JSON.stringify(raw ?? null);
-      return {
-        role: "tool_result",
-        content,
-        toolInput: toolResultBlock.tool_use_id
-          ? { tool_use_id: toolResultBlock.tool_use_id }
-          : undefined,
-        toolResult: typeof raw === "object" && raw !== null
-          ? (raw as Record<string, unknown>)
-          : undefined,
-      };
-    }
-    return null;
+    return mapUserBlocks(blocks);
   }
-
   return null;
 };
 
@@ -206,10 +227,10 @@ const runTurn = async (input: {
     ctx: input.ctx,
     id: input.aiAgentId,
   });
+
   if (agentResult.isErr()) {
     throw Err.from(agentResult.error);
   }
-
   aiAgentConversationEventBus.publish({
     type: "turn.started",
     aiAgentRunId: input.aiAgentRunId,
@@ -285,6 +306,7 @@ const markRunStatus = async (input: {
     ctx: input.ctx,
     id: input.aiAgentRunId,
   });
+
   if (getResult.isErr()) {
     throw Err.from(getResult.error);
   }
@@ -294,17 +316,20 @@ const markRunStatus = async (input: {
     status: input.status,
     _version: run._version,
   };
+
   if (input.sandbox !== undefined) {
     patch.sandbox = input.sandbox;
   }
   if (input.sessionId !== undefined) {
     patch.sessionId = input.sessionId;
   }
-  if (input.status === "stopped" || input.status === "errored") {
+  const isEnded = input.status === "stopped" || input.status === "errored";
+
+  if (isEnded) {
     patch.endedAt = new Date();
-    if (input.endedReason) {
-      patch.endedReason = input.endedReason;
-    }
+  }
+  if (isEnded && input.endedReason) {
+    patch.endedReason = input.endedReason;
   }
 
   const result = await aiAgentRunService.update({
