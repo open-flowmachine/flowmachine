@@ -8,7 +8,7 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "start": "NODE_ENV=production bun dist/index.js",
-    "test": "bun test"
+    "test": "bun test --randomize"
   },
   "dependencies": {
     "@date-fns/utc": "catalog:",
