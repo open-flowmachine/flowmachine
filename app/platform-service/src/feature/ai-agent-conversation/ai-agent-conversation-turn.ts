@@ -98,7 +98,9 @@ const parseStreamJsonEvents = (stdout: string): StreamJsonEvent[] => {
   const events: StreamJsonEvent[] = [];
   for (const raw of stdout.split("\n")) {
     const line = raw.trim();
-    if (!line) continue;
+    if (!line) {
+      continue;
+    }
     try {
       events.push(JSON.parse(line) as StreamJsonEvent);
     } catch (error) {
@@ -239,7 +241,9 @@ const runTurn = async (input: {
   const appendInputs: AppendInput[] = [];
   for (const event of events) {
     const mapped = mapEventToAppendInput(event);
-    if (mapped) appendInputs.push(mapped);
+    if (mapped) {
+      appendInputs.push(mapped);
+    }
   }
 
   await appendMessages({
@@ -290,11 +294,17 @@ const markRunStatus = async (input: {
     status: input.status,
     _version: run._version,
   };
-  if (input.sandbox !== undefined) patch.sandbox = input.sandbox;
-  if (input.sessionId !== undefined) patch.sessionId = input.sessionId;
+  if (input.sandbox !== undefined) {
+    patch.sandbox = input.sandbox;
+  }
+  if (input.sessionId !== undefined) {
+    patch.sessionId = input.sessionId;
+  }
   if (input.status === "stopped" || input.status === "errored") {
     patch.endedAt = new Date();
-    if (input.endedReason) patch.endedReason = input.endedReason;
+    if (input.endedReason) {
+      patch.endedReason = input.endedReason;
+    }
   }
 
   const result = await aiAgentRunService.update({

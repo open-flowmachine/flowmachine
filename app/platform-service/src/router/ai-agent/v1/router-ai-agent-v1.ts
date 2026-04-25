@@ -94,7 +94,9 @@ const loadScopedRun = async (input: {
     ctx: { tenant: input.tenant },
     id: input.runId,
   });
-  if (runResult.isErr()) return runResult;
+  if (runResult.isErr()) {
+    return runResult;
+  }
   if (runResult.value.data.aiAgentId !== input.aiAgentId) {
     return { isErr: () => true, isOk: () => false, error: Err.code("notFound") } as never;
   }
@@ -115,14 +117,18 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             ctx: { tenant },
             payload: body,
           });
-          if (result.isErr()) return errEnvelope(result.error);
+          if (result.isErr()) {
+            return errEnvelope(result.error);
+          }
           return okEnvelope({ data: { id: result.value.id } });
         },
         { body: postAiAgentRequestBodyDtoSchema },
       )
       .get("", async ({ tenant }) => {
         const result = await aiAgentService.list({ ctx: { tenant } });
-        if (result.isErr()) return errEnvelope(result.error);
+        if (result.isErr()) {
+          return errEnvelope(result.error);
+        }
         return okEnvelope({ data: result.value.data.map(toDto) });
       })
       .get(
@@ -132,7 +138,9 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             ctx: { tenant },
             id: params.aiAgentId,
           });
-          if (result.isErr()) return errEnvelope(result.error);
+          if (result.isErr()) {
+            return errEnvelope(result.error);
+          }
           return okEnvelope({ data: toDto(result.value.data) });
         },
         { params: patchAiAgentRequestParamsDtoSchema },
@@ -145,7 +153,9 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             id: params.aiAgentId,
             data: body,
           });
-          if (result.isErr()) return errEnvelope(result.error);
+          if (result.isErr()) {
+            return errEnvelope(result.error);
+          }
           return okEnvelope();
         },
         {
@@ -160,7 +170,9 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             ctx: { tenant },
             id: params.aiAgentId,
           });
-          if (result.isErr()) return errEnvelope(result.error);
+          if (result.isErr()) {
+            return errEnvelope(result.error);
+          }
           return okEnvelope();
         },
         { params: deleteAiAgentRequestParamsDtoSchema },
@@ -174,13 +186,17 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             ctx: { tenant },
             id: aiAgentId,
           });
-          if (agentResult.isErr()) return errEnvelope(agentResult.error);
+          if (agentResult.isErr()) {
+            return errEnvelope(agentResult.error);
+          }
 
           const result = await aiAgentRunService.create({
             ctx: { tenant },
             payload: { aiAgentId },
           });
-          if (result.isErr()) return errEnvelope(result.error);
+          if (result.isErr()) {
+            return errEnvelope(result.error);
+          }
 
           await inngestClient.send({
             name: AI_AGENT_RUN_STARTED_EVENT,
@@ -206,13 +222,17 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             ctx: { tenant },
             id: params.aiAgentId,
           });
-          if (agentResult.isErr()) return errEnvelope(agentResult.error);
+          if (agentResult.isErr()) {
+            return errEnvelope(agentResult.error);
+          }
 
           const result = await aiAgentRunService.list({
             ctx: { tenant },
             filter: { aiAgentId: params.aiAgentId },
           });
-          if (result.isErr()) return errEnvelope(result.error);
+          if (result.isErr()) {
+            return errEnvelope(result.error);
+          }
           return okEnvelope({ data: result.value.data.map(toRunDto) });
         },
         { params: aiAgentRunRequestParamsDtoSchema },
@@ -225,7 +245,9 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             aiAgentId: params.aiAgentId,
             runId: params.runId,
           });
-          if (runResult.isErr()) return errEnvelope(runResult.error);
+          if (runResult.isErr()) {
+            return errEnvelope(runResult.error);
+          }
           return okEnvelope({ data: toRunDto(runResult.value.data) });
         },
         { params: aiAgentRunWithIdRequestParamsDtoSchema },
@@ -238,7 +260,9 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             aiAgentId: params.aiAgentId,
             runId: params.runId,
           });
-          if (runResult.isErr()) return errEnvelope(runResult.error);
+          if (runResult.isErr()) {
+            return errEnvelope(runResult.error);
+          }
           if (isTerminal(runResult.value.data.status)) {
             return errEnvelope(
               Err.code("conflict", { message: "Run is already terminated" }),
@@ -261,7 +285,9 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             aiAgentId: params.aiAgentId,
             runId: params.runId,
           });
-          if (runResult.isErr()) return errEnvelope(runResult.error);
+          if (runResult.isErr()) {
+            return errEnvelope(runResult.error);
+          }
 
           const appendResult = await aiAgentRunMessageService.append({
             ctx: { tenant },
@@ -274,13 +300,17 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
               toolResult: null,
             },
           });
-          if (appendResult.isErr()) return errEnvelope(appendResult.error);
+          if (appendResult.isErr()) {
+            return errEnvelope(appendResult.error);
+          }
 
           const markResult = await aiAgentRunService.markProcessing({
             ctx: { tenant },
             id: params.runId,
           });
-          if (markResult.isErr()) return errEnvelope(markResult.error);
+          if (markResult.isErr()) {
+            return errEnvelope(markResult.error);
+          }
 
           await inngestClient.send({
             name: AI_AGENT_RUN_MESSAGE_RECEIVED_EVENT,
@@ -312,13 +342,17 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             aiAgentId: params.aiAgentId,
             runId: params.runId,
           });
-          if (runResult.isErr()) return errEnvelope(runResult.error);
+          if (runResult.isErr()) {
+            return errEnvelope(runResult.error);
+          }
 
           const result = await aiAgentRunMessageService.list({
             ctx: { tenant },
             filter: { aiAgentRunId: params.runId },
           });
-          if (result.isErr()) return errEnvelope(result.error);
+          if (result.isErr()) {
+            return errEnvelope(result.error);
+          }
           return okEnvelope({ data: result.value.data.map(toMessageDto) });
         },
         { params: aiAgentRunWithIdRequestParamsDtoSchema },
@@ -331,7 +365,9 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             aiAgentId: params.aiAgentId,
             runId: params.runId,
           });
-          if (runResult.isErr()) return errEnvelope(runResult.error);
+          if (runResult.isErr()) {
+            return errEnvelope(runResult.error);
+          }
           if (runResult.value.data.status !== "errored") {
             return errEnvelope(
               Err.code("conflict", {
@@ -344,7 +380,9 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             ctx: { tenant },
             filter: { aiAgentRunId: params.runId },
           });
-          if (messagesResult.isErr()) return errEnvelope(messagesResult.error);
+          if (messagesResult.isErr()) {
+            return errEnvelope(messagesResult.error);
+          }
 
           const lastUserMessage = messagesResult.value.data
             .filter((m) => m.role === "user")
@@ -376,7 +414,9 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             aiAgentId: params.aiAgentId,
             runId: params.runId,
           });
-          if (runResult.isErr()) return errEnvelope(runResult.error);
+          if (runResult.isErr()) {
+            return errEnvelope(runResult.error);
+          }
 
           const runId = params.runId;
           const encoder = new TextEncoder();
@@ -385,7 +425,9 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
             start(controller) {
               let closed = false;
               const safeEnqueue = (chunk: Uint8Array) => {
-                if (closed) return;
+                if (closed) {
+                  return;
+                }
                 try {
                   controller.enqueue(chunk);
                 } catch {
