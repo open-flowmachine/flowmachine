@@ -1,10 +1,10 @@
 {
   "version": 1,
   "skills": {
-    "clean-ddd-hexagonal": {
-      "source": "ccheney/robust-skills",
+    "shadcn": {
+      "source": "shadcn/ui",
       "sourceType": "github",
-      "computedHash": "b9a54e257685086d0034bd8277964452b7208e2f18bf68d158996936ce667b6a"
+      "computedHash": "2bc6cf38ec7b4a5778a43fabb3e87642c9897ad45e9eb42438b57fd2def6cca8"
     }
   }
 }
