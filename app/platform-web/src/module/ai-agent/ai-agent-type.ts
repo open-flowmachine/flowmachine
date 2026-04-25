@@ -1,8 +1,9 @@
 import type { Id, Model } from "@/lib/schema";
 
 const aiModels = [
-  "anthropic/claude-opus-4.6",
-  "anthropic/claude-sonnet-4.6",
+  "claude-opus-4-7",
+  "claude-sonnet-4-6",
+  "claude-haiku-4-5",
 ] as const;
 type AiModel = (typeof aiModels)[number];
 

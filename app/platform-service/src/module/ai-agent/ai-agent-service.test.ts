@@ -45,7 +45,7 @@ const makeAiAgent = (overrides?: Partial<AiAgent>): AiAgent => ({
   createdAt: now,
   updatedAt: now,
   name: "My Agent",
-  model: "anthropic/claude-sonnet-4.6",
+  model: "claude-sonnet-4-6",
   projects: [],
   ...overrides,
 });
@@ -71,7 +71,7 @@ test("create: given a valid payload, when inserted, then returns the new id", as
     ctx,
     payload: {
       name: "New Agent",
-      model: "anthropic/claude-sonnet-4.6",
+      model: "claude-sonnet-4-6",
       projects: [],
     },
   });
@@ -85,7 +85,7 @@ test("create: given a valid payload, when inserted, then returns the new id", as
       id: NEW_ID,
       _version: 1,
       name: "New Agent",
-      model: "anthropic/claude-sonnet-4.6",
+      model: "claude-sonnet-4-6",
       projects: [],
     }),
   });
@@ -102,7 +102,7 @@ test("create: given a valid payload, when repository insert fails, then returns 
     ctx,
     payload: {
       name: "New Agent",
-      model: "anthropic/claude-sonnet-4.6",
+      model: "claude-sonnet-4-6",
       projects: [],
     },
   });

@@ -30,6 +30,8 @@
     }
   },
   "globalEnv": [
+    "AI_AGENT_RUN_IDLE_TIMEOUT_DAYS",
+    "ANTHROPIC_API_KEY",
     "APP_ENV",
     "APP_VERSION",
     "AUTUMN_SECRET_KEY",
