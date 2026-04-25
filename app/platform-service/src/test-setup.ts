@@ -1,4 +1,4 @@
-import { mock } from "bun:test";
+import { afterAll, beforeAll, mock } from "bun:test";
 
 const MOCK_APP_ENV = "test";
 const MOCK_APP_VERSION = "0.0.0-test";
@@ -12,22 +12,29 @@ const MOCK_MONGO_DB_NAME = "test-db";
 const MOCK_RESEND_API_KEY = "test-resend-api-key";
 const MOCK_RESEND_FROM_ADDRESS = "Flow Machine <test@email.flowmachine.io>";
 
-// oxlint-disable-next-line typescript/no-floating-promises
-mock.module("@/vendor/env/env", () => ({
-  getEnv: () => ({
-    APP_ENV: MOCK_APP_ENV,
-    APP_VERSION: MOCK_APP_VERSION,
-    AUTUMN_SECRET_KEY: MOCK_AUTUMN_SECRET_KEY,
-    BETTER_AUTH_SECRET: MOCK_BETTER_AUTH_SECRET,
-    BETTER_AUTH_URL: MOCK_BETTER_AUTH_URL,
-    BETTER_AUTH_TRUSTED_ORIGINS: MOCK_BETTER_AUTH_TRUSTED_ORIGINS,
-    DAYTONA_API_KEY: MOCK_DAYTONA_API_KEY,
-    MONGO_DB_URL: MOCK_MONGO_DB_URL,
-    MONGO_DB_NAME: MOCK_MONGO_DB_NAME,
-    RESEND_API_KEY: MOCK_RESEND_API_KEY,
-    RESEND_FROM_ADDRESS: MOCK_RESEND_FROM_ADDRESS,
-  }),
-}));
+beforeAll(() => {
+  // oxlint-disable-next-line typescript/no-floating-promises
+  mock.module("@/vendor/env/env", () => ({
+    getEnv: () => ({
+      APP_ENV: MOCK_APP_ENV,
+      APP_VERSION: MOCK_APP_VERSION,
+      AUTUMN_SECRET_KEY: MOCK_AUTUMN_SECRET_KEY,
+      BETTER_AUTH_SECRET: MOCK_BETTER_AUTH_SECRET,
+      BETTER_AUTH_URL: MOCK_BETTER_AUTH_URL,
+      BETTER_AUTH_TRUSTED_ORIGINS: MOCK_BETTER_AUTH_TRUSTED_ORIGINS,
+      DAYTONA_API_KEY: MOCK_DAYTONA_API_KEY,
+      MONGO_DB_URL: MOCK_MONGO_DB_URL,
+      MONGO_DB_NAME: MOCK_MONGO_DB_NAME,
+      RESEND_API_KEY: MOCK_RESEND_API_KEY,
+      RESEND_FROM_ADDRESS: MOCK_RESEND_FROM_ADDRESS,
+    }),
+  }));
+});
+
+afterAll(() => {
+  mock.restore();
+  mock.clearAllMocks();
+});
 
 export {
   MOCK_APP_ENV,
