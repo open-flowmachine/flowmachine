@@ -45,6 +45,9 @@ const provisionSandbox = async (input: { volumeId: string }) => {
     envVars: { ANTHROPIC_API_KEY: getEnv().ANTHROPIC_API_KEY },
     volumes: [{ volumeId: input.volumeId, mountPath: "/home/daytona/.claude" }],
   });
+  await sandbox.process.executeCommand(
+    "curl -fsSL https://claude.ai/install.sh | bash",
+  );
   return { sandboxId: sandbox.id };
 };
 
