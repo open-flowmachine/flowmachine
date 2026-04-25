@@ -132,7 +132,7 @@ const makeAiAgentFixture = (overrides?: Partial<AiAgent>): AiAgent => ({
   createdAt: now,
   updatedAt: now,
   name: "Agent Alpha",
-  model: "anthropic/claude-sonnet-4.6",
+  model: "claude-sonnet-4-6",
   projects: [{ id: PROJECT_ID }],
   ...overrides,
 });

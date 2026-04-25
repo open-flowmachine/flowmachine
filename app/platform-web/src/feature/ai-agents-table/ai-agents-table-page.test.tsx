@@ -26,7 +26,7 @@ const AI_AGENT_1: AiAgent = {
   createdAt: "2026-01-15T10:30:00.000Z",
   updatedAt: "2026-01-15T10:30:00.000Z",
   name: "Alpha Agent",
-  model: "anthropic/claude-opus-4.6",
+  model: "claude-opus-4-7",
   projects: [],
 };
 
@@ -35,7 +35,7 @@ const AI_AGENT_2: AiAgent = {
   createdAt: "2026-02-20T14:00:00.000Z",
   updatedAt: "2026-02-20T14:00:00.000Z",
   name: "Beta Agent",
-  model: "anthropic/claude-sonnet-4.6",
+  model: "claude-sonnet-4-6",
   projects: [{ id: "01961a2b-0000-7000-8000-000000000010" }],
 };
 

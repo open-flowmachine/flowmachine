@@ -5,6 +5,9 @@ const envSchema = z.object({
   APP_ENV: z.string().default("local"),
   APP_VERSION: z.string().default("0.0.0"),
 
+  AI_AGENT_RUN_IDLE_TIMEOUT_DAYS: z.coerce.number().int().positive().default(7),
+  ANTHROPIC_API_KEY: z.string(),
+
   AUTUMN_SECRET_KEY: z.string(),
 
   BETTER_AUTH_SECRET: z.string(),

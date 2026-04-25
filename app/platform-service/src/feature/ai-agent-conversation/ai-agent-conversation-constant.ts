@@ -1,0 +1,12 @@
+const AI_AGENT_CONVERSATION_RUN_FUNCTION_ID = "ai-agent-conversation-run";
+
+const AI_AGENT_RUN_STARTED_EVENT = "ai-agent/run.started";
+const AI_AGENT_RUN_MESSAGE_RECEIVED_EVENT = "ai-agent/run.message-received";
+const AI_AGENT_RUN_STOP_REQUESTED_EVENT = "ai-agent/run.stop-requested";
+
+export {
+  AI_AGENT_CONVERSATION_RUN_FUNCTION_ID,
+  AI_AGENT_RUN_STARTED_EVENT,
+  AI_AGENT_RUN_MESSAGE_RECEIVED_EVENT,
+  AI_AGENT_RUN_STOP_REQUESTED_EVENT,
+};

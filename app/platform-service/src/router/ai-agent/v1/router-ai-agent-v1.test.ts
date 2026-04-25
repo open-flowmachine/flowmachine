@@ -19,6 +19,17 @@ const mockListAiAgents = mock();
 const mockUpdateAiAgent = mock();
 const mockDeleteAiAgent = mock();
 
+const mockCreateAiAgentRun = mock();
+const mockGetAiAgentRun = mock();
+const mockListAiAgentRuns = mock();
+const mockMarkProcessingAiAgentRun = mock();
+const mockUpdateAiAgentRun = mock();
+
+const mockAppendAiAgentRunMessage = mock();
+const mockListAiAgentRunMessages = mock();
+
+const mockInngestSend = mock();
+
 mock.module("@/module/ai-agent/ai-agent-service", () => ({
   makeAiAgentService: () => ({
     create: mockCreateAiAgent,
@@ -27,6 +38,30 @@ mock.module("@/module/ai-agent/ai-agent-service", () => ({
     update: mockUpdateAiAgent,
     delete: mockDeleteAiAgent,
   }),
+}));
+
+mock.module("@/module/ai-agent-run/ai-agent-run-service", () => ({
+  makeAiAgentRunService: () => ({
+    create: mockCreateAiAgentRun,
+    get: mockGetAiAgentRun,
+    list: mockListAiAgentRuns,
+    update: mockUpdateAiAgentRun,
+    markProcessing: mockMarkProcessingAiAgentRun,
+  }),
+}));
+
+mock.module(
+  "@/module/ai-agent-run-message/ai-agent-run-message-service",
+  () => ({
+    makeAiAgentRunMessageService: () => ({
+      append: mockAppendAiAgentRunMessage,
+      list: mockListAiAgentRunMessages,
+    }),
+  }),
+);
+
+mock.module("@/vendor/inngest/inngest-client", () => ({
+  inngestClient: { send: mockInngestSend },
 }));
 
 mock.module("@/router/router-auth-guard", () => ({
@@ -51,7 +86,7 @@ const makeAiAgent = (overrides?: Partial<AiAgent>): AiAgent => ({
   createdAt: now,
   updatedAt: now,
   name: "My Agent",
-  model: "anthropic/claude-sonnet-4.6",
+  model: "claude-sonnet-4-6",
   projects: [],
   ...overrides,
 });
@@ -62,6 +97,15 @@ const resetMocks = () => {
   mockListAiAgents.mockClear();
   mockUpdateAiAgent.mockClear();
   mockDeleteAiAgent.mockClear();
+  mockCreateAiAgentRun.mockClear();
+  mockGetAiAgentRun.mockClear();
+  mockListAiAgentRuns.mockClear();
+  mockMarkProcessingAiAgentRun.mockClear();
+  mockUpdateAiAgentRun.mockClear();
+  mockAppendAiAgentRunMessage.mockClear();
+  mockListAiAgentRunMessages.mockClear();
+  mockInngestSend.mockReset();
+  mockInngestSend.mockResolvedValue(undefined);
 };
 
 const app = aiAgentV1Router;
@@ -89,7 +133,7 @@ test("POST /api/v1/ai-agent: given a valid payload, when created successfully, t
   // when
   const response = await request("POST", "/api/v1/ai-agent", {
     name: "New Agent",
-    model: "anthropic/claude-sonnet-4.6",
+    model: "claude-sonnet-4-6",
     projects: [],
   });
   const json = await response.json();
@@ -102,7 +146,7 @@ test("POST /api/v1/ai-agent: given a valid payload, when created successfully, t
     ctx: { tenant: TENANT },
     payload: {
       name: "New Agent",
-      model: "anthropic/claude-sonnet-4.6",
+      model: "claude-sonnet-4-6",
       projects: [],
     },
   });
@@ -115,7 +159,7 @@ test("POST /api/v1/ai-agent: given a service failure, when called, then returns 
   // when
   const response = await request("POST", "/api/v1/ai-agent", {
     name: "New Agent",
-    model: "anthropic/claude-sonnet-4.6",
+    model: "claude-sonnet-4-6",
     projects: [],
   });
   const json = await response.json();
@@ -259,4 +303,315 @@ test("DELETE /api/v1/ai-agent/:id: given a service failure, when deleted, then r
   // then
   expect(json.status).toBe(500);
   expect(json.code).toBe("unknown");
+});
+
+// --- Run/message/stop/retry tests ---
+
+const RUN_ID = "019606a0-0000-7000-8000-000000000222" as Id;
+const MESSAGE_ID = "019606a0-0000-7000-8000-000000000333" as Id;
+
+const makeRun = (status: "idle" | "processing" | "errored" | "stopped" | "provisioning" = "idle") => ({
+  id: RUN_ID,
+  _version: 1,
+  createdAt: now,
+  updatedAt: now,
+  aiAgentId: TEST_ID,
+  status,
+  sessionId: null,
+  sandbox: null,
+  startedAt: now,
+  lastMessageAt: null,
+  endedAt: null,
+  endedReason: null,
+});
+
+test("POST /api/v1/ai-agent/:aiAgentId/run: given the agent exists and no active run, when created, then returns 202 with runId and emits started event", async () => {
+  // given
+  mockGetAiAgent.mockResolvedValue(ok({ data: makeAiAgent() }));
+  mockCreateAiAgentRun.mockResolvedValue(ok({ id: RUN_ID }));
+
+  // when
+  const response = await request("POST", `/api/v1/ai-agent/${TEST_ID}/run`, {});
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(202);
+  expect(json.data).toEqual({ runId: RUN_ID });
+  expect(mockInngestSend).toHaveBeenCalledWith(
+    expect.objectContaining({
+      name: "ai-agent/run.started",
+      data: expect.objectContaining({
+        aiAgentId: TEST_ID,
+        aiAgentRunId: RUN_ID,
+      }),
+    }),
+  );
+});
+
+test("POST /api/v1/ai-agent/:aiAgentId/run: given a non-terminal run already exists, when created, then returns 409 conflict and does not emit", async () => {
+  // given
+  mockGetAiAgent.mockResolvedValue(ok({ data: makeAiAgent() }));
+  mockCreateAiAgentRun.mockResolvedValue(
+    err(Err.code("conflict", { message: "active run exists" })),
+  );
+
+  // when
+  const response = await request("POST", `/api/v1/ai-agent/${TEST_ID}/run`, {});
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(409);
+  expect(json.code).toBe("conflict");
+  expect(mockInngestSend).not.toHaveBeenCalled();
+});
+
+test("POST /api/v1/ai-agent/:aiAgentId/run/:runId/message: given an idle run, when message sent, then persists message and emits event", async () => {
+  // given
+  mockGetAiAgentRun.mockResolvedValue(ok({ data: makeRun("idle") }));
+  mockAppendAiAgentRunMessage.mockResolvedValue(
+    ok({
+      data: {
+        id: MESSAGE_ID,
+        _version: 1,
+        createdAt: now,
+        updatedAt: now,
+        aiAgentRunId: RUN_ID,
+        role: "user",
+        content: "hello",
+        toolName: null,
+        toolInput: null,
+        toolResult: null,
+      },
+    }),
+  );
+  mockMarkProcessingAiAgentRun.mockResolvedValue(
+    ok({ data: makeRun("processing") }),
+  );
+
+  // when
+  const response = await request(
+    "POST",
+    `/api/v1/ai-agent/${TEST_ID}/run/${RUN_ID}/message`,
+    { content: "hello" },
+  );
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(202);
+  expect(json.data).toEqual({ messageId: MESSAGE_ID });
+  expect(mockInngestSend).toHaveBeenCalledWith(
+    expect.objectContaining({
+      name: "ai-agent/run.message-received",
+      data: expect.objectContaining({
+        aiAgentRunId: RUN_ID,
+        aiAgentMessageId: MESSAGE_ID,
+        content: "hello",
+      }),
+    }),
+  );
+});
+
+test("POST /api/v1/ai-agent/:aiAgentId/run/:runId/message: given the run is processing, when message sent, then returns 409 and does not emit", async () => {
+  // given
+  mockGetAiAgentRun.mockResolvedValue(ok({ data: makeRun("processing") }));
+  mockAppendAiAgentRunMessage.mockResolvedValue(
+    ok({
+      data: {
+        id: MESSAGE_ID,
+        _version: 1,
+        createdAt: now,
+        updatedAt: now,
+        aiAgentRunId: RUN_ID,
+        role: "user",
+        content: "hello",
+        toolName: null,
+        toolInput: null,
+        toolResult: null,
+      },
+    }),
+  );
+  mockMarkProcessingAiAgentRun.mockResolvedValue(
+    err(Err.code("conflict", { message: "already processing" })),
+  );
+
+  // when
+  const response = await request(
+    "POST",
+    `/api/v1/ai-agent/${TEST_ID}/run/${RUN_ID}/message`,
+    { content: "hello" },
+  );
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(409);
+  expect(json.code).toBe("conflict");
+  expect(mockInngestSend).not.toHaveBeenCalled();
+});
+
+test("POST /api/v1/ai-agent/:aiAgentId/run/:runId/message: given the run does not belong to the agent, when message sent, then returns 404", async () => {
+  // given
+  const OTHER_AGENT_ID = "019606a0-0000-7000-8000-000000000444" as Id;
+  mockGetAiAgentRun.mockResolvedValue(
+    ok({ data: { ...makeRun("idle"), aiAgentId: OTHER_AGENT_ID } }),
+  );
+
+  // when
+  const response = await request(
+    "POST",
+    `/api/v1/ai-agent/${TEST_ID}/run/${RUN_ID}/message`,
+    { content: "hello" },
+  );
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(404);
+  expect(mockAppendAiAgentRunMessage).not.toHaveBeenCalled();
+  expect(mockInngestSend).not.toHaveBeenCalled();
+});
+
+test("POST /api/v1/ai-agent/:aiAgentId/run/:runId/stop: given a non-terminal run, when stop requested, then returns 202 and emits stop event", async () => {
+  // given
+  mockGetAiAgentRun.mockResolvedValue(ok({ data: makeRun("idle") }));
+
+  // when
+  const response = await request(
+    "POST",
+    `/api/v1/ai-agent/${TEST_ID}/run/${RUN_ID}/stop`,
+  );
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(202);
+  expect(mockInngestSend).toHaveBeenCalledWith(
+    expect.objectContaining({
+      name: "ai-agent/run.stop-requested",
+      data: expect.objectContaining({ aiAgentRunId: RUN_ID }),
+    }),
+  );
+});
+
+test("POST /api/v1/ai-agent/:aiAgentId/run/:runId/stop: given a terminal run, when stop requested, then returns 409", async () => {
+  // given
+  mockGetAiAgentRun.mockResolvedValue(ok({ data: makeRun("stopped") }));
+
+  // when
+  const response = await request(
+    "POST",
+    `/api/v1/ai-agent/${TEST_ID}/run/${RUN_ID}/stop`,
+  );
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(409);
+  expect(mockInngestSend).not.toHaveBeenCalled();
+});
+
+test("POST /api/v1/ai-agent/:aiAgentId/run/:runId/retry: given an errored run with prior user message, when retried, then re-emits message-received", async () => {
+  // given
+  mockGetAiAgentRun.mockResolvedValue(ok({ data: makeRun("errored") }));
+  const earlier = new Date("2026-01-02T00:00:00Z");
+  const later = new Date("2026-01-03T00:00:00Z");
+  mockListAiAgentRunMessages.mockResolvedValue(
+    ok({
+      data: [
+        {
+          id: "019606a0-0000-7000-8000-000000000401" as Id,
+          _version: 1,
+          createdAt: earlier,
+          updatedAt: earlier,
+          aiAgentRunId: RUN_ID,
+          role: "user",
+          content: "first",
+          toolName: null,
+          toolInput: null,
+          toolResult: null,
+        },
+        {
+          id: "019606a0-0000-7000-8000-000000000402" as Id,
+          _version: 1,
+          createdAt: later,
+          updatedAt: later,
+          aiAgentRunId: RUN_ID,
+          role: "user",
+          content: "latest",
+          toolName: null,
+          toolInput: null,
+          toolResult: null,
+        },
+      ],
+    }),
+  );
+
+  // when
+  const response = await request(
+    "POST",
+    `/api/v1/ai-agent/${TEST_ID}/run/${RUN_ID}/retry`,
+  );
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(202);
+  expect(mockInngestSend).toHaveBeenCalledWith(
+    expect.objectContaining({
+      name: "ai-agent/run.message-received",
+      data: expect.objectContaining({ content: "latest" }),
+    }),
+  );
+});
+
+test("POST /api/v1/ai-agent/:aiAgentId/run/:runId/retry: given a non-errored run, when retried, then returns 409", async () => {
+  // given
+  mockGetAiAgentRun.mockResolvedValue(ok({ data: makeRun("idle") }));
+
+  // when
+  const response = await request(
+    "POST",
+    `/api/v1/ai-agent/${TEST_ID}/run/${RUN_ID}/retry`,
+  );
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(409);
+  expect(mockInngestSend).not.toHaveBeenCalled();
+});
+
+test("GET /api/v1/ai-agent/:aiAgentId/run/:runId/message: given an existing run, when fetched, then returns mapped messages", async () => {
+  // given
+  mockGetAiAgentRun.mockResolvedValue(ok({ data: makeRun("idle") }));
+  mockListAiAgentRunMessages.mockResolvedValue(
+    ok({
+      data: [
+        {
+          id: MESSAGE_ID,
+          _version: 1,
+          createdAt: now,
+          updatedAt: now,
+          aiAgentRunId: RUN_ID,
+          role: "user",
+          content: "hi",
+          toolName: null,
+          toolInput: null,
+          toolResult: null,
+        },
+      ],
+    }),
+  );
+
+  // when
+  const response = await request(
+    "GET",
+    `/api/v1/ai-agent/${TEST_ID}/run/${RUN_ID}/message`,
+  );
+  const json = await response.json();
+
+  // then
+  expect(json.status).toBe(200);
+  expect(json.data).toHaveLength(1);
+  expect(json.data[0]).toEqual(
+    expect.objectContaining({
+      id: MESSAGE_ID,
+      role: "user",
+      content: "hi",
+    }),
+  );
 });

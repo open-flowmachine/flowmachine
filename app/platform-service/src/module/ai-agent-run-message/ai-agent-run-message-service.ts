@@ -1,0 +1,43 @@
+import { err, ok } from "neverthrow";
+
+import type { AiAgentRunMessage } from "@/module/ai-agent-run-message/ai-agent-run-message-model";
+import type { Id } from "@/shared/model/model-id";
+import type { Tenant } from "@/shared/model/model-tenant";
+
+import { aiAgentRunMessageRepository } from "@/module/ai-agent-run-message/ai-agent-run-message-repository";
+import { newModel } from "@/shared/model/model";
+
+const appendAiAgentRunMessage = async (input: {
+  ctx: { tenant: Tenant };
+  payload: Omit<AiAgentRunMessage, "id" | "_version" | "createdAt" | "updatedAt">;
+}) => {
+  const { ctx, payload } = input;
+
+  const model = newModel(payload);
+  const insertResult = await aiAgentRunMessageRepository.insert({
+    ctx,
+    data: model,
+  });
+  if (insertResult.isErr()) {
+    return err(insertResult.error);
+  }
+  return ok({ data: model });
+};
+
+const listAiAgentRunMessages = async (input: {
+  ctx: { tenant: Tenant };
+  filter: { aiAgentRunId: Id };
+}) => {
+  const { ctx, filter } = input;
+  return aiAgentRunMessageRepository.findMany({
+    ctx,
+    filter: { aiAgentRunId: filter.aiAgentRunId },
+  });
+};
+
+const makeAiAgentRunMessageService = () => ({
+  append: appendAiAgentRunMessage,
+  list: listAiAgentRunMessages,
+});
+
+export { makeAiAgentRunMessageService };
