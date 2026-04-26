@@ -1,11 +1,14 @@
-import { beforeEach, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { AiAgentRun } from "@/module/ai-agent-run/ai-agent-run-model";
 import type { Tenant } from "@/shared/model/model-tenant";
 
+import { aiAgentRunRepository } from "@/module/ai-agent-run/ai-agent-run-repository";
+import { makeAiAgentRunService } from "@/module/ai-agent-run/ai-agent-run-service";
 import { Err } from "@/shared/err/err";
-import { type Id, idSchema } from "@/shared/model/model-id";
+import * as modelIdModule from "@/shared/model/model-id";
+import { type Id } from "@/shared/model/model-id";
 
 // --- Mock setup ---
 
@@ -18,26 +21,15 @@ const tenant: Tenant = { id: TEST_ID, type: "organization" };
 const ctx = { tenant };
 
 const mockRepository = {
-  findMany: mock(),
-  findById: mock(),
-  insert: mock(),
-  update: mock(),
-  deleteById: mock(),
+  findMany: spyOn(aiAgentRunRepository, "findMany"),
+  findById: spyOn(aiAgentRunRepository, "findById"),
+  insert: spyOn(aiAgentRunRepository, "insert"),
+  update: spyOn(aiAgentRunRepository, "update"),
+  deleteById: spyOn(aiAgentRunRepository, "deleteById"),
 };
 
-mock.module(
-  "@/module/ai-agent-run/ai-agent-run-repository",
-  () => ({
-    aiAgentRunRepository: mockRepository,
-  }),
-);
+const newIdSpy = spyOn(modelIdModule, "newId");
 
-mock.module("@/shared/model/model-id", () => ({
-  idSchema,
-  newId: () => NEW_ID,
-}));
-
-const { makeAiAgentRunService } = await import("./ai-agent-run-service");
 const aiAgentRunService = makeAiAgentRunService();
 
 // --- Helpers ---
@@ -61,16 +53,27 @@ const makeRun = (overrides?: Partial<AiAgentRun>): AiAgentRun => ({
 });
 
 const resetMocks = () => {
-  mockRepository.findMany.mockClear();
-  mockRepository.findById.mockClear();
-  mockRepository.insert.mockClear();
-  mockRepository.update.mockClear();
-  mockRepository.deleteById.mockClear();
+  mockRepository.findMany.mockReset();
+  mockRepository.findById.mockReset();
+  mockRepository.insert.mockReset();
+  mockRepository.update.mockReset();
+  mockRepository.deleteById.mockReset();
+  newIdSpy.mockReset();
+  newIdSpy.mockReturnValue(NEW_ID);
 };
 
 // --- Tests ---
 
 beforeEach(resetMocks);
+
+afterAll(() => {
+  mockRepository.findMany.mockRestore();
+  mockRepository.findById.mockRestore();
+  mockRepository.insert.mockRestore();
+  mockRepository.update.mockRestore();
+  mockRepository.deleteById.mockRestore();
+  newIdSpy.mockRestore();
+});
 
 test("create: given no existing runs, when called, then inserts a provisioning run and returns id", async () => {
   // given

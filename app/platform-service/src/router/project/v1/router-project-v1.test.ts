@@ -1,12 +1,13 @@
-import { beforeEach, expect, mock, test } from "bun:test";
-import Elysia from "elysia";
+import { afterAll, beforeEach, expect, mock, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { Project } from "@/module/project/project-model";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
 
+import * as projectServiceModule from "@/module/project/project-service";
 import { Err } from "@/shared/err/err";
+import { betterAuthClient } from "@/vendor/better-auth/better-auth-client";
 
 // --- Mock setup ---
 
@@ -19,27 +20,34 @@ const mockListProjects = mock();
 const mockUpdateProject = mock();
 const mockDeleteProject = mock();
 
-mock.module("@/module/project/project-service", () => ({
-  makeProjectService: () => ({
-    create: mockCreateProject,
-    get: mockGetProject,
-    list: mockListProjects,
-    update: mockUpdateProject,
-    delete: mockDeleteProject,
-  }),
-}));
+const mockService = {
+  create: mockCreateProject,
+  get: mockGetProject,
+  list: mockListProjects,
+  update: mockUpdateProject,
+  delete: mockDeleteProject,
+};
 
-mock.module("@/router/router-auth-guard", () => ({
-  routerAuthGuard: new Elysia({ name: "httpAuthGuard" }).resolve(
-    { as: "scoped" },
-    () => ({
-      tenant: TENANT,
-    }),
-  ),
-}));
+const makeServiceSpy = spyOn(
+  projectServiceModule,
+  "makeProjectService",
+).mockReturnValue(
+  mockService as unknown as ReturnType<
+    typeof projectServiceModule.makeProjectService
+  >,
+);
 
-const { projectV1Router } =
-  await import("@/router/project/v1/router-project-v1");
+const getSessionSpy = spyOn(
+  betterAuthClient.api,
+  "getSession",
+).mockResolvedValue({
+  session: { userId: TEST_ID, activeOrganizationId: TENANT.id },
+  user: { id: TEST_ID },
+} as never);
+
+const { projectV1Router } = await import(
+  "@/router/project/v1/router-project-v1"
+);
 
 // --- Helpers ---
 
@@ -56,11 +64,16 @@ const makeProject = (overrides?: Partial<Project>): Project => ({
 });
 
 const resetMocks = () => {
-  mockCreateProject.mockClear();
-  mockGetProject.mockClear();
-  mockListProjects.mockClear();
-  mockUpdateProject.mockClear();
-  mockDeleteProject.mockClear();
+  mockCreateProject.mockReset();
+  mockGetProject.mockReset();
+  mockListProjects.mockReset();
+  mockUpdateProject.mockReset();
+  mockDeleteProject.mockReset();
+  getSessionSpy.mockReset();
+  getSessionSpy.mockResolvedValue({
+    session: { userId: TEST_ID, activeOrganizationId: TENANT.id },
+    user: { id: TEST_ID },
+  } as never);
 };
 
 const app = projectV1Router;
@@ -79,6 +92,11 @@ const request = (method: string, path: string, body?: unknown) => {
 // --- Tests ---
 
 beforeEach(resetMocks);
+
+afterAll(() => {
+  makeServiceSpy.mockRestore();
+  getSessionSpy.mockRestore();
+});
 
 test("POST /api/v1/project: given a valid payload, when created successfully, then returns okEnvelope with id", async () => {
   // given

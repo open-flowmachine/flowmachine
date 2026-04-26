@@ -1,12 +1,13 @@
-import { beforeEach, expect, mock, test } from "bun:test";
-import Elysia from "elysia";
+import { afterAll, beforeEach, expect, mock, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { Credential } from "@/module/credential/credential-model";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
 
+import * as credentialServiceModule from "@/module/credential/credential-service";
 import { Err } from "@/shared/err/err";
+import { betterAuthClient } from "@/vendor/better-auth/better-auth-client";
 
 // --- Mock setup ---
 
@@ -19,27 +20,34 @@ const mockListCredentials = mock();
 const mockUpdateCredential = mock();
 const mockDeleteCredential = mock();
 
-mock.module("@/module/credential/credential-service", () => ({
-  makeCredentialService: () => ({
-    create: mockCreateCredential,
-    get: mockGetCredential,
-    list: mockListCredentials,
-    update: mockUpdateCredential,
-    delete: mockDeleteCredential,
-  }),
-}));
+const mockService = {
+  create: mockCreateCredential,
+  get: mockGetCredential,
+  list: mockListCredentials,
+  update: mockUpdateCredential,
+  delete: mockDeleteCredential,
+};
 
-mock.module("@/router/router-auth-guard", () => ({
-  routerAuthGuard: new Elysia({ name: "httpAuthGuard" }).resolve(
-    { as: "scoped" },
-    () => ({
-      tenant: TENANT,
-    }),
-  ),
-}));
+const makeServiceSpy = spyOn(
+  credentialServiceModule,
+  "makeCredentialService",
+).mockReturnValue(
+  mockService as unknown as ReturnType<
+    typeof credentialServiceModule.makeCredentialService
+  >,
+);
 
-const { credentialV1Router } =
-  await import("@/router/credential/v1/router-credential-v1");
+const getSessionSpy = spyOn(
+  betterAuthClient.api,
+  "getSession",
+).mockResolvedValue({
+  session: { userId: TEST_ID, activeOrganizationId: TENANT.id },
+  user: { id: TEST_ID },
+} as never);
+
+const { credentialV1Router } = await import(
+  "@/router/credential/v1/router-credential-v1"
+);
 
 // --- Helpers ---
 
@@ -79,11 +87,16 @@ const makeBasicCredential = (
 });
 
 const resetMocks = () => {
-  mockCreateCredential.mockClear();
-  mockGetCredential.mockClear();
-  mockListCredentials.mockClear();
-  mockUpdateCredential.mockClear();
-  mockDeleteCredential.mockClear();
+  mockCreateCredential.mockReset();
+  mockGetCredential.mockReset();
+  mockListCredentials.mockReset();
+  mockUpdateCredential.mockReset();
+  mockDeleteCredential.mockReset();
+  getSessionSpy.mockReset();
+  getSessionSpy.mockResolvedValue({
+    session: { userId: TEST_ID, activeOrganizationId: TENANT.id },
+    user: { id: TEST_ID },
+  } as never);
 };
 
 const app = credentialV1Router;
@@ -102,6 +115,11 @@ const request = (method: string, path: string, body?: unknown) => {
 // --- Tests ---
 
 beforeEach(resetMocks);
+
+afterAll(() => {
+  makeServiceSpy.mockRestore();
+  getSessionSpy.mockRestore();
+});
 
 test("POST /api/v1/credential: given a valid apiKey payload, when created successfully, then returns okEnvelope with id", async () => {
   // given

@@ -1,12 +1,17 @@
 import type { Document } from "mongodb";
 
-import { beforeEach, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, mock, spyOn, test } from "bun:test";
 
 import type { Model } from "@/shared/model/model";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
 
 import { Err } from "@/shared/err/err";
+import { mongoClient } from "@/vendor/mongo/mongo-client";
+import {
+  makeMongoRepository,
+  makeTenantAwareMongoRepository,
+} from "@/vendor/mongo/mongo-repository";
 
 // --- Mock setup ---
 
@@ -23,17 +28,10 @@ mockCollection.find.mockReturnValue({
   toArray: mock(() => Promise.resolve([])),
 });
 
-mock.module("@/vendor/mongo/mongo-client", () => ({
-  mongoClient: {
-    db: () => ({
-      collection: () => mockCollection,
-    }),
-  },
-}));
-
-// Import after mocking
-const { makeMongoRepository, makeTenantAwareMongoRepository } =
-  await import("./mongo-repository");
+const mockDb = { collection: () => mockCollection };
+const dbSpy = spyOn(mongoClient, "db").mockReturnValue(
+  mockDb as unknown as ReturnType<typeof mongoClient.db>,
+);
 
 // --- Helpers ---
 
@@ -64,14 +62,17 @@ const makeMongoDoc = (overrides?: Partial<TestDoc>) => ({
 
 const resetMocks = () => {
   mockCollection.createIndexes.mockClear();
-  mockCollection.find.mockClear();
+  mockCollection.find.mockReset();
   mockCollection.find.mockReturnValue({
     toArray: mock(() => Promise.resolve([])),
   });
-  mockCollection.findOne.mockClear();
-  mockCollection.insertOne.mockClear();
-  mockCollection.findOneAndUpdate.mockClear();
-  mockCollection.deleteOne.mockClear();
+  mockCollection.findOne.mockReset();
+  mockCollection.insertOne.mockReset();
+  mockCollection.insertOne.mockResolvedValue(undefined);
+  mockCollection.findOneAndUpdate.mockReset();
+  mockCollection.deleteOne.mockReset();
+  mockCollection.deleteOne.mockResolvedValue(undefined);
+  dbSpy.mockClear();
 };
 
 // --- makeMongoRepository ---
@@ -82,6 +83,10 @@ const repo = makeMongoRepository<Model<TestDoc>>({
 });
 
 beforeEach(resetMocks);
+
+afterAll(() => {
+  dbSpy.mockRestore();
+});
 
 test("makeMongoRepository findMany: given documents in the collection, when called, then returns all documents mapped to models with id instead of _id", async () => {
   // given

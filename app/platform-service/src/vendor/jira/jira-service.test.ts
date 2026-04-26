@@ -1,7 +1,9 @@
-import { beforeEach, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, mock, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import { Err } from "@/shared/err/err";
+import * as jiraClientModule from "@/vendor/jira/jira-client";
+import { makeJiraService } from "@/vendor/jira/jira-service";
 
 // --- Mock setup ---
 
@@ -9,20 +11,22 @@ const mockCreateCustomField = mock();
 const mockCreateCustomFieldContextOptions = mock();
 const mockCreateCustomFieldAssociations = mock();
 const mockGetCustomFieldContexts = mock();
+const mockGetProject = mock();
 const mockDeleteField = mock();
 
-mock.module("@/vendor/jira/jira-client", () => ({
-  makeJiraClient: () => ({
-    createCustomField: mockCreateCustomField,
-    createCustomFieldContextOptions: mockCreateCustomFieldContextOptions,
-    createCustomFieldAssociations: mockCreateCustomFieldAssociations,
-    getCustomFieldContexts: mockGetCustomFieldContexts,
-    deleteField: mockDeleteField,
-  }),
-}));
+const mockJiraClient = {
+  createCustomField: mockCreateCustomField,
+  createCustomFieldContextOptions: mockCreateCustomFieldContextOptions,
+  createCustomFieldAssociations: mockCreateCustomFieldAssociations,
+  getCustomFieldContexts: mockGetCustomFieldContexts,
+  getProject: mockGetProject,
+  deleteField: mockDeleteField,
+};
 
-// Import after mocking
-const { makeJiraService } = await import("./jira-service");
+const makeJiraClientSpy = spyOn(
+  jiraClientModule,
+  "makeJiraClient",
+).mockReturnValue(mockJiraClient);
 
 // --- Helpers ---
 
@@ -47,11 +51,14 @@ const fieldDefinitionWithIntegration = {
 };
 
 const resetMocks = () => {
-  mockCreateCustomField.mockClear();
-  mockCreateCustomFieldContextOptions.mockClear();
-  mockCreateCustomFieldAssociations.mockClear();
-  mockGetCustomFieldContexts.mockClear();
-  mockDeleteField.mockClear();
+  mockCreateCustomField.mockReset();
+  mockCreateCustomFieldContextOptions.mockReset();
+  mockCreateCustomFieldAssociations.mockReset();
+  mockGetCustomFieldContexts.mockReset();
+  mockGetProject.mockReset();
+  mockDeleteField.mockReset();
+  makeJiraClientSpy.mockClear();
+  makeJiraClientSpy.mockReturnValue(mockJiraClient);
 };
 
 // --- Tests ---
@@ -59,6 +66,10 @@ const resetMocks = () => {
 const service = makeJiraService();
 
 beforeEach(resetMocks);
+
+afterAll(() => {
+  makeJiraClientSpy.mockRestore();
+});
 
 test("createCustomIssueField: given a project with no integration, when called, then returns badRequest err", async () => {
   // given

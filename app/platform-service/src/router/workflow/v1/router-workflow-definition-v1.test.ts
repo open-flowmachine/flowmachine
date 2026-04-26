@@ -1,12 +1,13 @@
-import { beforeEach, expect, mock, test } from "bun:test";
-import Elysia from "elysia";
+import { afterAll, beforeEach, expect, mock, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-model";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
 
+import * as workflowDefinitionServiceModule from "@/module/workflow/workflow-definition-service";
 import { Err } from "@/shared/err/err";
+import { betterAuthClient } from "@/vendor/better-auth/better-auth-client";
 
 // --- Mock setup ---
 
@@ -19,27 +20,34 @@ const mockListWorkflowDefinitions = mock();
 const mockUpdateWorkflowDefinition = mock();
 const mockDeleteWorkflowDefinition = mock();
 
-mock.module("@/module/workflow/workflow-definition-service", () => ({
-  makeWorkflowDefinitionService: () => ({
-    create: mockCreateWorkflowDefinition,
-    get: mockGetWorkflowDefinition,
-    list: mockListWorkflowDefinitions,
-    update: mockUpdateWorkflowDefinition,
-    delete: mockDeleteWorkflowDefinition,
-  }),
-}));
+const mockService = {
+  create: mockCreateWorkflowDefinition,
+  get: mockGetWorkflowDefinition,
+  list: mockListWorkflowDefinitions,
+  update: mockUpdateWorkflowDefinition,
+  delete: mockDeleteWorkflowDefinition,
+};
 
-mock.module("@/router/router-auth-guard", () => ({
-  routerAuthGuard: new Elysia({ name: "httpAuthGuard" }).resolve(
-    { as: "scoped" },
-    () => ({
-      tenant: TENANT,
-    }),
-  ),
-}));
+const makeServiceSpy = spyOn(
+  workflowDefinitionServiceModule,
+  "makeWorkflowDefinitionService",
+).mockReturnValue(
+  mockService as unknown as ReturnType<
+    typeof workflowDefinitionServiceModule.makeWorkflowDefinitionService
+  >,
+);
 
-const { workflowDefinitionV1Router } =
-  await import("@/router/workflow/v1/router-workflow-definition-v1");
+const getSessionSpy = spyOn(
+  betterAuthClient.api,
+  "getSession",
+).mockResolvedValue({
+  session: { userId: TEST_ID, activeOrganizationId: TENANT.id },
+  user: { id: TEST_ID },
+} as never);
+
+const { workflowDefinitionV1Router } = await import(
+  "@/router/workflow/v1/router-workflow-definition-v1"
+);
 
 // --- Helpers ---
 
@@ -62,11 +70,16 @@ const makeWorkflowDefinition = (
 });
 
 const resetMocks = () => {
-  mockCreateWorkflowDefinition.mockClear();
-  mockGetWorkflowDefinition.mockClear();
-  mockListWorkflowDefinitions.mockClear();
-  mockUpdateWorkflowDefinition.mockClear();
-  mockDeleteWorkflowDefinition.mockClear();
+  mockCreateWorkflowDefinition.mockReset();
+  mockGetWorkflowDefinition.mockReset();
+  mockListWorkflowDefinitions.mockReset();
+  mockUpdateWorkflowDefinition.mockReset();
+  mockDeleteWorkflowDefinition.mockReset();
+  getSessionSpy.mockReset();
+  getSessionSpy.mockResolvedValue({
+    session: { userId: TEST_ID, activeOrganizationId: TENANT.id },
+    user: { id: TEST_ID },
+  } as never);
 };
 
 const app = workflowDefinitionV1Router;
@@ -85,6 +98,11 @@ const request = (method: string, path: string, body?: unknown) => {
 // --- Tests ---
 
 beforeEach(resetMocks);
+
+afterAll(() => {
+  makeServiceSpy.mockRestore();
+  getSessionSpy.mockRestore();
+});
 
 test("POST /api/v1/workflow-definition: given a valid payload, when created successfully, then returns okEnvelope with id", async () => {
   // given

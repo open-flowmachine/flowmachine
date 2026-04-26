@@ -1,11 +1,14 @@
-import { beforeEach, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { Credential } from "@/module/credential/credential-model";
 import type { Tenant } from "@/shared/model/model-tenant";
 
+import { credentialRepository } from "@/module/credential/credential-repository";
+import { makeCredentialService } from "@/module/credential/credential-service";
 import { Err } from "@/shared/err/err";
-import { type Id, idSchema } from "@/shared/model/model-id";
+import * as modelIdModule from "@/shared/model/model-id";
+import { type Id } from "@/shared/model/model-id";
 
 // --- Mock setup ---
 
@@ -16,23 +19,15 @@ const tenant: Tenant = { id: TEST_ID, type: "organization" };
 const ctx = { tenant };
 
 const mockRepository = {
-  findMany: mock(),
-  findById: mock(),
-  insert: mock(),
-  update: mock(),
-  deleteById: mock(),
+  findMany: spyOn(credentialRepository, "findMany"),
+  findById: spyOn(credentialRepository, "findById"),
+  insert: spyOn(credentialRepository, "insert"),
+  update: spyOn(credentialRepository, "update"),
+  deleteById: spyOn(credentialRepository, "deleteById"),
 };
 
-mock.module("@/module/credential/credential-repository", () => ({
-  credentialRepository: mockRepository,
-}));
+const newIdSpy = spyOn(modelIdModule, "newId");
 
-mock.module("@/shared/model/model-id", () => ({
-  idSchema,
-  newId: () => NEW_ID,
-}));
-
-const { makeCredentialService } = await import("./credential-service");
 const credentialService = makeCredentialService();
 
 // --- Helpers ---
@@ -72,16 +67,27 @@ const makeBasicCredential = (
 });
 
 const resetMocks = () => {
-  mockRepository.findMany.mockClear();
-  mockRepository.findById.mockClear();
-  mockRepository.insert.mockClear();
-  mockRepository.update.mockClear();
-  mockRepository.deleteById.mockClear();
+  mockRepository.findMany.mockReset();
+  mockRepository.findById.mockReset();
+  mockRepository.insert.mockReset();
+  mockRepository.update.mockReset();
+  mockRepository.deleteById.mockReset();
+  newIdSpy.mockReset();
+  newIdSpy.mockReturnValue(NEW_ID);
 };
 
 // --- Tests ---
 
 beforeEach(resetMocks);
+
+afterAll(() => {
+  mockRepository.findMany.mockRestore();
+  mockRepository.findById.mockRestore();
+  mockRepository.insert.mockRestore();
+  mockRepository.update.mockRestore();
+  mockRepository.deleteById.mockRestore();
+  newIdSpy.mockRestore();
+});
 
 test("create: given an apiKey payload, when inserted, then returns the new id", async () => {
   // given

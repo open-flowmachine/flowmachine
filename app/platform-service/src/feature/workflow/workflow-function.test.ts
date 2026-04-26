@@ -1,14 +1,16 @@
 import { InngestTestEngine } from "@inngest/test";
-import { beforeEach, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, mock, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
 
+import * as workflowEngineModule from "@/feature/workflow/workflow-engine";
 import {
   WORKFLOW_EXECUTION_INITIALIZED_EVENT,
   WORKFLOW_EXECUTION_TRIGGERED_EVENT,
 } from "@/feature/workflow/workflow-constant";
+import * as workflowExecutionServiceModule from "@/module/workflow/workflow-execution-service";
 import { Err } from "@/shared/err/err";
 
 // --- Mock setup ---
@@ -20,19 +22,27 @@ const TENANT: Tenant = { id: TENANT_ID, type: "organization" };
 
 const mockCreateWorkflowExecution = mock();
 
-mock.module("@/module/workflow/workflow-execution-service", () => ({
-  makeWorkflowExecutionService: () => ({
-    create: mockCreateWorkflowExecution,
-    get: mock(),
-    list: mock(),
-    update: mock(),
-    delete: mock(),
-  }),
-}));
+const mockWorkflowExecutionService = {
+  create: mockCreateWorkflowExecution,
+  get: mock(),
+  list: mock(),
+  update: mock(),
+  delete: mock(),
+};
 
-mock.module("@/feature/workflow/workflow-engine", () => ({
-  workflowEngine: { run: mock() },
-}));
+const makeServiceSpy = spyOn(
+  workflowExecutionServiceModule,
+  "makeWorkflowExecutionService",
+).mockReturnValue(
+  mockWorkflowExecutionService as unknown as ReturnType<
+    typeof workflowExecutionServiceModule.makeWorkflowExecutionService
+  >,
+);
+
+const workflowEngineRunSpy = spyOn(
+  workflowEngineModule.workflowEngine,
+  "run",
+).mockResolvedValue(undefined as never);
 
 const { workflowFunctions } = await import(
   "@/feature/workflow/workflow-function"
@@ -48,6 +58,7 @@ if (!initializeWorkflowExecution) {
 
 const resetMocks = () => {
   mockCreateWorkflowExecution.mockReset();
+  workflowEngineRunSpy.mockClear();
 };
 
 const makeEngine = () =>
@@ -76,6 +87,11 @@ const spy = (fn: unknown) => fn as unknown as TinySpy;
 // --- Tests ---
 
 beforeEach(resetMocks);
+
+afterAll(() => {
+  makeServiceSpy.mockRestore();
+  workflowEngineRunSpy.mockRestore();
+});
 
 test("initializeWorkflowExecution: given valid event data, when executed, then creates the workflow execution and sends the initialized event with workflowExecutionId", async () => {
   // given
