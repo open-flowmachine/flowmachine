@@ -1,12 +1,12 @@
 import Elysia from "elysia";
 
-import type { AiAgent } from "@/module/ai-agent/ai-agent-model";
-import type { AiAgentRun } from "@/module/ai-agent-run/ai-agent-run-model";
-import type { AiAgentRunMessage } from "@/module/ai-agent-run-message/ai-agent-run-message-model";
 import type {
   AiAgentConversationEvent,
   AiAgentConversationMessageAppendedEvent,
 } from "@/feature/ai-agent-conversation/ai-agent-conversation-event";
+import type { AiAgentRunMessage } from "@/module/ai-agent-run-message/ai-agent-run-message-model";
+import type { AiAgentRun } from "@/module/ai-agent-run/ai-agent-run-model";
+import type { AiAgent } from "@/module/ai-agent/ai-agent-model";
 import type {
   AiAgentResponseDto,
   AiAgentRunMessageResponseDto,
@@ -15,15 +15,14 @@ import type {
 import type { Tenant } from "@/shared/model/model-tenant";
 
 import {
-  AI_AGENT_RUN_MESSAGE_RECEIVED_EVENT,
   AI_AGENT_RUN_STARTED_EVENT,
-  AI_AGENT_RUN_STOP_REQUESTED_EVENT,
+  AI_AGENT_RUN_USER_INPUT_EVENT,
 } from "@/feature/ai-agent-conversation/ai-agent-conversation-constant";
 import { aiAgentConversationEventBus } from "@/feature/ai-agent-conversation/ai-agent-conversation-event";
-import { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
+import { makeAiAgentRunMessageService } from "@/module/ai-agent-run-message/ai-agent-run-message-service";
 import { aiAgentRunTerminalStatuses } from "@/module/ai-agent-run/ai-agent-run-model";
 import { makeAiAgentRunService } from "@/module/ai-agent-run/ai-agent-run-service";
-import { makeAiAgentRunMessageService } from "@/module/ai-agent-run-message/ai-agent-run-message-service";
+import { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
 import {
   aiAgentRunRequestParamsDtoSchema,
   aiAgentRunWithIdRequestParamsDtoSchema,
@@ -98,7 +97,11 @@ const loadScopedRun = async (input: {
     return runResult;
   }
   if (runResult.value.data.aiAgentId !== input.aiAgentId) {
-    return { isErr: () => true, isOk: () => false, error: Err.code("notFound") } as never;
+    return {
+      isErr: () => true,
+      isOk: () => false,
+      error: Err.code("notFound"),
+    } as never;
   }
   return runResult;
 };
@@ -270,10 +273,14 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
           }
 
           await inngestClient.send({
-            name: AI_AGENT_RUN_STOP_REQUESTED_EVENT,
-            data: { tenant, aiAgentRunId: params.runId },
+            name: AI_AGENT_RUN_USER_INPUT_EVENT,
+            data: { type: "stop", tenant, aiAgentRunId: params.runId },
           });
-          return okEnvelope({ status: 202, code: "accepted", message: "accepted" });
+          return okEnvelope({
+            status: 202,
+            code: "accepted",
+            message: "accepted",
+          });
         },
         { params: aiAgentRunWithIdRequestParamsDtoSchema },
       )
@@ -313,8 +320,9 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
           }
 
           await inngestClient.send({
-            name: AI_AGENT_RUN_MESSAGE_RECEIVED_EVENT,
+            name: AI_AGENT_RUN_USER_INPUT_EVENT,
             data: {
+              type: "message",
               tenant,
               aiAgentRunId: params.runId,
               aiAgentMessageId: appendResult.value.data.id,
@@ -394,15 +402,20 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
           }
 
           await inngestClient.send({
-            name: AI_AGENT_RUN_MESSAGE_RECEIVED_EVENT,
+            name: AI_AGENT_RUN_USER_INPUT_EVENT,
             data: {
+              type: "message",
               tenant,
               aiAgentRunId: params.runId,
               aiAgentMessageId: lastUserMessage.id,
               content: lastUserMessage.content,
             },
           });
-          return okEnvelope({ status: 202, code: "accepted", message: "accepted" });
+          return okEnvelope({
+            status: 202,
+            code: "accepted",
+            message: "accepted",
+          });
         },
         { params: aiAgentRunWithIdRequestParamsDtoSchema },
       )
@@ -437,7 +450,8 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
 
               const onEvent = (event: AiAgentConversationEvent) => {
                 if (event.type === "message.appended") {
-                  const payload = event as AiAgentConversationMessageAppendedEvent;
+                  const payload =
+                    event as AiAgentConversationMessageAppendedEvent;
                   safeEnqueue(
                     encoder.encode(
                       encodeSseEvent({
@@ -451,7 +465,11 @@ const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
                   );
                   return;
                 }
-                safeEnqueue(encoder.encode(encodeSseEvent({ event: event.type, data: event })));
+                safeEnqueue(
+                  encoder.encode(
+                    encodeSseEvent({ event: event.type, data: event }),
+                  ),
+                );
               };
 
               const unsubscribe = aiAgentConversationEventBus.subscribe(
