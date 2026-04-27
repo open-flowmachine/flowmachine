@@ -5,9 +5,8 @@ import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
 
 import {
-  AI_AGENT_RUN_MESSAGE_RECEIVED_EVENT,
   AI_AGENT_RUN_STARTED_EVENT,
-  AI_AGENT_RUN_STOP_REQUESTED_EVENT,
+  AI_AGENT_RUN_USER_INPUT_EVENT,
 } from "@/feature/ai-agent-conversation/ai-agent-conversation-constant";
 import * as aiAgentConversationTurnModule from "@/feature/ai-agent-conversation/ai-agent-conversation-turn";
 
@@ -24,31 +23,21 @@ const mockProvisionVolume = spyOn(
   aiAgentConversationTurnModule,
   "provisionVolume",
 );
-const mockDestroyVolume = spyOn(
-  aiAgentConversationTurnModule,
-  "destroyVolume",
-);
+const mockDestroyVolume = spyOn(aiAgentConversationTurnModule, "destroyVolume");
 const mockProvisionSandbox = spyOn(
   aiAgentConversationTurnModule,
   "provisionSandbox",
 );
-const mockTeardownSandbox = spyOn(
-  aiAgentConversationTurnModule,
-  "teardownSandbox",
-);
+const mockStopSandbox = spyOn(aiAgentConversationTurnModule, "stopSandbox");
 const mockRunTurn = spyOn(aiAgentConversationTurnModule, "runTurn");
-const mockMarkRunStatus = spyOn(
-  aiAgentConversationTurnModule,
-  "markRunStatus",
-);
+const mockMarkRunStatus = spyOn(aiAgentConversationTurnModule, "markRunStatus");
 const mockAppendSystemErrorMessage = spyOn(
   aiAgentConversationTurnModule,
   "appendSystemErrorMessage",
 );
 
-const { aiAgentConversationFunctions } = await import(
-  "@/feature/ai-agent-conversation/ai-agent-conversation-function"
-);
+const { aiAgentConversationFunctions } =
+  await import("@/feature/ai-agent-conversation/ai-agent-conversation-function");
 const aiAgentConversationRun = aiAgentConversationFunctions[0];
 if (!aiAgentConversationRun) {
   throw new Error("aiAgentConversationRun missing");
@@ -60,7 +49,7 @@ const resetMocks = () => {
   mockProvisionVolume.mockReset();
   mockDestroyVolume.mockReset();
   mockProvisionSandbox.mockReset();
-  mockTeardownSandbox.mockReset();
+  mockStopSandbox.mockReset();
   mockRunTurn.mockReset();
   mockMarkRunStatus.mockReset();
   mockAppendSystemErrorMessage.mockReset();
@@ -68,7 +57,7 @@ const resetMocks = () => {
   mockProvisionSandbox.mockResolvedValue({ sandboxId: "sbx_1" } as never);
   mockRunTurn.mockResolvedValue({ sessionId: "sess_1" } as never);
   mockMarkRunStatus.mockResolvedValue(undefined as never);
-  mockTeardownSandbox.mockResolvedValue(undefined as never);
+  mockStopSandbox.mockResolvedValue(undefined as never);
   mockDestroyVolume.mockResolvedValue(undefined as never);
   mockAppendSystemErrorMessage.mockResolvedValue(undefined as never);
 };
@@ -95,7 +84,7 @@ afterAll(() => {
   mockProvisionVolume.mockRestore();
   mockDestroyVolume.mockRestore();
   mockProvisionSandbox.mockRestore();
-  mockTeardownSandbox.mockRestore();
+  mockStopSandbox.mockRestore();
   mockRunTurn.mockRestore();
   mockMarkRunStatus.mockRestore();
   mockAppendSystemErrorMessage.mockRestore();
@@ -114,14 +103,10 @@ test("aiAgentConversationRun: given a stop event after provisioning, when execut
         handler: () => ({ volumeId: "vol_1" }),
       },
       {
-        id: "wait-message-1",
-        handler: () => null,
-      },
-      {
-        id: "wait-stop-1",
+        id: "wait-user-input-1",
         handler: () => ({
-          name: AI_AGENT_RUN_STOP_REQUESTED_EVENT,
-          data: { tenant: TENANT, aiAgentRunId: RUN_ID },
+          name: AI_AGENT_RUN_USER_INPUT_EVENT,
+          data: { type: "stop", tenant: TENANT, aiAgentRunId: RUN_ID },
         }),
       },
       {
@@ -162,8 +147,7 @@ test("aiAgentConversationRun: given a timeout (no message, no stop), when execut
     events: [startedEvent()],
     steps: [
       { id: "provision-volume", handler: () => ({ volumeId: "vol_1" }) },
-      { id: "wait-message-1", handler: () => null },
-      { id: "wait-stop-1", handler: () => null },
+      { id: "wait-user-input-1", handler: () => null },
       {
         id: "cleanup-1",
         handler: async () => {
@@ -205,8 +189,101 @@ test("aiAgentConversationRun: given an invalid event payload, when executed, the
 
 test("aiAgentConversationRun: event names are wired to the documented constants", () => {
   expect(AI_AGENT_RUN_STARTED_EVENT).toBe("ai-agent/run.started");
-  expect(AI_AGENT_RUN_MESSAGE_RECEIVED_EVENT).toBe(
-    "ai-agent/run.message-received",
+  expect(AI_AGENT_RUN_USER_INPUT_EVENT).toBe("ai-agent/run.user-input");
+});
+
+test("aiAgentConversationRun: given a message event, when executed, then provisions sandbox, runs the turn, stops the sandbox, and marks the run idle", async () => {
+  // given
+  const MESSAGE_ID = "019606a0-0000-7000-8000-000000000030" as Id;
+  const engine = makeEngine();
+
+  // when
+  const { error } = await engine.execute({
+    events: [startedEvent()],
+    steps: [
+      {
+        id: "provision-volume",
+        handler: async () => {
+          await mockProvisionVolume({ aiAgentRunId: RUN_ID });
+          return { volumeId: "vol_1" };
+        },
+      },
+      {
+        id: "wait-user-input-1",
+        handler: () => ({
+          name: AI_AGENT_RUN_USER_INPUT_EVENT,
+          data: {
+            type: "message",
+            tenant: TENANT,
+            aiAgentRunId: RUN_ID,
+            aiAgentMessageId: MESSAGE_ID,
+            content: "hello",
+          },
+        }),
+      },
+      {
+        id: "provision-sandbox-1",
+        handler: async () => {
+          await mockProvisionSandbox({ volumeId: "vol_1" });
+          return { sandboxId: "sbx_1" };
+        },
+      },
+      {
+        id: "run-turn-1",
+        handler: async () => {
+          await mockRunTurn({
+            ctx: { tenant: TENANT },
+            aiAgentRunId: RUN_ID,
+            aiAgentId: AGENT_ID,
+            userMessageId: MESSAGE_ID,
+            content: "hello",
+            sandboxId: "sbx_1",
+            sessionId: null,
+          });
+          return { sessionId: "sess_1" };
+        },
+      },
+      {
+        id: "teardown-sandbox-1",
+        handler: async () => {
+          await mockStopSandbox({ sandboxId: "sbx_1" });
+          await mockMarkRunStatus({
+            ctx: { tenant: TENANT },
+            aiAgentRunId: RUN_ID,
+            status: "idle",
+          });
+        },
+      },
+      { id: "wait-user-input-2", handler: () => null },
+      {
+        id: "cleanup-2",
+        handler: async () => {
+          await mockDestroyVolume({ aiAgentRunId: RUN_ID });
+          await mockMarkRunStatus({
+            ctx: { tenant: TENANT },
+            aiAgentRunId: RUN_ID,
+            status: "stopped",
+            endedReason: "idle_timeout",
+          });
+        },
+      },
+    ],
+  });
+
+  // then
+  expect(error).toBeUndefined();
+  expect(mockProvisionVolume).toHaveBeenCalledTimes(1);
+  expect(mockProvisionSandbox).toHaveBeenCalledWith({ volumeId: "vol_1" });
+  expect(mockRunTurn).toHaveBeenCalledWith(
+    expect.objectContaining({
+      sandboxId: "sbx_1",
+      userMessageId: MESSAGE_ID,
+      content: "hello",
+    }),
   );
-  expect(AI_AGENT_RUN_STOP_REQUESTED_EVENT).toBe("ai-agent/run.stop-requested");
+  expect(mockStopSandbox).toHaveBeenCalledWith({ sandboxId: "sbx_1" });
+  expect(mockMarkRunStatus).toHaveBeenCalledWith(
+    expect.objectContaining({ status: "idle" }),
+  );
+  expect(mockAppendSystemErrorMessage).not.toHaveBeenCalled();
 });

@@ -2,9 +2,8 @@ import z from "zod";
 
 import {
   AI_AGENT_CONVERSATION_RUN_FUNCTION_ID,
-  AI_AGENT_RUN_MESSAGE_RECEIVED_EVENT,
   AI_AGENT_RUN_STARTED_EVENT,
-  AI_AGENT_RUN_STOP_REQUESTED_EVENT,
+  AI_AGENT_RUN_USER_INPUT_EVENT,
 } from "@/feature/ai-agent-conversation/ai-agent-conversation-constant";
 import {
   appendSystemErrorMessage,
@@ -13,7 +12,7 @@ import {
   provisionSandbox,
   provisionVolume,
   runTurn,
-  teardownSandbox,
+  stopSandbox,
 } from "@/feature/ai-agent-conversation/ai-agent-conversation-turn";
 import { Err } from "@/shared/err/err";
 import { idSchema } from "@/shared/model/model-id";
@@ -31,12 +30,23 @@ const runStartedEventDataSchema = z.object({
   aiAgentRunId: idSchema,
 });
 
-const messageReceivedEventDataSchema = z.object({
-  tenant: tenantSchema,
-  aiAgentRunId: idSchema,
-  aiAgentMessageId: idSchema,
-  content: z.string(),
-});
+const userInputEventDataSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("message"),
+
+    tenant: tenantSchema,
+    aiAgentRunId: idSchema,
+
+    aiAgentMessageId: idSchema,
+    content: z.string(),
+  }),
+  z.object({
+    type: z.literal("stop"),
+
+    tenant: tenantSchema,
+    aiAgentRunId: idSchema,
+  }),
+]);
 
 const aiAgentConversationRun = inngestClient.createFunction(
   { id: AI_AGENT_CONVERSATION_RUN_FUNCTION_ID },
@@ -97,40 +107,37 @@ const aiAgentConversationRun = inngestClient.createFunction(
     while (true) {
       iteration += 1;
 
-      const [messageEvent, stopEvent] = await Promise.all([
-        step.waitForEvent(`wait-message-${iteration}`, {
-          event: AI_AGENT_RUN_MESSAGE_RECEIVED_EVENT,
+      const userInputEvent = await step.waitForEvent(
+        `wait-user-input-${iteration}`,
+        {
+          event: AI_AGENT_RUN_USER_INPUT_EVENT,
           match: "data.aiAgentRunId",
           timeout: `${idleTimeoutDays}d`,
-        }),
-        step.waitForEvent(`wait-stop-${iteration}`, {
-          event: AI_AGENT_RUN_STOP_REQUESTED_EVENT,
-          match: "data.aiAgentRunId",
-          timeout: `${idleTimeoutDays}d`,
-        }),
-      ]);
+        },
+      );
 
-      if (stopEvent) {
-        await terminate("user_stop");
-        return;
-      }
-      if (!messageEvent) {
+      if (!userInputEvent) {
         await terminate("idle_timeout");
         return;
       }
-      const messageValidation = validate(
-        messageReceivedEventDataSchema,
-        messageEvent.data,
+      const userInputEventDataValidation = validate(
+        userInputEventDataSchema,
+        userInputEvent.data,
       );
 
-      if (messageValidation.isErr()) {
+      if (userInputEventDataValidation.isErr()) {
         log.error(
-          { error: messageValidation.error },
-          "invalid message event data",
+          { error: userInputEventDataValidation.error },
+          "invalid user input event data",
         );
         continue;
       }
-      const { aiAgentMessageId, content } = messageValidation.value;
+
+      if (userInputEventDataValidation.value.type === "stop") {
+        await terminate("user_stop");
+        return;
+      }
+      const { aiAgentMessageId, content } = userInputEventDataValidation.value;
 
       const { sandboxId } = await step.run(
         `provision-sandbox-${iteration}`,
@@ -178,7 +185,7 @@ const aiAgentConversationRun = inngestClient.createFunction(
             aiAgentRunId,
             message: err.message,
           });
-          await teardownSandbox({ sandboxId });
+          await stopSandbox({ sandboxId });
           await destroyVolume({ aiAgentRunId });
           await markRunStatus({
             ctx,
@@ -198,7 +205,7 @@ const aiAgentConversationRun = inngestClient.createFunction(
       }
 
       await step.run(`teardown-sandbox-${iteration}`, async () => {
-        await teardownSandbox({ sandboxId });
+        await stopSandbox({ sandboxId });
         await markRunStatus({
           ctx,
           aiAgentRunId,

@@ -43,18 +43,15 @@ const destroyVolume = async (input: { aiAgentRunId: Id }) => {
 const provisionSandbox = async (input: { volumeId: string }) => {
   const sandbox = await daytonaClient.create({
     envVars: { ANTHROPIC_API_KEY: getEnv().ANTHROPIC_API_KEY },
-    volumes: [{ volumeId: input.volumeId, mountPath: "/home/daytona/.claude" }],
+    volumes: [{ volumeId: input.volumeId, mountPath: "/home/daytona/volume" }],
   });
-  await sandbox.process.executeCommand(
-    "curl -fsSL https://claude.ai/install.sh | bash",
-  );
   return { sandboxId: sandbox.id };
 };
 
-const teardownSandbox = async (input: { sandboxId: string }) => {
+const stopSandbox = async (input: { sandboxId: string }) => {
   try {
     const sandbox = await daytonaClient.get(input.sandboxId);
-    await daytonaClient.delete(sandbox);
+    await daytonaClient.stop(sandbox);
   } catch (error) {
     log.warn({ error, sandboxId: input.sandboxId }, "sandbox teardown skipped");
   }
@@ -69,11 +66,11 @@ const buildClaudeCommand = (input: {
 }) => {
   const parts = [
     "claude",
-    "--bare",
-    `--model ${shellEscape(input.model)}`,
-    `-p ${shellEscape(input.content)}`,
+    "--dangerously-skip-permissions",
+    `-p "${shellEscape(input.content)}"`,
+    `--model ${input.model}`,
     "--output-format stream-json",
-    '--allowedTools "*"',
+    "--verbose",
   ];
   if (input.sessionId) {
     parts.splice(2, 0, `--resume ${shellEscape(input.sessionId)}`);
@@ -250,7 +247,7 @@ const runTurn = async (input: {
 
   const response = await sandbox.process.executeCommand(
     command,
-    undefined,
+    "/home/daytona",
     undefined,
     60 * 30,
   );
@@ -355,7 +352,7 @@ export {
   provisionVolume,
   destroyVolume,
   provisionSandbox,
-  teardownSandbox,
+  stopSandbox,
   runTurn,
   appendSystemErrorMessage,
   markRunStatus,

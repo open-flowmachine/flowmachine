@@ -10,11 +10,7 @@ const aiAgentRunStatuses = [
 ] as const;
 type AiAgentRunStatus = (typeof aiAgentRunStatuses)[number];
 
-const aiAgentRunEndedReasons = [
-  "user_stop",
-  "idle_timeout",
-  "error",
-] as const;
+const aiAgentRunEndedReasons = ["user_stop", "idle_timeout", "error"] as const;
 type AiAgentRunEndedReason = (typeof aiAgentRunEndedReasons)[number];
 
 const aiAgentRunSandboxProviders = ["daytona"] as const;

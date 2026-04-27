@@ -5,9 +5,9 @@ import type { AiAgent } from "@/module/ai-agent/ai-agent-model";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
 
-import * as aiAgentServiceModule from "@/module/ai-agent/ai-agent-service";
 import * as aiAgentRunMessageServiceModule from "@/module/ai-agent-run-message/ai-agent-run-message-service";
 import * as aiAgentRunServiceModule from "@/module/ai-agent-run/ai-agent-run-service";
+import * as aiAgentServiceModule from "@/module/ai-agent/ai-agent-service";
 import { Err } from "@/shared/err/err";
 import { betterAuthClient } from "@/vendor/better-auth/better-auth-client";
 import { inngestClient } from "@/vendor/inngest/inngest-client";
@@ -90,9 +90,8 @@ const getSessionSpy = spyOn(
   user: { id: TEST_ID },
 } as never);
 
-const { aiAgentV1Router } = await import(
-  "@/router/ai-agent/v1/router-ai-agent-v1"
-);
+const { aiAgentV1Router } =
+  await import("@/router/ai-agent/v1/router-ai-agent-v1");
 
 // --- Helpers ---
 
@@ -341,7 +340,14 @@ test("DELETE /api/v1/ai-agent/:id: given a service failure, when deleted, then r
 const RUN_ID = "019606a0-0000-7000-8000-000000000222" as Id;
 const MESSAGE_ID = "019606a0-0000-7000-8000-000000000333" as Id;
 
-const makeRun = (status: "idle" | "processing" | "errored" | "stopped" | "provisioning" = "idle") => ({
+const makeRun = (
+  status:
+    | "idle"
+    | "processing"
+    | "errored"
+    | "stopped"
+    | "provisioning" = "idle",
+) => ({
   id: RUN_ID,
   _version: 1,
   createdAt: now,
@@ -432,8 +438,9 @@ test("POST /api/v1/ai-agent/:aiAgentId/run/:runId/message: given an idle run, wh
   expect(json.data).toEqual({ messageId: MESSAGE_ID });
   expect(mockInngestSend).toHaveBeenCalledWith(
     expect.objectContaining({
-      name: "ai-agent/run.message-received",
+      name: "ai-agent/run.user-input",
       data: expect.objectContaining({
+        type: "message",
         aiAgentRunId: RUN_ID,
         aiAgentMessageId: MESSAGE_ID,
         content: "hello",
@@ -515,8 +522,8 @@ test("POST /api/v1/ai-agent/:aiAgentId/run/:runId/stop: given a non-terminal run
   expect(json.status).toBe(202);
   expect(mockInngestSend).toHaveBeenCalledWith(
     expect.objectContaining({
-      name: "ai-agent/run.stop-requested",
-      data: expect.objectContaining({ aiAgentRunId: RUN_ID }),
+      name: "ai-agent/run.user-input",
+      data: expect.objectContaining({ type: "stop", aiAgentRunId: RUN_ID }),
     }),
   );
 });
@@ -584,8 +591,8 @@ test("POST /api/v1/ai-agent/:aiAgentId/run/:runId/retry: given an errored run wi
   expect(json.status).toBe(202);
   expect(mockInngestSend).toHaveBeenCalledWith(
     expect.objectContaining({
-      name: "ai-agent/run.message-received",
-      data: expect.objectContaining({ content: "latest" }),
+      name: "ai-agent/run.user-input",
+      data: expect.objectContaining({ type: "message", content: "latest" }),
     }),
   );
 });
