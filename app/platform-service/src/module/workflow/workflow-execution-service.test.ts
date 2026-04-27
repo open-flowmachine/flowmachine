@@ -1,11 +1,14 @@
-import { beforeEach, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { WorkflowExecution } from "@/module/workflow/workflow-execution-model";
 import type { Tenant } from "@/shared/model/model-tenant";
 
+import { workflowExecutionRepository } from "@/module/workflow/workflow-execution-repository";
+import { makeWorkflowExecutionService } from "@/module/workflow/workflow-execution-service";
 import { Err } from "@/shared/err/err";
-import { type Id, idSchema } from "@/shared/model/model-id";
+import * as modelIdModule from "@/shared/model/model-id";
+import { type Id } from "@/shared/model/model-id";
 
 // --- Mock setup ---
 
@@ -16,24 +19,15 @@ const tenant: Tenant = { id: TEST_ID, type: "organization" };
 const ctx = { tenant };
 
 const mockRepository = {
-  findMany: mock(),
-  findById: mock(),
-  insert: mock(),
-  update: mock(),
-  deleteById: mock(),
+  findMany: spyOn(workflowExecutionRepository, "findMany"),
+  findById: spyOn(workflowExecutionRepository, "findById"),
+  insert: spyOn(workflowExecutionRepository, "insert"),
+  update: spyOn(workflowExecutionRepository, "update"),
+  deleteById: spyOn(workflowExecutionRepository, "deleteById"),
 };
 
-mock.module("@/module/workflow/workflow-execution-repository", () => ({
-  workflowExecutionRepository: mockRepository,
-}));
+const newIdSpy = spyOn(modelIdModule, "newId");
 
-mock.module("@/shared/model/model-id", () => ({
-  idSchema,
-  newId: () => NEW_ID,
-}));
-
-const { makeWorkflowExecutionService } =
-  await import("./workflow-execution-service");
 const workflowExecutionService = makeWorkflowExecutionService();
 
 // --- Helpers ---
@@ -59,16 +53,27 @@ const makeWorkflowExecution = (
 });
 
 const resetMocks = () => {
-  mockRepository.findMany.mockClear();
-  mockRepository.findById.mockClear();
-  mockRepository.insert.mockClear();
-  mockRepository.update.mockClear();
-  mockRepository.deleteById.mockClear();
+  mockRepository.findMany.mockReset();
+  mockRepository.findById.mockReset();
+  mockRepository.insert.mockReset();
+  mockRepository.update.mockReset();
+  mockRepository.deleteById.mockReset();
+  newIdSpy.mockReset();
+  newIdSpy.mockReturnValue(NEW_ID);
 };
 
 // --- Tests ---
 
 beforeEach(resetMocks);
+
+afterAll(() => {
+  mockRepository.findMany.mockRestore();
+  mockRepository.findById.mockRestore();
+  mockRepository.insert.mockRestore();
+  mockRepository.update.mockRestore();
+  mockRepository.deleteById.mockRestore();
+  newIdSpy.mockRestore();
+});
 
 test("create: given valid payload, when inserted, then returns new workflow execution id and calls repository with correct data", async () => {
   // given

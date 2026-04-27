@@ -1,7 +1,6 @@
-import { mock } from "bun:test";
-
 const MOCK_APP_ENV = "test";
 const MOCK_APP_VERSION = "0.0.0-test";
+const MOCK_ANTHROPIC_API_KEY = "test-anthropic-api-key";
 const MOCK_AUTUMN_SECRET_KEY = "test-autumn-secret-key";
 const MOCK_BETTER_AUTH_SECRET = "test-better-auth-secret";
 const MOCK_BETTER_AUTH_URL = "http://localhost:8000";
@@ -12,26 +11,23 @@ const MOCK_MONGO_DB_NAME = "test-db";
 const MOCK_RESEND_API_KEY = "test-resend-api-key";
 const MOCK_RESEND_FROM_ADDRESS = "Flow Machine <test@email.flowmachine.io>";
 
-// oxlint-disable-next-line typescript/no-floating-promises
-mock.module("@/vendor/env/env", () => ({
-  getEnv: () => ({
-    APP_ENV: MOCK_APP_ENV,
-    APP_VERSION: MOCK_APP_VERSION,
-    AUTUMN_SECRET_KEY: MOCK_AUTUMN_SECRET_KEY,
-    BETTER_AUTH_SECRET: MOCK_BETTER_AUTH_SECRET,
-    BETTER_AUTH_URL: MOCK_BETTER_AUTH_URL,
-    BETTER_AUTH_TRUSTED_ORIGINS: MOCK_BETTER_AUTH_TRUSTED_ORIGINS,
-    DAYTONA_API_KEY: MOCK_DAYTONA_API_KEY,
-    MONGO_DB_URL: MOCK_MONGO_DB_URL,
-    MONGO_DB_NAME: MOCK_MONGO_DB_NAME,
-    RESEND_API_KEY: MOCK_RESEND_API_KEY,
-    RESEND_FROM_ADDRESS: MOCK_RESEND_FROM_ADDRESS,
-  }),
-}));
+process.env.APP_ENV = MOCK_APP_ENV;
+process.env.APP_VERSION = MOCK_APP_VERSION;
+process.env.ANTHROPIC_API_KEY = MOCK_ANTHROPIC_API_KEY;
+process.env.AUTUMN_SECRET_KEY = MOCK_AUTUMN_SECRET_KEY;
+process.env.BETTER_AUTH_SECRET = MOCK_BETTER_AUTH_SECRET;
+process.env.BETTER_AUTH_URL = MOCK_BETTER_AUTH_URL;
+process.env.BETTER_AUTH_TRUSTED_ORIGINS = MOCK_BETTER_AUTH_TRUSTED_ORIGINS;
+process.env.DAYTONA_API_KEY = MOCK_DAYTONA_API_KEY;
+process.env.MONGO_DB_URL = MOCK_MONGO_DB_URL;
+process.env.MONGO_DB_NAME = MOCK_MONGO_DB_NAME;
+process.env.RESEND_API_KEY = MOCK_RESEND_API_KEY;
+process.env.RESEND_FROM_ADDRESS = MOCK_RESEND_FROM_ADDRESS;
 
 export {
   MOCK_APP_ENV,
   MOCK_APP_VERSION,
+  MOCK_ANTHROPIC_API_KEY,
   MOCK_AUTUMN_SECRET_KEY,
   MOCK_BETTER_AUTH_SECRET,
   MOCK_BETTER_AUTH_URL,

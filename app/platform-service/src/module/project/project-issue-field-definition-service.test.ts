@@ -1,11 +1,14 @@
-import { beforeEach, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { ProjectIssueFieldDefinition } from "@/module/project/project-issue-field-definition-model";
 import type { Tenant } from "@/shared/model/model-tenant";
 
+import { projectIssueFieldDefinitionRepository } from "@/module/project/project-issue-field-definition-repository";
+import { makeProjectIssueFieldDefinitionService } from "@/module/project/project-issue-field-definition-service";
 import { Err } from "@/shared/err/err";
-import { type Id, idSchema } from "@/shared/model/model-id";
+import * as modelIdModule from "@/shared/model/model-id";
+import { type Id } from "@/shared/model/model-id";
 
 // --- Mock setup ---
 
@@ -17,27 +20,15 @@ const tenant: Tenant = { id: TEST_ID, type: "organization" };
 const ctx = { tenant };
 
 const mockRepository = {
-  findMany: mock(),
-  findById: mock(),
-  insert: mock(),
-  update: mock(),
-  deleteById: mock(),
+  findMany: spyOn(projectIssueFieldDefinitionRepository, "findMany"),
+  findById: spyOn(projectIssueFieldDefinitionRepository, "findById"),
+  insert: spyOn(projectIssueFieldDefinitionRepository, "insert"),
+  update: spyOn(projectIssueFieldDefinitionRepository, "update"),
+  deleteById: spyOn(projectIssueFieldDefinitionRepository, "deleteById"),
 };
 
-mock.module(
-  "@/module/project/project-issue-field-definition-repository",
-  () => ({
-    projectIssueFieldDefinitionRepository: mockRepository,
-  }),
-);
+const newIdSpy = spyOn(modelIdModule, "newId");
 
-mock.module("@/shared/model/model-id", () => ({
-  idSchema,
-  newId: () => NEW_ID,
-}));
-
-const { makeProjectIssueFieldDefinitionService } =
-  await import("./project-issue-field-definition-service");
 const service = makeProjectIssueFieldDefinitionService();
 
 // --- Helpers ---
@@ -60,16 +51,27 @@ const makeFieldDefinition = (
 });
 
 const resetMocks = () => {
-  mockRepository.findMany.mockClear();
-  mockRepository.findById.mockClear();
-  mockRepository.insert.mockClear();
-  mockRepository.update.mockClear();
-  mockRepository.deleteById.mockClear();
+  mockRepository.findMany.mockReset();
+  mockRepository.findById.mockReset();
+  mockRepository.insert.mockReset();
+  mockRepository.update.mockReset();
+  mockRepository.deleteById.mockReset();
+  newIdSpy.mockReset();
+  newIdSpy.mockReturnValue(NEW_ID);
 };
 
 // --- Tests ---
 
 beforeEach(resetMocks);
+
+afterAll(() => {
+  mockRepository.findMany.mockRestore();
+  mockRepository.findById.mockRestore();
+  mockRepository.insert.mockRestore();
+  mockRepository.update.mockRestore();
+  mockRepository.deleteById.mockRestore();
+  newIdSpy.mockRestore();
+});
 
 test("list: given repository returns definitions, when listed, then returns all field definitions for the tenant", async () => {
   // given

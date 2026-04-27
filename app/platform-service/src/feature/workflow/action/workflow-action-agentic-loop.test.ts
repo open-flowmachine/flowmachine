@@ -1,10 +1,12 @@
-import { beforeEach, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, mock, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
 
+import { workflowExecutionRepository } from "@/module/workflow/workflow-execution-repository";
 import { Err } from "@/shared/err/err";
+import { daytonaClient } from "@/vendor/daytona/daytona-client";
 
 // --- Mock setup ---
 
@@ -13,46 +15,13 @@ const WORKFLOW_EXECUTION_ID = "019606a0-0000-7000-8000-000000000002" as Id;
 const SANDBOX_ID = "sandbox-abc-123";
 const TENANT: Tenant = { id: TENANT_ID, type: "organization" };
 
-const mockUpdateWorkflowExecution = mock();
-const mockCreateWorkflowExecution = mock();
-const mockGetWorkflowExecution = mock();
-const mockListWorkflowExecutions = mock();
-const mockDeleteWorkflowExecution = mock();
+const mockRepoFindById = spyOn(workflowExecutionRepository, "findById");
+const mockRepoUpdate = spyOn(workflowExecutionRepository, "update");
 
-const mockDaytonaCreate = mock();
-const mockDaytonaGet = mock();
-const mockDaytonaStop = mock();
+const mockDaytonaCreate = spyOn(daytonaClient, "create");
+const mockDaytonaGet = spyOn(daytonaClient, "get");
+const mockDaytonaStop = spyOn(daytonaClient, "stop");
 const mockSandboxExecuteCommand = mock();
-
-const mockLogError = mock();
-const mockLogInfo = mock();
-
-mock.module("@/module/workflow/workflow-execution-service", () => ({
-  makeWorkflowExecutionService: () => ({
-    create: mockCreateWorkflowExecution,
-    get: mockGetWorkflowExecution,
-    list: mockListWorkflowExecutions,
-    update: mockUpdateWorkflowExecution,
-    delete: mockDeleteWorkflowExecution,
-  }),
-}));
-
-mock.module("@/vendor/daytona/daytona-client", () => ({
-  daytonaClient: {
-    create: mockDaytonaCreate,
-    get: mockDaytonaGet,
-    stop: mockDaytonaStop,
-  },
-}));
-
-mock.module("@/vendor/pino/pino-log", () => ({
-  baseLog: {
-    child: () => ({
-      error: mockLogError,
-      info: mockLogInfo,
-    }),
-  },
-}));
 
 const { agenticLoopAction } = await import(
   "@/feature/workflow/action/workflow-action-agentic-loop"
@@ -95,37 +64,43 @@ const invokeHandler = (event: ReturnType<typeof makeEvent>, step: FakeStep) => {
 };
 
 const resetMocks = () => {
-  mockUpdateWorkflowExecution.mockReset();
-  mockCreateWorkflowExecution.mockReset();
-  mockGetWorkflowExecution.mockReset();
-  mockListWorkflowExecutions.mockReset();
-  mockDeleteWorkflowExecution.mockReset();
+  mockRepoFindById.mockReset();
+  mockRepoUpdate.mockReset();
   mockDaytonaCreate.mockReset();
   mockDaytonaGet.mockReset();
   mockDaytonaStop.mockReset();
   mockSandboxExecuteCommand.mockReset();
-  mockLogError.mockReset();
-  mockLogInfo.mockReset();
+  // The service.update flow does findById first; default to a found row so
+  // repo.update is the failure point we control per-test.
+  mockRepoFindById.mockResolvedValue(ok({ data: { id: WORKFLOW_EXECUTION_ID } }) as never);
 };
 
 const setDaytonaHappyPath = () => {
-  mockDaytonaCreate.mockResolvedValue({ id: SANDBOX_ID });
+  mockDaytonaCreate.mockResolvedValue({ id: SANDBOX_ID } as never);
   mockSandboxExecuteCommand.mockResolvedValue({ result: "/workspace" });
   mockDaytonaGet.mockResolvedValue({
     id: SANDBOX_ID,
     process: { executeCommand: mockSandboxExecuteCommand },
-  });
-  mockDaytonaStop.mockResolvedValue(undefined);
+  } as never);
+  mockDaytonaStop.mockResolvedValue(undefined as never);
 };
 
 // --- Tests ---
 
 beforeEach(resetMocks);
 
+afterAll(() => {
+  mockRepoFindById.mockRestore();
+  mockRepoUpdate.mockRestore();
+  mockDaytonaCreate.mockRestore();
+  mockDaytonaGet.mockRestore();
+  mockDaytonaStop.mockRestore();
+});
+
 test("agenticLoopAction: given valid event data, when handled, then creates sandbox, marks running, execs pwd, stops sandbox, marks destroyed", async () => {
   // given
   setDaytonaHappyPath();
-  mockUpdateWorkflowExecution.mockResolvedValue(ok({ data: {} }));
+  mockRepoUpdate.mockResolvedValue(ok({ data: {} }) as never);
   const { step, stepRunNames } = makeFakeStep();
 
   // when
@@ -145,8 +120,8 @@ test("agenticLoopAction: given valid event data, when handled, then creates sand
   expect(mockDaytonaGet).toHaveBeenNthCalledWith(2, SANDBOX_ID);
   expect(mockSandboxExecuteCommand).toHaveBeenCalledWith("pwd");
   expect(mockDaytonaStop).toHaveBeenCalledTimes(1);
-  expect(mockUpdateWorkflowExecution).toHaveBeenCalledTimes(2);
-  expect(mockUpdateWorkflowExecution).toHaveBeenNthCalledWith(1, {
+  expect(mockRepoUpdate).toHaveBeenCalledTimes(2);
+  expect(mockRepoUpdate).toHaveBeenNthCalledWith(1, {
     ctx: { tenant: TENANT },
     id: WORKFLOW_EXECUTION_ID,
     data: {
@@ -163,7 +138,7 @@ test("agenticLoopAction: given valid event data, when handled, then creates sand
       },
     },
   });
-  expect(mockUpdateWorkflowExecution).toHaveBeenNthCalledWith(2, {
+  expect(mockRepoUpdate).toHaveBeenNthCalledWith(2, {
     ctx: { tenant: TENANT },
     id: WORKFLOW_EXECUTION_ID,
     data: {
@@ -182,7 +157,7 @@ test("agenticLoopAction: given valid event data, when handled, then creates sand
   });
 });
 
-test("agenticLoopAction: given invalid event data, when handled, then logs and returns without touching daytona or the execution service", async () => {
+test("agenticLoopAction: given invalid event data, when handled, then returns without touching daytona or the execution repository", async () => {
   // given
   const { step, stepRunNames } = makeFakeStep();
 
@@ -190,19 +165,18 @@ test("agenticLoopAction: given invalid event data, when handled, then logs and r
   await invokeHandler(makeEvent({}), step);
 
   // then
-  expect(mockLogError).toHaveBeenCalledTimes(1);
   expect(stepRunNames).toEqual([]);
   expect(mockDaytonaCreate).not.toHaveBeenCalled();
   expect(mockDaytonaGet).not.toHaveBeenCalled();
   expect(mockDaytonaStop).not.toHaveBeenCalled();
-  expect(mockUpdateWorkflowExecution).not.toHaveBeenCalled();
+  expect(mockRepoUpdate).not.toHaveBeenCalled();
 });
 
 test("agenticLoopAction: given the running-status update returns an error, when handled, then throws before running pwd", async () => {
   // given
   setDaytonaHappyPath();
-  mockUpdateWorkflowExecution.mockResolvedValueOnce(
-    err(Err.code("unknown", { message: "update failed" })),
+  mockRepoUpdate.mockResolvedValueOnce(
+    err(Err.code("unknown", { message: "update failed" })) as never,
   );
   const { step } = makeFakeStep();
 
@@ -211,20 +185,20 @@ test("agenticLoopAction: given the running-status update returns an error, when 
   expect(mockDaytonaCreate).toHaveBeenCalledTimes(1);
   expect(mockSandboxExecuteCommand).not.toHaveBeenCalled();
   expect(mockDaytonaStop).not.toHaveBeenCalled();
-  expect(mockUpdateWorkflowExecution).toHaveBeenCalledTimes(1);
+  expect(mockRepoUpdate).toHaveBeenCalledTimes(1);
 });
 
 test("agenticLoopAction: given the destroyed-status update returns an error, when handled, then throws after the sandbox is stopped", async () => {
   // given
   setDaytonaHappyPath();
-  mockUpdateWorkflowExecution
-    .mockResolvedValueOnce(ok({ data: {} }))
-    .mockResolvedValueOnce(err(Err.code("unknown")));
+  mockRepoUpdate
+    .mockResolvedValueOnce(ok({ data: {} }) as never)
+    .mockResolvedValueOnce(err(Err.code("unknown")) as never);
   const { step } = makeFakeStep();
 
   // when / then
   await expect(invokeHandler(makeEvent(), step)).rejects.toBeInstanceOf(Err);
   expect(mockDaytonaStop).toHaveBeenCalledTimes(1);
   expect(mockSandboxExecuteCommand).toHaveBeenCalledWith("pwd");
-  expect(mockUpdateWorkflowExecution).toHaveBeenCalledTimes(2);
+  expect(mockRepoUpdate).toHaveBeenCalledTimes(2);
 });

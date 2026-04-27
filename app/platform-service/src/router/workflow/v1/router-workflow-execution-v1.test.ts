@@ -1,30 +1,22 @@
-import { beforeEach, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 
 import type { Id } from "@/shared/model/model-id";
 
 import { WORKFLOW_EXECUTION_TRIGGERED_EVENT } from "@/feature/workflow/workflow-constant";
+import { workflowExecutionV1Router } from "@/router/workflow/v1/router-workflow-execution-v1";
+import { inngestClient } from "@/vendor/inngest/inngest-client";
 
 // --- Mock setup ---
 
 const TENANT_ID = "019606a0-0000-7000-8000-000000000001" as Id;
 const WORKFLOW_DEFINITION_ID = "019606a0-0000-7000-8000-000000000002" as Id;
 
-const mockInngestSend = mock();
-
-mock.module("@/vendor/inngest/inngest-client", () => ({
-  inngestClient: {
-    send: mockInngestSend,
-  },
-}));
-
-const { workflowExecutionV1Router } = await import(
-  "@/router/workflow/v1/router-workflow-execution-v1"
-);
+const mockInngestSend = spyOn(inngestClient, "send");
 
 // --- Helpers ---
 
 const resetMocks = () => {
-  mockInngestSend.mockClear();
+  mockInngestSend.mockReset();
 };
 
 const app = workflowExecutionV1Router;
@@ -44,9 +36,13 @@ const request = (method: string, path: string, body?: unknown) => {
 
 beforeEach(resetMocks);
 
+afterAll(() => {
+  mockInngestSend.mockRestore();
+});
+
 test("POST /api/v1/workflow-execution: given a valid body, when posted, then sends the triggered event and returns okEnvelope", async () => {
   // given
-  mockInngestSend.mockResolvedValue(undefined);
+  mockInngestSend.mockResolvedValue(undefined as never);
 
   // when
   const response = await request("POST", "/api/v1/workflow-execution", {
@@ -70,7 +66,7 @@ test("POST /api/v1/workflow-execution: given a valid body, when posted, then sen
 
 test("POST /api/v1/workflow-execution: given a body missing workflowDefinitionId, when posted, then does not send an event and returns a validation error", async () => {
   // given
-  mockInngestSend.mockResolvedValue(undefined);
+  mockInngestSend.mockResolvedValue(undefined as never);
 
   // when
   const response = await request("POST", "/api/v1/workflow-execution", {
@@ -84,7 +80,7 @@ test("POST /api/v1/workflow-execution: given a body missing workflowDefinitionId
 
 test("POST /api/v1/workflow-execution: given a body with an invalid tenant type, when posted, then does not send an event and returns a validation error", async () => {
   // given
-  mockInngestSend.mockResolvedValue(undefined);
+  mockInngestSend.mockResolvedValue(undefined as never);
 
   // when
   const response = await request("POST", "/api/v1/workflow-execution", {

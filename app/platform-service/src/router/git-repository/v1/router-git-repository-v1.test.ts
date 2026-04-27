@@ -1,12 +1,13 @@
-import { beforeEach, expect, mock, test } from "bun:test";
-import Elysia from "elysia";
+import { afterAll, beforeEach, expect, mock, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { GitRepository } from "@/module/git-repository/git-repository-model";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
 
+import * as gitRepositoryServiceModule from "@/module/git-repository/git-repository-service";
 import { Err } from "@/shared/err/err";
+import { betterAuthClient } from "@/vendor/better-auth/better-auth-client";
 
 // --- Mock setup ---
 
@@ -20,27 +21,31 @@ const mockListGitRepositories = mock();
 const mockUpdateGitRepository = mock();
 const mockDeleteGitRepository = mock();
 
-mock.module("@/module/git-repository/git-repository-service", () => ({
-  makeGitRepositoryService: () => ({
-    create: mockCreateGitRepository,
-    get: mockGetGitRepository,
-    list: mockListGitRepositories,
-    update: mockUpdateGitRepository,
-    delete: mockDeleteGitRepository,
-  }),
-}));
+const mockService = {
+  create: mockCreateGitRepository,
+  get: mockGetGitRepository,
+  list: mockListGitRepositories,
+  update: mockUpdateGitRepository,
+  delete: mockDeleteGitRepository,
+};
 
-mock.module("@/router/router-auth-guard", () => ({
-  routerAuthGuard: new Elysia({ name: "httpAuthGuard" }).resolve(
-    { as: "scoped" },
-    () => ({
-      tenant: TENANT,
-    }),
-  ),
-}));
+const makeServiceSpy = spyOn(
+  gitRepositoryServiceModule,
+  "makeGitRepositoryService",
+).mockReturnValue(
+  mockService as unknown as ReturnType<
+    typeof gitRepositoryServiceModule.makeGitRepositoryService
+  >,
+);
 
-const { gitRepositoryV1Router } =
-  await import("@/router/git-repository/v1/router-git-repository-v1");
+const getSessionSpy = spyOn(betterAuthClient.api, "getSession").mockResolvedValue({
+  session: { userId: TEST_ID, activeOrganizationId: TENANT.id },
+  user: { id: TEST_ID },
+} as never);
+
+const { gitRepositoryV1Router } = await import(
+  "@/router/git-repository/v1/router-git-repository-v1"
+);
 
 // --- Helpers ---
 
@@ -69,11 +74,16 @@ const makeGitRepository = (
 });
 
 const resetMocks = () => {
-  mockCreateGitRepository.mockClear();
-  mockGetGitRepository.mockClear();
-  mockListGitRepositories.mockClear();
-  mockUpdateGitRepository.mockClear();
-  mockDeleteGitRepository.mockClear();
+  mockCreateGitRepository.mockReset();
+  mockGetGitRepository.mockReset();
+  mockListGitRepositories.mockReset();
+  mockUpdateGitRepository.mockReset();
+  mockDeleteGitRepository.mockReset();
+  getSessionSpy.mockReset();
+  getSessionSpy.mockResolvedValue({
+    session: { userId: TEST_ID, activeOrganizationId: TENANT.id },
+    user: { id: TEST_ID },
+  } as never);
 };
 
 const app = gitRepositoryV1Router;
@@ -92,6 +102,11 @@ const request = (method: string, path: string, body?: unknown) => {
 // --- Tests ---
 
 beforeEach(resetMocks);
+
+afterAll(() => {
+  makeServiceSpy.mockRestore();
+  getSessionSpy.mockRestore();
+});
 
 test("POST /api/v1/git-repository: given a valid payload, when created successfully, then returns okEnvelope with id", async () => {
   // given

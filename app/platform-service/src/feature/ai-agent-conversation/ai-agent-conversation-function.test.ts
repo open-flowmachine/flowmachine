@@ -1,5 +1,5 @@
 import { InngestTestEngine } from "@inngest/test";
-import { beforeEach, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
@@ -9,6 +9,7 @@ import {
   AI_AGENT_RUN_STARTED_EVENT,
   AI_AGENT_RUN_STOP_REQUESTED_EVENT,
 } from "@/feature/ai-agent-conversation/ai-agent-conversation-constant";
+import * as aiAgentConversationTurnModule from "@/feature/ai-agent-conversation/ai-agent-conversation-turn";
 
 // --- Mock setup ---
 
@@ -17,29 +18,33 @@ const AGENT_ID = "019606a0-0000-7000-8000-000000000010" as Id;
 const RUN_ID = "019606a0-0000-7000-8000-000000000020" as Id;
 const TENANT: Tenant = { id: TENANT_ID, type: "organization" };
 
-const mockProvisionVolume = mock();
-const mockDestroyVolume = mock();
-const mockProvisionSandbox = mock();
-const mockTeardownSandbox = mock();
-const mockRunTurn = mock();
-const mockMarkRunStatus = mock();
-const mockAppendSystemErrorMessage = mock();
-
-mock.module(
-  "@/feature/ai-agent-conversation/ai-agent-conversation-turn",
-  () => ({
-    provisionVolume: mockProvisionVolume,
-    destroyVolume: mockDestroyVolume,
-    provisionSandbox: mockProvisionSandbox,
-    teardownSandbox: mockTeardownSandbox,
-    runTurn: mockRunTurn,
-    markRunStatus: mockMarkRunStatus,
-    appendSystemErrorMessage: mockAppendSystemErrorMessage,
-  }),
-);
-
-process.env.ANTHROPIC_API_KEY ??= "test-key";
 process.env.AI_AGENT_RUN_IDLE_TIMEOUT_DAYS ??= "7";
+
+const mockProvisionVolume = spyOn(
+  aiAgentConversationTurnModule,
+  "provisionVolume",
+);
+const mockDestroyVolume = spyOn(
+  aiAgentConversationTurnModule,
+  "destroyVolume",
+);
+const mockProvisionSandbox = spyOn(
+  aiAgentConversationTurnModule,
+  "provisionSandbox",
+);
+const mockTeardownSandbox = spyOn(
+  aiAgentConversationTurnModule,
+  "teardownSandbox",
+);
+const mockRunTurn = spyOn(aiAgentConversationTurnModule, "runTurn");
+const mockMarkRunStatus = spyOn(
+  aiAgentConversationTurnModule,
+  "markRunStatus",
+);
+const mockAppendSystemErrorMessage = spyOn(
+  aiAgentConversationTurnModule,
+  "appendSystemErrorMessage",
+);
 
 const { aiAgentConversationFunctions } = await import(
   "@/feature/ai-agent-conversation/ai-agent-conversation-function"
@@ -59,13 +64,13 @@ const resetMocks = () => {
   mockRunTurn.mockReset();
   mockMarkRunStatus.mockReset();
   mockAppendSystemErrorMessage.mockReset();
-  mockProvisionVolume.mockResolvedValue({ volumeId: "vol_1" });
-  mockProvisionSandbox.mockResolvedValue({ sandboxId: "sbx_1" });
-  mockRunTurn.mockResolvedValue({ sessionId: "sess_1" });
-  mockMarkRunStatus.mockResolvedValue(undefined);
-  mockTeardownSandbox.mockResolvedValue(undefined);
-  mockDestroyVolume.mockResolvedValue(undefined);
-  mockAppendSystemErrorMessage.mockResolvedValue(undefined);
+  mockProvisionVolume.mockResolvedValue({ volumeId: "vol_1" } as never);
+  mockProvisionSandbox.mockResolvedValue({ sandboxId: "sbx_1" } as never);
+  mockRunTurn.mockResolvedValue({ sessionId: "sess_1" } as never);
+  mockMarkRunStatus.mockResolvedValue(undefined as never);
+  mockTeardownSandbox.mockResolvedValue(undefined as never);
+  mockDestroyVolume.mockResolvedValue(undefined as never);
+  mockAppendSystemErrorMessage.mockResolvedValue(undefined as never);
 };
 
 const makeEngine = () =>
@@ -85,6 +90,16 @@ const startedEvent = (
 // --- Tests ---
 
 beforeEach(resetMocks);
+
+afterAll(() => {
+  mockProvisionVolume.mockRestore();
+  mockDestroyVolume.mockRestore();
+  mockProvisionSandbox.mockRestore();
+  mockTeardownSandbox.mockRestore();
+  mockRunTurn.mockRestore();
+  mockMarkRunStatus.mockRestore();
+  mockAppendSystemErrorMessage.mockRestore();
+});
 
 test("aiAgentConversationRun: given a stop event after provisioning, when executed, then provisions volume, terminates with user_stop, and never runs a turn", async () => {
   // given

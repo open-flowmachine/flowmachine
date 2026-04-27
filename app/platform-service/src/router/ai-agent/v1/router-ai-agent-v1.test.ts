@@ -1,12 +1,16 @@
-import { beforeEach, expect, mock, test } from "bun:test";
-import Elysia from "elysia";
+import { afterAll, beforeEach, expect, mock, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { AiAgent } from "@/module/ai-agent/ai-agent-model";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
 
+import * as aiAgentServiceModule from "@/module/ai-agent/ai-agent-service";
+import * as aiAgentRunMessageServiceModule from "@/module/ai-agent-run-message/ai-agent-run-message-service";
+import * as aiAgentRunServiceModule from "@/module/ai-agent-run/ai-agent-run-service";
 import { Err } from "@/shared/err/err";
+import { betterAuthClient } from "@/vendor/better-auth/better-auth-client";
+import { inngestClient } from "@/vendor/inngest/inngest-client";
 
 // --- Mock setup ---
 
@@ -28,53 +32,67 @@ const mockUpdateAiAgentRun = mock();
 const mockAppendAiAgentRunMessage = mock();
 const mockListAiAgentRunMessages = mock();
 
-const mockInngestSend = mock();
+const mockAiAgentService = {
+  create: mockCreateAiAgent,
+  get: mockGetAiAgent,
+  list: mockListAiAgents,
+  update: mockUpdateAiAgent,
+  delete: mockDeleteAiAgent,
+};
 
-mock.module("@/module/ai-agent/ai-agent-service", () => ({
-  makeAiAgentService: () => ({
-    create: mockCreateAiAgent,
-    get: mockGetAiAgent,
-    list: mockListAiAgents,
-    update: mockUpdateAiAgent,
-    delete: mockDeleteAiAgent,
-  }),
-}));
+const mockAiAgentRunService = {
+  create: mockCreateAiAgentRun,
+  get: mockGetAiAgentRun,
+  list: mockListAiAgentRuns,
+  update: mockUpdateAiAgentRun,
+  markProcessing: mockMarkProcessingAiAgentRun,
+};
 
-mock.module("@/module/ai-agent-run/ai-agent-run-service", () => ({
-  makeAiAgentRunService: () => ({
-    create: mockCreateAiAgentRun,
-    get: mockGetAiAgentRun,
-    list: mockListAiAgentRuns,
-    update: mockUpdateAiAgentRun,
-    markProcessing: mockMarkProcessingAiAgentRun,
-  }),
-}));
+const mockAiAgentRunMessageService = {
+  append: mockAppendAiAgentRunMessage,
+  list: mockListAiAgentRunMessages,
+};
 
-mock.module(
-  "@/module/ai-agent-run-message/ai-agent-run-message-service",
-  () => ({
-    makeAiAgentRunMessageService: () => ({
-      append: mockAppendAiAgentRunMessage,
-      list: mockListAiAgentRunMessages,
-    }),
-  }),
+const makeAiAgentServiceSpy = spyOn(
+  aiAgentServiceModule,
+  "makeAiAgentService",
+).mockReturnValue(
+  mockAiAgentService as unknown as ReturnType<
+    typeof aiAgentServiceModule.makeAiAgentService
+  >,
 );
 
-mock.module("@/vendor/inngest/inngest-client", () => ({
-  inngestClient: { send: mockInngestSend },
-}));
+const makeAiAgentRunServiceSpy = spyOn(
+  aiAgentRunServiceModule,
+  "makeAiAgentRunService",
+).mockReturnValue(
+  mockAiAgentRunService as unknown as ReturnType<
+    typeof aiAgentRunServiceModule.makeAiAgentRunService
+  >,
+);
 
-mock.module("@/router/router-auth-guard", () => ({
-  routerAuthGuard: new Elysia({ name: "httpAuthGuard" }).resolve(
-    { as: "scoped" },
-    () => ({
-      tenant: TENANT,
-    }),
-  ),
-}));
+const makeAiAgentRunMessageServiceSpy = spyOn(
+  aiAgentRunMessageServiceModule,
+  "makeAiAgentRunMessageService",
+).mockReturnValue(
+  mockAiAgentRunMessageService as unknown as ReturnType<
+    typeof aiAgentRunMessageServiceModule.makeAiAgentRunMessageService
+  >,
+);
 
-const { aiAgentV1Router } =
-  await import("@/router/ai-agent/v1/router-ai-agent-v1");
+const mockInngestSend = spyOn(inngestClient, "send");
+
+const getSessionSpy = spyOn(
+  betterAuthClient.api,
+  "getSession",
+).mockResolvedValue({
+  session: { userId: TEST_ID, activeOrganizationId: TENANT.id },
+  user: { id: TEST_ID },
+} as never);
+
+const { aiAgentV1Router } = await import(
+  "@/router/ai-agent/v1/router-ai-agent-v1"
+);
 
 // --- Helpers ---
 
@@ -92,20 +110,25 @@ const makeAiAgent = (overrides?: Partial<AiAgent>): AiAgent => ({
 });
 
 const resetMocks = () => {
-  mockCreateAiAgent.mockClear();
-  mockGetAiAgent.mockClear();
-  mockListAiAgents.mockClear();
-  mockUpdateAiAgent.mockClear();
-  mockDeleteAiAgent.mockClear();
-  mockCreateAiAgentRun.mockClear();
-  mockGetAiAgentRun.mockClear();
-  mockListAiAgentRuns.mockClear();
-  mockMarkProcessingAiAgentRun.mockClear();
-  mockUpdateAiAgentRun.mockClear();
-  mockAppendAiAgentRunMessage.mockClear();
-  mockListAiAgentRunMessages.mockClear();
+  mockCreateAiAgent.mockReset();
+  mockGetAiAgent.mockReset();
+  mockListAiAgents.mockReset();
+  mockUpdateAiAgent.mockReset();
+  mockDeleteAiAgent.mockReset();
+  mockCreateAiAgentRun.mockReset();
+  mockGetAiAgentRun.mockReset();
+  mockListAiAgentRuns.mockReset();
+  mockMarkProcessingAiAgentRun.mockReset();
+  mockUpdateAiAgentRun.mockReset();
+  mockAppendAiAgentRunMessage.mockReset();
+  mockListAiAgentRunMessages.mockReset();
   mockInngestSend.mockReset();
-  mockInngestSend.mockResolvedValue(undefined);
+  mockInngestSend.mockResolvedValue(undefined as never);
+  getSessionSpy.mockReset();
+  getSessionSpy.mockResolvedValue({
+    session: { userId: TEST_ID, activeOrganizationId: TENANT.id },
+    user: { id: TEST_ID },
+  } as never);
 };
 
 const app = aiAgentV1Router;
@@ -124,6 +147,14 @@ const request = (method: string, path: string, body?: unknown) => {
 // --- Tests ---
 
 beforeEach(resetMocks);
+
+afterAll(() => {
+  makeAiAgentServiceSpy.mockRestore();
+  makeAiAgentRunServiceSpy.mockRestore();
+  makeAiAgentRunMessageServiceSpy.mockRestore();
+  mockInngestSend.mockRestore();
+  getSessionSpy.mockRestore();
+});
 
 test("POST /api/v1/ai-agent: given a valid payload, when created successfully, then returns okEnvelope with id", async () => {
   // given

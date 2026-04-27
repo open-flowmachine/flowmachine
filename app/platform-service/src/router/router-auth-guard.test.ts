@@ -1,22 +1,23 @@
-import { expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 import Elysia from "elysia";
 
 import type { Id } from "@/shared/model/model-id";
 
+import { routerAuthGuard } from "@/router/router-auth-guard";
+import { betterAuthClient } from "@/vendor/better-auth/better-auth-client";
+
 const USER_ID = "019606a0-0000-7000-8000-000000000001" as Id;
 const ORG_ID = "019606a0-0000-7000-8000-000000000002" as Id;
 
-const mockGetSession = mock();
+const mockGetSession = spyOn(betterAuthClient.api, "getSession");
 
-mock.module("@/vendor/better-auth/better-auth-client", () => ({
-  betterAuthClient: {
-    api: {
-      getSession: mockGetSession,
-    },
-  },
-}));
+beforeEach(() => {
+  mockGetSession.mockReset();
+});
 
-const { routerAuthGuard } = await import("@/router/router-auth-guard");
+afterAll(() => {
+  mockGetSession.mockRestore();
+});
 
 const makeTestApp = () =>
   new Elysia().use(routerAuthGuard).get("/test", ({ tenant }) => ({ tenant }));
@@ -26,7 +27,7 @@ test("routerAuthGuard: given no activeOrganizationId, when session resolves, the
   mockGetSession.mockResolvedValue({
     session: { userId: USER_ID, activeOrganizationId: null },
     user: { id: USER_ID },
-  });
+  } as never);
 
   // when
   const app = makeTestApp();
@@ -45,7 +46,7 @@ test("routerAuthGuard: given an activeOrganizationId, when session resolves, the
   mockGetSession.mockResolvedValue({
     session: { userId: USER_ID, activeOrganizationId: ORG_ID },
     user: { id: USER_ID },
-  });
+  } as never);
 
   // when
   const app = makeTestApp();

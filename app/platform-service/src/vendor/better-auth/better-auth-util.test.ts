@@ -1,31 +1,27 @@
-import { beforeEach, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 
 import {
   MOCK_BETTER_AUTH_URL,
   MOCK_RESEND_FROM_ADDRESS,
 } from "@/test/env-mock.test";
+import { makeBetterAuthUtil } from "@/vendor/better-auth/better-auth-util";
+import { resendClient } from "@/vendor/resend/resend-client";
 
 // --- Mock setup ---
 
-const mockSend = mock(() => Promise.resolve());
+const mockSend = spyOn(resendClient.emails, "send");
 
-mock.module("@/vendor/resend/resend-client", () => ({
-  resendClient: {
-    emails: {
-      send: mockSend,
-    },
-  },
-}));
-
-// Import after mocking
-const { makeBetterAuthUtil } = await import("./better-auth-util");
 const { sendOtpEmail, sendInvitationEmail } = makeBetterAuthUtil();
 
 // --- Tests ---
 
 beforeEach(() => {
-  mockSend.mockClear();
-  mockSend.mockResolvedValue(undefined);
+  mockSend.mockReset();
+  mockSend.mockResolvedValue(undefined as never);
+});
+
+afterAll(() => {
+  mockSend.mockRestore();
 });
 
 test("sendOtpEmail: given a sign-in type, when called, then sends email with correct subject", async () => {

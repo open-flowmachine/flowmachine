@@ -1,21 +1,13 @@
-import { beforeEach, expect, mock, test } from "bun:test";
+import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 
 import { Err } from "@/shared/err/err";
+import { resendClient } from "@/vendor/resend/resend-client";
+import { makeResendService } from "@/vendor/resend/resend-service";
 
 // --- Mock setup ---
 
-const mockSend = mock(() => Promise.resolve());
+const mockSend = spyOn(resendClient.emails, "send");
 
-mock.module("@/vendor/resend/resend-client", () => ({
-  resendClient: {
-    emails: {
-      send: mockSend,
-    },
-  },
-}));
-
-// Import after mocking
-const { makeResendService } = await import("./resend-service");
 const resendService = makeResendService();
 
 // --- Helpers ---
@@ -33,8 +25,12 @@ const makePayload = (
 // --- Tests ---
 
 beforeEach(() => {
-  mockSend.mockClear();
-  mockSend.mockResolvedValue(undefined);
+  mockSend.mockReset();
+  mockSend.mockResolvedValue(undefined as never);
+});
+
+afterAll(() => {
+  mockSend.mockRestore();
 });
 
 test("sendEmail: given a valid payload, when sent, then calls resend client with correct parameters", async () => {
