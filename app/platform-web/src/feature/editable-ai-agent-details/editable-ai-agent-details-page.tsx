@@ -9,6 +9,7 @@ import type { EditAiAgentFormValues } from "@/feature/editable-ai-agent-details/
 
 import { PlatformPageNotFoundError } from "@/component/platform/platform-page-not-found-error";
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
+import { AiAgentTabs } from "@/feature/ai-agent-tabs/ai-agent-tabs";
 import { EditAiAgentForm } from "@/feature/editable-ai-agent-details/edit-ai-agent-form";
 import { EditableAiAgentDetails } from "@/feature/editable-ai-agent-details/editable-ai-agent-details";
 import { useEditAiAgentForm } from "@/feature/editable-ai-agent-details/use-edit-ai-agent-form";
@@ -93,6 +94,7 @@ export function EditableAiAgentDetailsPage({
       isPending={isPending}
     >
       <div className="max-w-2xl space-y-6">
+        <AiAgentTabs aiAgentId={id} />
         {isEditing ? (
           <EditAiAgentForm
             aiAgent={data}

@@ -4,6 +4,24 @@ const makeListAiAgentsQueryKey = () => ["ai-agent"];
 
 const makeGetAiAgentQueryKey = (id: string) => ["ai-agent", id];
 
+const makeListAiAgentRunsQueryKey = (aiAgentId: string) => [
+  "ai-agent",
+  aiAgentId,
+  "run",
+];
+
+const makeGetAiAgentRunQueryKey = (aiAgentId: string, runId: string) => [
+  "ai-agent",
+  aiAgentId,
+  "run",
+  runId,
+];
+
+const makeListAiAgentRunMessagesQueryKey = (
+  aiAgentId: string,
+  runId: string,
+) => ["ai-agent", aiAgentId, "run", runId, "message"];
+
 const makeListWorkflowDefinitionsQueryKey = () => ["workflow-definition"];
 
 const makeGetWorkflowDefinitionQueryKey = (id: string) => [
@@ -27,6 +45,9 @@ export {
   makeListPromptsQueryKey,
   makeListAiAgentsQueryKey,
   makeGetAiAgentQueryKey,
+  makeListAiAgentRunsQueryKey,
+  makeGetAiAgentRunQueryKey,
+  makeListAiAgentRunMessagesQueryKey,
   makeListWorkflowDefinitionsQueryKey,
   makeGetWorkflowDefinitionQueryKey,
   makeListProjectsQueryKey,
