@@ -1,5 +1,5 @@
 {
-  "extends": "@flowmachine/typescript-config/base.json",
+  "extends": "@flowmachine/typescript-config/app-bun.json",
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist",

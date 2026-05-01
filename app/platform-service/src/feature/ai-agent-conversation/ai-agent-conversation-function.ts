@@ -3,6 +3,7 @@ import z from "zod";
 import {
   AI_AGENT_CONVERSATION_RUN_FUNCTION_ID,
   AI_AGENT_RUN_STARTED_EVENT,
+  AI_AGENT_RUN_TERMINATED_EVENT,
   AI_AGENT_RUN_USER_INPUT_EVENT,
 } from "@/feature/ai-agent-conversation/ai-agent-conversation-constant";
 import {
@@ -14,8 +15,9 @@ import {
   runTurn,
   stopSandbox,
 } from "@/feature/ai-agent-conversation/ai-agent-conversation-turn";
+import { makeAiAgentRunMessageService } from "@/module/ai-agent-run-message/ai-agent-run-message-service";
 import { Err } from "@/shared/err/err";
-import { idSchema } from "@/shared/model/model-id";
+import { type Id, idSchema } from "@/shared/model/model-id";
 import { tenantSchema } from "@/shared/model/model-tenant";
 import { validate } from "@/shared/schema/schema-validation";
 import { getEnv } from "@/vendor/env/env";
@@ -23,11 +25,13 @@ import { inngestClient } from "@/vendor/inngest/inngest-client";
 import { baseLog } from "@/vendor/pino/pino-log";
 
 const log = baseLog.child({ context: "ai-agent-conversation-function" });
+const aiAgentRunMessageService = makeAiAgentRunMessageService();
 
 const runStartedEventDataSchema = z.object({
   tenant: tenantSchema,
   aiAgentId: idSchema,
   aiAgentRunId: idSchema,
+  initialMessage: z.string().min(1).max(200_000).optional(),
 });
 
 const userInputEventDataSchema = z.discriminatedUnion("type", [
@@ -58,7 +62,8 @@ const aiAgentConversationRun = inngestClient.createFunction(
       log.error({ error: validationResult.error }, "invalid event data");
       return;
     }
-    const { tenant, aiAgentId, aiAgentRunId } = validationResult.value;
+    const { tenant, aiAgentId, aiAgentRunId, initialMessage } =
+      validationResult.value;
 
     const ctx = { tenant };
     const idleTimeoutDays = getEnv().AI_AGENT_RUN_IDLE_TIMEOUT_DAYS;
@@ -83,6 +88,16 @@ const aiAgentConversationRun = inngestClient.createFunction(
     let sessionId: string | null = null;
     let iteration = 0;
 
+    const emitTerminated = async (
+      reason: "user_stop" | "idle_timeout" | "error",
+    ) => {
+      const status = reason === "error" ? "errored" : "stopped";
+      await step.sendEvent(`emit-terminated-${iteration}`, {
+        name: AI_AGENT_RUN_TERMINATED_EVENT,
+        data: { tenant, aiAgentRunId, status, endedReason: reason },
+      });
+    };
+
     const terminate = async (
       reason: "user_stop" | "idle_timeout" | "error",
     ) => {
@@ -102,42 +117,72 @@ const aiAgentConversationRun = inngestClient.createFunction(
           },
         });
       });
+      await emitTerminated(reason);
     };
 
     while (true) {
       iteration += 1;
 
-      const userInputEvent = await step.waitForEvent(
-        `wait-user-input-${iteration}`,
-        {
-          event: AI_AGENT_RUN_USER_INPUT_EVENT,
-          match: "data.aiAgentRunId",
-          timeout: `${idleTimeoutDays}d`,
-        },
-      );
+      let aiAgentMessageId: Id;
+      let content: string;
 
-      if (!userInputEvent) {
-        await terminate("idle_timeout");
-        return;
-      }
-      const userInputEventDataValidation = validate(
-        userInputEventDataSchema,
-        userInputEvent.data,
-      );
-
-      if (userInputEventDataValidation.isErr()) {
-        log.error(
-          { error: userInputEventDataValidation.error },
-          "invalid user input event data",
+      if (iteration === 1 && initialMessage) {
+        const seeded = await step.run("seed-initial-message", async () => {
+          const appendResult = await aiAgentRunMessageService.append({
+            ctx,
+            payload: {
+              aiAgentRunId,
+              role: "user",
+              content: initialMessage,
+              toolName: null,
+              toolInput: null,
+              toolResult: null,
+            },
+          });
+          if (appendResult.isErr()) {
+            throw appendResult.error;
+          }
+          return {
+            aiAgentMessageId: appendResult.value.data.id,
+            content: initialMessage,
+          };
+        });
+        aiAgentMessageId = seeded.aiAgentMessageId;
+        content = seeded.content;
+      } else {
+        const userInputEvent = await step.waitForEvent(
+          `wait-user-input-${iteration}`,
+          {
+            event: AI_AGENT_RUN_USER_INPUT_EVENT,
+            match: "data.aiAgentRunId",
+            timeout: `${idleTimeoutDays}d`,
+          },
         );
-        continue;
-      }
 
-      if (userInputEventDataValidation.value.type === "stop") {
-        await terminate("user_stop");
-        return;
+        if (!userInputEvent) {
+          await terminate("idle_timeout");
+          return;
+        }
+        const userInputEventDataValidation = validate(
+          userInputEventDataSchema,
+          userInputEvent.data,
+        );
+
+        if (userInputEventDataValidation.isErr()) {
+          log.error(
+            { error: userInputEventDataValidation.error },
+            "invalid user input event data",
+          );
+          continue;
+        }
+
+        if (userInputEventDataValidation.value.type === "stop") {
+          await terminate("user_stop");
+          return;
+        }
+        aiAgentMessageId = userInputEventDataValidation.value.aiAgentMessageId;
+        content = userInputEventDataValidation.value.content;
       }
-      const { aiAgentMessageId, content } = userInputEventDataValidation.value;
 
       const { sandboxId } = await step.run(
         `provision-sandbox-${iteration}`,
@@ -201,6 +246,7 @@ const aiAgentConversationRun = inngestClient.createFunction(
             },
           });
         });
+        await emitTerminated("error");
         return;
       }
 

@@ -1,10 +1,10 @@
 import type { EngineAction } from "@inngest/workflow-kit";
 import type { Inngest } from "inngest";
 
-import { agenticLoopAction } from "@/feature/workflow/action/workflow-action-agentic-loop";
+import { agentRunAction } from "@/feature/workflow/action/workflow-action-agent-run";
 
 const workflowActionDefinitions: EngineAction<Inngest>[] = [
-  agenticLoopAction,
+  agentRunAction,
   {
     name: "Code Review Request",
     kind: "code-review-request",

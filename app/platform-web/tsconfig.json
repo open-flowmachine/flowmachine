@@ -1,6 +1,6 @@
 {
   "exclude": ["node_modules"],
-  "extends": "@flowmachine/typescript-config/nextjs.json",
+  "extends": "@flowmachine/typescript-config/app-nextjs.json",
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "dist",
