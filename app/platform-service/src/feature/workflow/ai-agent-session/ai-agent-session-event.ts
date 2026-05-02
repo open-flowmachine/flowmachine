@@ -4,7 +4,7 @@ import {
   AI_AGENT_SESSION_INITIALIZATION_REQUESTED_EVENT,
   AI_AGENT_SESSION_INITIALIZED_EVENT,
   AI_AGENT_SESSION_USER_INPUT_RECEIVED_EVENT,
-} from "@/feature/ai-agent-session/ai-agent-session-constant";
+} from "@/feature/workflow/ai-agent-session/ai-agent-session-constant";
 import { idSchema } from "@/shared/model/model-id";
 import { tenantSchema } from "@/shared/model/model-tenant";
 import { makeInngestEventType } from "@/vendor/inngest/inngest-util";

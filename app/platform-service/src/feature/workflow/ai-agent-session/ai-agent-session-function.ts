@@ -9,12 +9,12 @@ import {
   AI_AGENT_SESSION_INITIALIZATION_REQUESTED_HANDLER_ID,
   AI_AGENT_SESSION_INITIALIZED_HANDLER_ID,
   AI_AGENT_SESSION_BATCH_TERMINATION_REQUESTED_HANDLER_ID,
-} from "@/feature/ai-agent-session/ai-agent-session-constant";
+} from "@/feature/workflow/ai-agent-session/ai-agent-session-constant";
 import {
   aiAgentSessionInitializationRequestEvent,
   aiAgentSessionInitializedEvent,
   aiAgentSessionUserInputReceivedEvent,
-} from "@/feature/ai-agent-session/ai-agent-session-event";
+} from "@/feature/workflow/ai-agent-session/ai-agent-session-event";
 import { validate } from "@/shared/schema/schema-validation";
 import { inngestClient } from "@/vendor/inngest/inngest-client";
 import { makeInngestFnHandler } from "@/vendor/inngest/inngest-util";
