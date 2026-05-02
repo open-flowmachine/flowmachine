@@ -1,7 +1,7 @@
 import Elysia from "elysia";
 import { serve } from "inngest/bun";
 
-import { aiAgentConversationFunctions } from "@/feature/ai-agent-conversation/ai-agent-conversation-function";
+import { aiAgentSessionFunctions } from "@/feature/workflow/ai-agent-session/ai-agent-session-function";
 import { workflowFunctions } from "@/feature/workflow/workflow-function";
 import { inngestClient } from "@/vendor/inngest/inngest-client";
 
@@ -10,7 +10,7 @@ const inngestRouter = new Elysia({ name: "inngest-router" }).all(
   ({ request }) =>
     serve({
       client: inngestClient,
-      functions: [...workflowFunctions, ...aiAgentConversationFunctions],
+      functions: [...workflowFunctions, ...aiAgentSessionFunctions],
     })(request),
 );
 

@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { aiModels } from "@/module/ai-agent/ai-agent-model";
+import { dateTimeSchema } from "@/shared/model/model";
 import { idSchema } from "@/shared/model/model-id";
 
 const aiAgentProjectSchema = z.object({
@@ -9,8 +10,8 @@ const aiAgentProjectSchema = z.object({
 
 const aiAgentResponseDtoSchema = z.object({
   id: idSchema,
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: dateTimeSchema,
+  updatedAt: dateTimeSchema,
   name: z.string(),
   model: z.enum(aiModels),
   projects: aiAgentProjectSchema.array(),

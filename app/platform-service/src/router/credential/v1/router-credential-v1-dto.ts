@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { credentialTypes } from "@/module/credential/credential-model";
+import { dateTimeSchema } from "@/shared/model/model";
 import { idSchema } from "@/shared/model/model-id";
 
 const postCredentialRequestBodyDtoSchema = z.discriminatedUnion("type", [
@@ -46,8 +47,8 @@ const deleteCredentialRequestParamsDtoSchema = z.object({
 const credentialResponseDtoSchema = z.discriminatedUnion("type", [
   z.object({
     id: idSchema,
-    createdAt: z.date(),
-    updatedAt: z.date(),
+    createdAt: dateTimeSchema,
+    updatedAt: dateTimeSchema,
     type: z.literal(credentialTypes[0]),
     name: z.string(),
     apiKey: z.string(),
@@ -55,8 +56,8 @@ const credentialResponseDtoSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     id: idSchema,
-    createdAt: z.date(),
-    updatedAt: z.date(),
+    createdAt: dateTimeSchema,
+    updatedAt: dateTimeSchema,
     type: z.literal(credentialTypes[1]),
     name: z.string(),
     username: z.string(),

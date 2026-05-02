@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { gitProviders } from "@/module/git-repository/git-repository-model";
+import { dateTimeSchema } from "@/shared/model/model";
 import { idSchema } from "@/shared/model/model-id";
 
 const configSchema = z.object({
@@ -20,8 +21,8 @@ const projectSchema = z.object({
 
 const gitRepositoryResponseDtoSchema = z.object({
   id: idSchema,
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: dateTimeSchema,
+  updatedAt: dateTimeSchema,
   name: z.string(),
   url: z.string(),
   config: configSchema,
