@@ -10,12 +10,10 @@ import type { AiAgentRun } from "@/module/ai-agent-run/ai-agent-run-type";
 import { Button } from "@/component/ui/button";
 import { Spinner } from "@/component/ui/spinner";
 import { Textarea } from "@/component/ui/textarea";
-import {
-  isAiAgentRunTerminal,
-} from "@/module/ai-agent-run/ai-agent-run-type";
-import { makeAiAgentRunService } from "@/module/ai-agent-run/ai-agent-run-service";
-import { useStopAiAgentRun } from "@/module/ai-agent-run/use-stop-ai-agent-run";
 import { useSendAiAgentRunMessage } from "@/module/ai-agent-run-message/use-send-ai-agent-run-message";
+import { makeAiAgentRunService } from "@/module/ai-agent-run/ai-agent-run-service";
+import { isAiAgentRunTerminal } from "@/module/ai-agent-run/ai-agent-run-type";
+import { useStopAiAgentRun } from "@/module/ai-agent-run/use-stop-ai-agent-run";
 
 type AiAgentRunChatComposerProps = {
   aiAgentId: string;

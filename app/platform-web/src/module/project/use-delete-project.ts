@@ -29,7 +29,9 @@ export const useDeleteProject = (options?: UseDeleteProjectOptions) => {
     ...options,
     onSuccess: (...args) => {
       const [, variables] = args;
-      void queryClient.invalidateQueries({ queryKey: makeListProjectsQueryKey() });
+      void queryClient.invalidateQueries({
+        queryKey: makeListProjectsQueryKey(),
+      });
       void queryClient.invalidateQueries({
         queryKey: makeGetProjectQueryKey(variables.params.id),
       });

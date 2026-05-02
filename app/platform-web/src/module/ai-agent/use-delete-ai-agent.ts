@@ -29,7 +29,9 @@ export const useDeleteAiAgent = (options?: UseDeleteAiAgentOptions) => {
     ...options,
     onSuccess: (...args) => {
       const [, variables] = args;
-      void queryClient.invalidateQueries({ queryKey: makeListAiAgentsQueryKey() });
+      void queryClient.invalidateQueries({
+        queryKey: makeListAiAgentsQueryKey(),
+      });
       void queryClient.invalidateQueries({
         queryKey: makeGetAiAgentQueryKey(variables.params.id),
       });

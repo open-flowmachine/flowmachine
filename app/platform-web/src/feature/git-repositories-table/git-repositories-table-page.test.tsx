@@ -2,7 +2,10 @@ import { screen, waitForElementToBeRemoved } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
-import type { GitRepository, GitRepositoryProject } from "@/module/git-repository/git-repository-type";
+import type {
+  GitRepository,
+  GitRepositoryProject,
+} from "@/module/git-repository/git-repository-type";
 
 import { makeGitRepositoryMswHandler } from "@/test/msw/msw-git-repository-handler";
 import { mswServer } from "@/test/msw/msw-server";
@@ -170,10 +173,7 @@ test("GitRepositoriesTablePage: given a repository in the list, when the list re
 
   // then
   const link = await screen.findByRole("link", { name: "alpha-repo" });
-  expect(link).toHaveAttribute(
-    "href",
-    `/platform/git-repository/${REPO_1.id}`,
-  );
+  expect(link).toHaveAttribute("href", `/platform/git-repository/${REPO_1.id}`);
 });
 
 test("GitRepositoriesTablePage: given the page loads, when the list resolves, then the Add Repository button links to /platform/git-repository/new", async () => {
@@ -285,9 +285,9 @@ test("GitRepositoriesTablePage: given the delete dialog is open, when it appears
   await screen.findByText("Delete repository");
 
   // then
-  expect(
-    screen.getByText(/Are you sure you want to delete/),
-  ).toHaveTextContent("alpha-repo");
+  expect(screen.getByText(/Are you sure you want to delete/)).toHaveTextContent(
+    "alpha-repo",
+  );
 });
 
 test("GitRepositoriesTablePage: given the delete dialog is open, when deletion is confirmed, then it calls the API and closes the dialog", async () => {

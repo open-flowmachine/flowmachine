@@ -38,14 +38,16 @@ const makeServiceSpy = spyOn(
   >,
 );
 
-const getSessionSpy = spyOn(betterAuthClient.api, "getSession").mockResolvedValue({
+const getSessionSpy = spyOn(
+  betterAuthClient.api,
+  "getSession",
+).mockResolvedValue({
   session: { userId: TEST_ID, activeOrganizationId: TENANT.id },
   user: { id: TEST_ID },
 } as never);
 
-const { gitRepositoryV1Router } = await import(
-  "@/router/git-repository/v1/router-git-repository-v1"
-);
+const { gitRepositoryV1Router } =
+  await import("@/router/git-repository/v1/router-git-repository-v1");
 
 // --- Helpers ---
 
@@ -275,11 +277,9 @@ test("PATCH /api/v1/git-repository/:id: given a valid update payload, when updat
   mockUpdateGitRepository.mockResolvedValue(ok({ data: updated }));
 
   // when
-  const response = await request(
-    "PATCH",
-    `/api/v1/git-repository/${TEST_ID}`,
-    { name: "Updated" },
-  );
+  const response = await request("PATCH", `/api/v1/git-repository/${TEST_ID}`, {
+    name: "Updated",
+  });
   const json = await response.json();
 
   // then
@@ -297,11 +297,9 @@ test("PATCH /api/v1/git-repository/:id: given a service failure, when updated, t
   mockUpdateGitRepository.mockResolvedValue(err(Err.code("notFound")));
 
   // when
-  const response = await request(
-    "PATCH",
-    `/api/v1/git-repository/${TEST_ID}`,
-    { name: "Updated" },
-  );
+  const response = await request("PATCH", `/api/v1/git-repository/${TEST_ID}`, {
+    name: "Updated",
+  });
   const json = await response.json();
 
   // then
@@ -314,10 +312,7 @@ test("DELETE /api/v1/git-repository/:id: given the repository exists, when delet
   mockDeleteGitRepository.mockResolvedValue(ok());
 
   // when
-  const response = await request(
-    "DELETE",
-    `/api/v1/git-repository/${TEST_ID}`,
-  );
+  const response = await request("DELETE", `/api/v1/git-repository/${TEST_ID}`);
   const json = await response.json();
 
   // then
@@ -334,10 +329,7 @@ test("DELETE /api/v1/git-repository/:id: given a service failure, when deleted, 
   mockDeleteGitRepository.mockResolvedValue(err(Err.code("unknown")));
 
   // when
-  const response = await request(
-    "DELETE",
-    `/api/v1/git-repository/${TEST_ID}`,
-  );
+  const response = await request("DELETE", `/api/v1/git-repository/${TEST_ID}`);
   const json = await response.json();
 
   // then

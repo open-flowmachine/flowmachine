@@ -8,12 +8,12 @@ import { DataTable } from "@/component/extended-ui/data-table";
 import { PlatformPageTemplate } from "@/component/platform/platform-page-template";
 import { Button } from "@/component/ui/button";
 import { Spinner } from "@/component/ui/spinner";
-import { AiAgentTabs } from "@/feature/ai-agent-tabs/ai-agent-tabs";
 import { makeAiAgentRunsTableColumnDef } from "@/feature/ai-agent-runs-table/ai-agent-runs-table-column-def";
-import { useGetAiAgent } from "@/module/ai-agent/use-get-ai-agent";
+import { AiAgentTabs } from "@/feature/ai-agent-tabs/ai-agent-tabs";
 import { isAiAgentRunTerminal } from "@/module/ai-agent-run/ai-agent-run-type";
 import { useCreateAiAgentRun } from "@/module/ai-agent-run/use-create-ai-agent-run";
 import { useListAiAgentRuns } from "@/module/ai-agent-run/use-list-ai-agent-runs";
+import { useGetAiAgent } from "@/module/ai-agent/use-get-ai-agent";
 
 type AiAgentRunsTablePageProps = {
   aiAgentId: string;
@@ -31,16 +31,12 @@ export function AiAgentRunsTablePage({ aiAgentId }: AiAgentRunsTablePageProps) {
       (run) => !isAiAgentRunTerminal(run.status),
     );
     if (nonTerminalRun) {
-      router.push(
-        `/platform/ai-agent/${aiAgentId}/run/${nonTerminalRun.id}`,
-      );
+      router.push(`/platform/ai-agent/${aiAgentId}/run/${nonTerminalRun.id}`);
       return;
     }
     try {
       const result = await createRun({ params: { aiAgentId } });
-      router.push(
-        `/platform/ai-agent/${aiAgentId}/run/${result.data.runId}`,
-      );
+      router.push(`/platform/ai-agent/${aiAgentId}/run/${result.data.runId}`);
     } catch {
       toast.error("Failed to start a new chat");
     }

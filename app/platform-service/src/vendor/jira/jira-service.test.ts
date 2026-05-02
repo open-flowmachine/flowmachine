@@ -122,9 +122,7 @@ test("createCustomIssueField: given valid inputs, when createCustomFieldAssociat
   mockCreateCustomField.mockResolvedValue(
     ok({ id: "cf_1", key: "cf_1", name: "Test", custom: true }),
   );
-  mockCreateCustomFieldAssociations.mockResolvedValue(
-    err(Err.code("unknown")),
-  );
+  mockCreateCustomFieldAssociations.mockResolvedValue(err(Err.code("unknown")));
 
   // when
   const result = await service.createCustomIssueField({
@@ -218,9 +216,7 @@ test("createCustomIssueField: given field options, when called, then passes opti
   mockGetCustomFieldContexts.mockResolvedValue(
     ok({ values: [{ id: "ctx_1" }] }),
   );
-  mockCreateCustomFieldContextOptions.mockResolvedValue(
-    ok({ options: [] }),
-  );
+  mockCreateCustomFieldContextOptions.mockResolvedValue(ok({ options: [] }));
 
   // when
   await service.createCustomIssueField({

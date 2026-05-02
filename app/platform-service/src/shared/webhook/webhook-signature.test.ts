@@ -44,7 +44,11 @@ test("verifyWebhookSignature: given a tampered body, when verified, then returns
   // given
 
   // when
-  const result = verifyWebhookSignature("Tampered Body", secret, validSignature);
+  const result = verifyWebhookSignature(
+    "Tampered Body",
+    secret,
+    validSignature,
+  );
 
   // then
   expect(result).toBe(false);

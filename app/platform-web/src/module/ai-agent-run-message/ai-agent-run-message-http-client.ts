@@ -22,9 +22,10 @@ const makeAiAgentRunMessageHttpClient = (input: { httpClient: HttpClient }) => {
     },
 
     send: async ({ params, body }: HttpClientSendAiAgentRunMessageInput) => {
-      const response = await httpClient.post<
-        HttpEnvelope<{ messageId: Id }>
-      >(basePath(params.aiAgentId, params.runId), body);
+      const response = await httpClient.post<HttpEnvelope<{ messageId: Id }>>(
+        basePath(params.aiAgentId, params.runId),
+        body,
+      );
       return response.data;
     },
   };

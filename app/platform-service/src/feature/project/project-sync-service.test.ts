@@ -615,9 +615,7 @@ test("syncWorkflowDefinitionToExternal: given no existing field definition, when
     ],
   });
 
-  mockWorkflowDefinitionService.list.mockResolvedValue(
-    ok({ data: workflows }),
-  );
+  mockWorkflowDefinitionService.list.mockResolvedValue(ok({ data: workflows }));
   mockFieldDefService.list.mockResolvedValue(ok({ data: [] }));
   mockFieldDefService.create.mockResolvedValue(ok({ id: FIELD_DEF_ID }));
   mockFieldDefService.get.mockResolvedValue(ok({ data: createdDef }));
@@ -660,9 +658,7 @@ test("syncWorkflowDefinitionToExternal: given existing field definition, when sy
     _version: 2,
   });
 
-  mockWorkflowDefinitionService.list.mockResolvedValue(
-    ok({ data: workflows }),
-  );
+  mockWorkflowDefinitionService.list.mockResolvedValue(ok({ data: workflows }));
   mockFieldDefService.list.mockResolvedValue(ok({ data: [existingDef] }));
   mockExternalProjectService.deleteCustomIssueField.mockResolvedValue(
     ok(undefined),

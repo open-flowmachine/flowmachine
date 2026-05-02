@@ -1,9 +1,6 @@
 import { expect, test } from "bun:test";
 
-import {
-  decodeTenant,
-  encodeTenant,
-} from "@/shared/tenant/tenant-encoding";
+import { decodeTenant, encodeTenant } from "@/shared/tenant/tenant-encoding";
 
 const uuidv7 = "01945f4e-9c8f-7b2a-9c10-3a4b5c6d7e8f";
 

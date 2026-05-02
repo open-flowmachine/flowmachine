@@ -1,8 +1,8 @@
 import { screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
-import type { AiAgent } from "@/module/ai-agent/ai-agent-type";
 import type { AiAgentRun } from "@/module/ai-agent-run/ai-agent-run-type";
+import type { AiAgent } from "@/module/ai-agent/ai-agent-type";
 
 import { AiAgentRunsTablePage } from "@/feature/ai-agent-runs-table/ai-agent-runs-table-page";
 import { makeAiAgentMswHandler } from "@/test/msw/msw-ai-agent-handler";

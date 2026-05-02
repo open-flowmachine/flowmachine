@@ -16,7 +16,9 @@ const collapsibleRoles: readonly AiAgentRunMessageRole[] = [
   "tool_result",
 ];
 
-const makeAiAgentRunMessageService = (input: { message: AiAgentRunMessage }) => {
+const makeAiAgentRunMessageService = (input: {
+  message: AiAgentRunMessage;
+}) => {
   const { message } = input;
 
   const getToolLabel = () => {

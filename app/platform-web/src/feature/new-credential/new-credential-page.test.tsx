@@ -123,9 +123,7 @@ test("NewCredentialPage: given a valid form, when Save is clicked and the reques
   createHandler.resolveRequest();
 
   // then
-  expect(
-    await screen.findByText("Failed to create credential"),
-  ).toBeVisible();
+  expect(await screen.findByText("Failed to create credential")).toBeVisible();
 });
 
 test("NewCredentialPage: given a valid form, when Save is clicked and the request is in progress, then a Saving... label is visible", async () => {

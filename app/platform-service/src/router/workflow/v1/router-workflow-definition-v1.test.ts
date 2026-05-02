@@ -45,9 +45,8 @@ const getSessionSpy = spyOn(
   user: { id: TEST_ID },
 } as never);
 
-const { workflowDefinitionV1Router } = await import(
-  "@/router/workflow/v1/router-workflow-definition-v1"
-);
+const { workflowDefinitionV1Router } =
+  await import("@/router/workflow/v1/router-workflow-definition-v1");
 
 // --- Helpers ---
 

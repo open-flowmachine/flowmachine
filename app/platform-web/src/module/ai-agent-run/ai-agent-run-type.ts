@@ -9,14 +9,12 @@ const aiAgentRunStatuses = [
 ] as const;
 type AiAgentRunStatus = (typeof aiAgentRunStatuses)[number];
 
-const aiAgentRunTerminalStatuses = ["stopped", "errored"] as const satisfies
-  readonly AiAgentRunStatus[];
+const aiAgentRunTerminalStatuses = [
+  "stopped",
+  "errored",
+] as const satisfies readonly AiAgentRunStatus[];
 
-const aiAgentRunEndedReasons = [
-  "user_stop",
-  "idle_timeout",
-  "error",
-] as const;
+const aiAgentRunEndedReasons = ["user_stop", "idle_timeout", "error"] as const;
 type AiAgentRunEndedReason = (typeof aiAgentRunEndedReasons)[number];
 
 type AiAgentRun = Model<{
