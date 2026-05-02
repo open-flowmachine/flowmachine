@@ -4,8 +4,8 @@ import type { Id } from "@/shared/model/model-id";
 const aiAgentRunMessageRoles = [
   "user",
   "assistant",
-  "tool_use",
-  "tool_result",
+  "toolUse",
+  "toolResult",
   "system",
 ] as const;
 type AiAgentRunMessageRole = (typeof aiAgentRunMessageRoles)[number];

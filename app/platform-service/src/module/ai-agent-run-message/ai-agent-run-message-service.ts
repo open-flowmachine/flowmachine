@@ -7,9 +7,12 @@ import type { Tenant } from "@/shared/model/model-tenant";
 import { aiAgentRunMessageRepository } from "@/module/ai-agent-run-message/ai-agent-run-message-repository";
 import { newModel } from "@/shared/model/model";
 
-const appendAiAgentRunMessage = async (input: {
+const createAiAgentRunMessage = async (input: {
   ctx: { tenant: Tenant };
-  payload: Omit<AiAgentRunMessage, "id" | "_version" | "createdAt" | "updatedAt">;
+  payload: Omit<
+    AiAgentRunMessage,
+    "id" | "_version" | "createdAt" | "updatedAt"
+  >;
 }) => {
   const { ctx, payload } = input;
 
@@ -18,6 +21,7 @@ const appendAiAgentRunMessage = async (input: {
     ctx,
     data: model,
   });
+
   if (insertResult.isErr()) {
     return err(insertResult.error);
   }
@@ -36,7 +40,7 @@ const listAiAgentRunMessages = async (input: {
 };
 
 const makeAiAgentRunMessageService = () => ({
-  append: appendAiAgentRunMessage,
+  create: createAiAgentRunMessage,
   list: listAiAgentRunMessages,
 });
 

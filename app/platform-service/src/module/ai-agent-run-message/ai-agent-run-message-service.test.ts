@@ -58,7 +58,7 @@ test("append: given a valid payload, when inserted, then returns the new message
   mockRepository.insert.mockResolvedValue(ok());
 
   // when
-  const result = await service.append({
+  const result = await service.create({
     ctx,
     payload: {
       aiAgentRunId: RUN_ID,
@@ -91,7 +91,7 @@ test("append: given the repository fails, when inserted, then returns the err", 
   );
 
   // when
-  const result = await service.append({
+  const result = await service.create({
     ctx,
     payload: {
       aiAgentRunId: RUN_ID,

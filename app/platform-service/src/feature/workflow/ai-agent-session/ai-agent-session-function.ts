@@ -1,9 +1,5 @@
-import type { Sandbox } from "@daytonaio/sdk";
-
-import { isNil, noop } from "es-toolkit";
+import { isNil } from "es-toolkit";
 import z from "zod";
-
-import type { AiAgentRun } from "@/module/ai-agent-run/ai-agent-run-model";
 
 import {
   AI_AGENT_SESSION_INITIALIZATION_REQUESTED_HANDLER_ID,
@@ -15,6 +11,17 @@ import {
   aiAgentSessionInitializedEvent,
   aiAgentSessionUserInputReceivedEvent,
 } from "@/feature/workflow/ai-agent-session/ai-agent-session-event";
+import {
+  appendUserMessage,
+  createAiAgentRun,
+  getAiAgentRun,
+  updateAiAgentRun,
+  createSandbox,
+  startSandbox,
+  runTurn,
+  stopSandbox,
+  adminListActiveAiAgentRuns,
+} from "@/feature/workflow/ai-agent-session/ai-agent-session-step";
 import { validate } from "@/shared/schema/schema-validation";
 import { inngestClient } from "@/vendor/inngest/inngest-client";
 import { makeInngestFnHandler } from "@/vendor/inngest/inngest-util";
@@ -28,15 +35,48 @@ const aiAgentSessionInitialize = inngestClient.createFunction(
       const { event, step } = input;
       const { data } = event;
 
-      const aiAgentRun: AiAgentRun = isNil(data.aiAgentRunId)
-        ? await step.run("create-ai-agent-run", noop)
-        : await step.run("get-ai-agent-run", noop);
+      let aiAgentRunId = data.aiAgentRunId;
 
-      const sandbox = isNil(aiAgentRun.sandbox)
-        ? await step.run("create-sandbox", noop)
-        : await step.run("get-sandbox", noop);
+      if (isNil(aiAgentRunId)) {
+        const result = await step.run(
+          "create-ai-agent-run",
+          createAiAgentRun({
+            tenant: data.tenant,
+            aiAgentId: data.aiAgentId,
+          }),
+        );
+        aiAgentRunId = result.id;
+      }
 
-      await step.run("update-ai-agent-run", noop);
+      const aiAgentRun = await step.run(
+        "get-ai-agent-run",
+        getAiAgentRun({
+          tenant: data.tenant,
+          aiAgentRunId,
+        }),
+      );
+
+      if (isNil(aiAgentRun.sandbox)) {
+        const { sandboxId } = await step.run("create-sandbox", createSandbox());
+
+        await step.run(
+          "update-ai-agent-run",
+          updateAiAgentRun({
+            tenant: data.tenant,
+            aiAgentRunId: aiAgentRun.id,
+            data: {
+              status: "idle",
+              sandbox: {
+                integration: {
+                  externalId: sandboxId,
+                  provider: "daytona",
+                },
+                status: "running",
+              },
+            },
+          }),
+        );
+      }
 
       await step.sendEvent(
         `send-initialized-event`,
@@ -61,10 +101,21 @@ const aiAgentSessionInitializedHandler = inngestClient.createFunction(
       const { event, step } = input;
       const { data } = event;
 
-      const aiAgentRun: AiAgentRun = await step.run("get-ai-agent-run", noop);
-      const sandbox: Sandbox = await startSandbox();
+      const aiAgentRun = await step.run(
+        "get-ai-agent-run",
+        getAiAgentRun({
+          tenant: data.tenant,
+          aiAgentRunId: data.aiAgentRunId,
+        }),
+      );
 
+      const sandbox = await startSandbox({
+        sandboxId: aiAgentRun.sandbox?.integration.externalId ?? "",
+      });
+
+      let sessionId = aiAgentRun.sessionId;
       let iteration = 1;
+
       while (true) {
         const userInputEvent = await step.waitForEvent(
           `wait-user-input-${iteration}`,
@@ -85,7 +136,30 @@ const aiAgentSessionInitializedHandler = inngestClient.createFunction(
         }
         const userInput = userInputValidationResult.value;
 
-        await step.run("turn", noop);
+        const userMessageId = await step.run(
+          `append-user-message-${iteration}`,
+          appendUserMessage({
+            tenant: data.tenant,
+            aiAgentRunId: data.aiAgentRunId,
+            content: userInput.content,
+          }),
+        );
+
+        const turnResult = await step.run(
+          `turn-${iteration}`,
+          runTurn({
+            tenant: data.tenant,
+            aiAgentRunId: data.aiAgentRunId,
+            aiAgentId: data.aiAgentId,
+            userMessageId,
+            content: userInput.content,
+            sandboxId: sandbox.id,
+            sessionId,
+          }),
+        );
+
+        sessionId = turnResult.sessionId;
+        iteration++;
       }
     },
   }),
@@ -100,19 +174,18 @@ const aiAgentSessionBatchTerminationRequestedHandler =
       handler: async (input) => {
         const { step } = input;
 
-        const aiAgentRuns: AiAgentRun[] = await step.run(
-          "list-ai-agent-runs",
-          noop,
+        const aiAgentRuns = await step.run(
+          "admin-list-ai-agent-runs",
+          adminListActiveAiAgentRuns(),
         );
 
         for (const aiAgentRun of aiAgentRuns) {
-          const sandboxId =
-            aiAgentRun.sandbox?.currentSandbox?.integration.externalId;
+          const sandboxId = aiAgentRun.sandbox?.integration.externalId;
 
           if (isNil(sandboxId)) {
             continue;
           }
-          await step.run("stop-sandbox", noop);
+          await step.run("stop-sandbox", stopSandbox({ sandboxId }));
         }
       },
     }),

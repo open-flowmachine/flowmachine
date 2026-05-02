@@ -3,7 +3,7 @@ import type { Document, Filter, IndexDescription, WithId } from "mongodb";
 import { err, ok } from "neverthrow";
 
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant, TenantToggle } from "@/shared/model/model-tenant";
 
 import { type Model } from "@/shared/model/model";
 import { getEnv } from "@/vendor/env/env";
@@ -137,7 +137,7 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
     ]);
 
   const findMany = async (input: {
-    ctx: { tenant: Tenant };
+    ctx: TenantToggle<{ tenant: Tenant }>;
     filter?: Filter<T>;
   }) => {
     try {
@@ -152,7 +152,10 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
     }
   };
 
-  const findById = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
+  const findById = async (input: {
+    ctx: TenantToggle<{ tenant: Tenant }>;
+    id: Id;
+  }) => {
     try {
       const { ctx, id } = input;
       const col = await collection();
@@ -163,7 +166,10 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
     }
   };
 
-  const insert = async (input: { ctx: { tenant: Tenant }; data: T }) => {
+  const insert = async (input: {
+    ctx: TenantToggle<{ tenant: Tenant }>;
+    data: T;
+  }) => {
     try {
       const { ctx, data } = input;
       const col = await collection();
@@ -178,7 +184,7 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
   };
 
   const update = async (input: {
-    ctx: { tenant: Tenant };
+    ctx: TenantToggle<{ tenant: Tenant }>;
     id: Id;
     data: Partial<T>;
   }) => {
@@ -203,7 +209,10 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
     }
   };
 
-  const deleteById = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
+  const deleteById = async (input: {
+    ctx: TenantToggle<{ tenant: Tenant }>;
+    id: Id;
+  }) => {
     try {
       const { ctx, id } = input;
       const col = await collection();
