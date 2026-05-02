@@ -1,8 +1,10 @@
+import type { Filter } from "mongodb";
+
 import { err, ok } from "neverthrow";
 
 import type { AiAgentRunMessage } from "@/module/ai-agent-run-message/ai-agent-run-message-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant, TenantToggle } from "@/shared/model/model-tenant";
 
 import { aiAgentRunMessageRepository } from "@/module/ai-agent-run-message/ai-agent-run-message-repository";
 import { newModel } from "@/shared/model/model";
@@ -39,7 +41,16 @@ const listAiAgentRunMessages = async (input: {
   });
 };
 
+const adminListAiAgentRunMessages = async (input: {
+  ctx: TenantToggle<{ tenant: Tenant }>;
+  filter?: Filter<AiAgentRunMessage>;
+}) => {
+  const { ctx, filter } = input;
+  return aiAgentRunMessageRepository.findMany({ ctx, filter });
+};
+
 const makeAiAgentRunMessageService = () => ({
+  adminList: adminListAiAgentRunMessages,
   create: createAiAgentRunMessage,
   list: listAiAgentRunMessages,
 });

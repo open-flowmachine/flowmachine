@@ -1,5 +1,7 @@
 import type { Sandbox } from "@daytonaio/sdk";
 
+import { UTCDate } from "@date-fns/utc";
+import { sub } from "date-fns";
 import { camelCase } from "es-toolkit";
 
 import type { AiAgentRunMessage } from "@/module/ai-agent-run-message/ai-agent-run-message-model";
@@ -334,13 +336,32 @@ const appendUserMessage =
 const adminListActiveAiAgentRuns = () => async (): Promise<AiAgentRun[]> => {
   const result = await aiAgentRunService.adminList({
     ctx: { dangerouslyDisableTenant: true },
-    filter: {},
+    filter: { status: "initialized" },
   });
 
   if (result.isErr()) {
     throw Err.from(result.error);
   }
-  return result.value.data;
+
+  const aiAgentRuns = result.value.data;
+  const recentActivityThreshold = sub(new UTCDate(), { minutes: 15 });
+
+  const recentMessages = await aiAgentRunMessageService.adminList({
+    ctx: { dangerouslyDisableTenant: true },
+    filter: {
+      aiAgentRunId: { $in: aiAgentRuns.map((run) => run.id) },
+      createdAt: { $gte: recentActivityThreshold },
+    },
+  });
+
+  if (recentMessages.isErr()) {
+    throw Err.from(recentMessages.error);
+  }
+  const activeRunIds = new Set(
+    recentMessages.value.data.map((message) => message.aiAgentRunId),
+  );
+
+  return aiAgentRuns.filter((run) => !activeRunIds.has(run.id));
 };
 
 export {

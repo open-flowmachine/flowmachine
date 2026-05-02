@@ -21,6 +21,7 @@
     "autumn-js": "catalog:",
     "axios": "catalog:",
     "better-auth": "catalog:",
+    "date-fns": "catalog:",
     "dotenv": "catalog:",
     "elysia": "catalog:",
     "es-toolkit": "catalog:",
