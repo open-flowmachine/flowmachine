@@ -5,8 +5,8 @@ import { UTCDate } from "@date-fns/utc";
 import { type Id, newId } from "@/shared/model/model-id";
 
 type ModelBaseFields = {
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | string;
+  updatedAt: Date | string;
   _version: number;
 };
 

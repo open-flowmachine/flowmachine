@@ -22,6 +22,8 @@ import {
   stopSandbox,
   adminListActiveAiAgentRuns,
 } from "@/feature/workflow/ai-agent-session/ai-agent-session-step";
+import { isInitializedAiAgentRun } from "@/module/ai-agent-run/ai-agent-run-model";
+import { Err } from "@/shared/err/err";
 import { validate } from "@/shared/schema/schema-validation";
 import { inngestClient } from "@/vendor/inngest/inngest-client";
 import { makeInngestFnHandler } from "@/vendor/inngest/inngest-util";
@@ -57,6 +59,18 @@ const aiAgentSessionInitialize = inngestClient.createFunction(
       );
 
       if (isNil(aiAgentRun.sandbox)) {
+        await step.run(
+          "update-ai-agent-run",
+          updateAiAgentRun({
+            tenant: data.tenant,
+            aiAgentRunId: aiAgentRun.id,
+            data: {
+              status: "initializing",
+              sandbox: null,
+            },
+          }),
+        );
+
         const { sandboxId } = await step.run("create-sandbox", createSandbox());
 
         await step.run(
@@ -65,7 +79,7 @@ const aiAgentSessionInitialize = inngestClient.createFunction(
             tenant: data.tenant,
             aiAgentRunId: aiAgentRun.id,
             data: {
-              status: "idle",
+              status: "initialized",
               sandbox: {
                 integration: {
                   externalId: sandboxId,
@@ -109,8 +123,14 @@ const aiAgentSessionInitializedHandler = inngestClient.createFunction(
         }),
       );
 
+      if (!isInitializedAiAgentRun(aiAgentRun)) {
+        throw Err.code("unprocessableEntity", {
+          message: "invalid ai agent run status",
+        });
+      }
+
       const sandbox = await startSandbox({
-        sandboxId: aiAgentRun.sandbox?.integration.externalId ?? "",
+        sandboxId: aiAgentRun.sandbox.integration.externalId,
       });
 
       let sessionId = aiAgentRun.sessionId;
@@ -145,8 +165,8 @@ const aiAgentSessionInitializedHandler = inngestClient.createFunction(
           }),
         );
 
-        const turnResult = await step.run(
-          `turn-${iteration}`,
+        const runTurnResult = await step.run(
+          `run-turn-${iteration}`,
           runTurn({
             tenant: data.tenant,
             aiAgentRunId: data.aiAgentRunId,
@@ -158,7 +178,7 @@ const aiAgentSessionInitializedHandler = inngestClient.createFunction(
           }),
         );
 
-        sessionId = turnResult.sessionId;
+        sessionId = runTurnResult.sessionId;
         iteration++;
       }
     },
@@ -180,11 +200,10 @@ const aiAgentSessionBatchTerminationRequestedHandler =
         );
 
         for (const aiAgentRun of aiAgentRuns) {
-          const sandboxId = aiAgentRun.sandbox?.integration.externalId;
-
-          if (isNil(sandboxId)) {
+          if (!isInitializedAiAgentRun(aiAgentRun)) {
             continue;
           }
+          const sandboxId = aiAgentRun.sandbox.integration.externalId;
           await step.run("stop-sandbox", stopSandbox({ sandboxId }));
         }
       },

@@ -334,6 +334,7 @@ const appendUserMessage =
 const adminListActiveAiAgentRuns = () => async (): Promise<AiAgentRun[]> => {
   const result = await aiAgentRunService.adminList({
     ctx: { dangerouslyDisableTenant: true },
+    filter: {},
   });
 
   if (result.isErr()) {
