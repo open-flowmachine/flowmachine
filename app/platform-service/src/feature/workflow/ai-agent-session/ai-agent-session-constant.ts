@@ -2,25 +2,20 @@ const AI_AGENT_SESSION_INITIALIZATION_REQUESTED_HANDLER_ID =
   "ai-agent-session/handler/initialization-requested";
 const AI_AGENT_SESSION_INITIALIZED_HANDLER_ID =
   "ai-agent-session/handler/initialized";
-const AI_AGENT_SESSION_BATCH_TERMINATION_REQUESTED_HANDLER_ID =
-  "ai-agent-session/handler/batch-termination-requested";
-const AI_AGENT_SESSION_TERMINATED_HANDLER_ID =
-  "ai-agent-session/handler/terminated";
+const AI_AGENT_SESSION_SCHEDULED_CLEAN_UP_HANDLER_ID =
+  "ai-agent-session/handler/scheduled-clean-up";
 
 const AI_AGENT_SESSION_INITIALIZATION_REQUESTED_EVENT =
   "ai-agent-session/event/initialization-requested";
 const AI_AGENT_SESSION_INITIALIZED_EVENT = "ai-agent-session/event/initialized";
-const AI_AGENT_SESSION_TERMINATED_EVENT = "ai-agent-session/event/terminated";
 const AI_AGENT_SESSION_USER_INPUT_RECEIVED_EVENT =
   "ai-agent-session/event/user-input-received";
 
 export {
   AI_AGENT_SESSION_INITIALIZATION_REQUESTED_HANDLER_ID,
   AI_AGENT_SESSION_INITIALIZED_HANDLER_ID,
-  AI_AGENT_SESSION_BATCH_TERMINATION_REQUESTED_HANDLER_ID,
-  AI_AGENT_SESSION_TERMINATED_HANDLER_ID,
+  AI_AGENT_SESSION_SCHEDULED_CLEAN_UP_HANDLER_ID,
   AI_AGENT_SESSION_INITIALIZATION_REQUESTED_EVENT,
   AI_AGENT_SESSION_INITIALIZED_EVENT,
-  AI_AGENT_SESSION_TERMINATED_EVENT,
   AI_AGENT_SESSION_USER_INPUT_RECEIVED_EVENT,
 };

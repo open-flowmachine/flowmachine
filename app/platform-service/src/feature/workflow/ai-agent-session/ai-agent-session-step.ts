@@ -60,17 +60,32 @@ const getAiAgentRun =
     return result.value.data;
   };
 
-const updateAiAgentRun =
-  (input: {
-    tenant: Tenant;
-    aiAgentRunId: Id;
-    data: Parameters<typeof aiAgentRunService.update>[0]["data"];
-  }) =>
-  async () => {
+const markAiAgentRunAsInitializing =
+  (input: { tenant: Tenant; aiAgentRunId: Id }) => async () => {
     const result = await aiAgentRunService.update({
       ctx: { tenant: input.tenant },
       id: input.aiAgentRunId,
-      data: input.data,
+      data: {
+        status: "initializing",
+      },
+    });
+
+    if (result.isErr()) {
+      throw Err.from(result.error);
+    }
+  };
+
+const markAiAgentRunAsInitialized =
+  (input: { tenant: Tenant; aiAgentRunId: Id; sandboxId: Id }) => async () => {
+    const result = await aiAgentRunService.update({
+      ctx: { tenant: input.tenant },
+      id: input.aiAgentRunId,
+      data: {
+        status: "initializing",
+        sandbox: {
+          integration: { externalId: input.sandboxId, provider: "daytona" },
+        },
+      },
     });
 
     if (result.isErr()) {
@@ -333,7 +348,7 @@ const appendUserMessage =
 // Batch steps
 // ---------------------------------------------------------------------------
 
-const adminListActiveAiAgentRuns = () => async (): Promise<AiAgentRun[]> => {
+const adminListNonActiveAiAgentRuns = () => async (): Promise<AiAgentRun[]> => {
   const result = await aiAgentRunService.adminList({
     ctx: { dangerouslyDisableTenant: true },
     filter: { status: "initialized" },
@@ -364,15 +379,38 @@ const adminListActiveAiAgentRuns = () => async (): Promise<AiAgentRun[]> => {
   return aiAgentRuns.filter((run) => !activeRunIds.has(run.id));
 };
 
+const adminMarkAiAgentRunAsStopping =
+  (input: { id: string }) => async (): Promise<void> => {
+    const { id } = input;
+    await aiAgentRunService.adminUpdate({
+      ctx: { dangerouslyDisableTenant: true },
+      id,
+      data: { status: "stopping" },
+    });
+  };
+
+const adminMarkAiAgentRunAsStopped =
+  (input: { id: string }) => async (): Promise<void> => {
+    const { id } = input;
+    await aiAgentRunService.adminUpdate({
+      ctx: { dangerouslyDisableTenant: true },
+      id,
+      data: { status: "stopped" },
+    });
+  };
+
 export {
   createAiAgentRun,
   getAiAgentRun,
-  updateAiAgentRun,
+  markAiAgentRunAsInitializing,
+  markAiAgentRunAsInitialized,
   createSandbox,
   getSandbox,
   startSandbox,
   stopSandbox,
   runTurn,
   appendUserMessage,
-  adminListActiveAiAgentRuns,
+  adminListNonActiveAiAgentRuns,
+  adminMarkAiAgentRunAsStopping,
+  adminMarkAiAgentRunAsStopped,
 };

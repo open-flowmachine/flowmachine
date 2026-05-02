@@ -11,27 +11,14 @@ const aiAgentRunStatuses = [
 ] as const;
 type AiAgentRunStatus = (typeof aiAgentRunStatuses)[number];
 
-const aiAgentRunEndedReasons = ["idleTimeout", "error"] as const;
-type AiAgentRunEndedReason = (typeof aiAgentRunEndedReasons)[number];
-
 const aiAgentRunSandboxProviders = ["daytona"] as const;
 type AiAgentRunSandboxProvider = (typeof aiAgentRunSandboxProviders)[number];
-
-const aiAgentRunSandboxStatuses = [
-  "creating",
-  "running",
-  "failed",
-  "stopping",
-  "stopped",
-] as const;
-type AiAgentRunSandboxStatus = (typeof aiAgentRunSandboxStatuses)[number];
 
 type AiAgentRunSandbox = {
   integration: {
     externalId: string;
     provider: AiAgentRunSandboxProvider;
   };
-  status: AiAgentRunSandboxStatus;
 };
 
 type BaseAiAgentRun = Model<{
@@ -82,15 +69,7 @@ const isInitializedAiAgentRun = (
 
 export {
   aiAgentRunStatuses,
-  aiAgentRunEndedReasons,
   aiAgentRunSandboxProviders,
-  aiAgentRunSandboxStatuses,
   isInitializedAiAgentRun,
 };
-export type {
-  AiAgentRun,
-  AiAgentRunStatus,
-  AiAgentRunEndedReason,
-  AiAgentRunSandboxProvider,
-  AiAgentRunSandboxStatus,
-};
+export type { AiAgentRun, AiAgentRunStatus, AiAgentRunSandboxProvider };

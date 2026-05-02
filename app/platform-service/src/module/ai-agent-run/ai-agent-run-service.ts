@@ -21,6 +21,23 @@ const adminListAiAgentRuns = async (input: {
   });
 };
 
+const adminUpdateAiAgentRun = async (input: {
+  ctx: TenantToggle<{ tenant: Tenant }>;
+  id: Id;
+  data: Partial<Omit<AiAgentRun, ExcludedUpdateModelFields>>;
+}) => {
+  const { ctx, id, data } = input;
+
+  const findResult = await aiAgentRunRepository.findById({ ctx, id });
+  if (findResult.isErr()) {
+    return err(findResult.error);
+  }
+  if (!findResult.value.data) {
+    return err(Err.code("notFound"));
+  }
+  return aiAgentRunRepository.update({ ctx, id, data });
+};
+
 const createAiAgentRun = async (input: {
   ctx: { tenant: Tenant };
   payload: Omit<AiAgentRun, "id" | "_version" | "createdAt" | "updatedAt">;
@@ -52,33 +69,17 @@ const getAiAgentRun = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
 const listAiAgentRuns = async (input: {
   ctx: { tenant: Tenant };
   filter?: Filter<AiAgentRun>;
-}) => {
-  const { ctx, filter } = input;
-  return aiAgentRunRepository.findMany({
-    ctx,
-    filter,
-  });
-};
+}) => adminListAiAgentRuns(input);
 
 const updateAiAgentRun = async (input: {
   ctx: { tenant: Tenant };
   id: Id;
   data: Partial<Omit<AiAgentRun, ExcludedUpdateModelFields>>;
-}) => {
-  const { ctx, id, data } = input;
-
-  const findResult = await aiAgentRunRepository.findById({ ctx, id });
-  if (findResult.isErr()) {
-    return err(findResult.error);
-  }
-  if (!findResult.value.data) {
-    return err(Err.code("notFound"));
-  }
-  return aiAgentRunRepository.update({ ctx, id, data });
-};
+}) => adminUpdateAiAgentRun(input);
 
 const makeAiAgentRunService = () => ({
   adminList: adminListAiAgentRuns,
+  adminUpdate: adminUpdateAiAgentRun,
   create: createAiAgentRun,
   get: getAiAgentRun,
   list: listAiAgentRuns,

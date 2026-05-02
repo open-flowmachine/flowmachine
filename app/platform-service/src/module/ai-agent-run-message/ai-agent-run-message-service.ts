@@ -9,6 +9,14 @@ import type { Tenant, TenantToggle } from "@/shared/model/model-tenant";
 import { aiAgentRunMessageRepository } from "@/module/ai-agent-run-message/ai-agent-run-message-repository";
 import { newModel } from "@/shared/model/model";
 
+const adminListAiAgentRunMessages = async (input: {
+  ctx: TenantToggle<{ tenant: Tenant }>;
+  filter?: Filter<AiAgentRunMessage>;
+}) => {
+  const { ctx, filter } = input;
+  return aiAgentRunMessageRepository.findMany({ ctx, filter });
+};
+
 const createAiAgentRunMessage = async (input: {
   ctx: { tenant: Tenant };
   payload: Omit<
@@ -33,21 +41,7 @@ const createAiAgentRunMessage = async (input: {
 const listAiAgentRunMessages = async (input: {
   ctx: { tenant: Tenant };
   filter: { aiAgentRunId: Id };
-}) => {
-  const { ctx, filter } = input;
-  return aiAgentRunMessageRepository.findMany({
-    ctx,
-    filter: { aiAgentRunId: filter.aiAgentRunId },
-  });
-};
-
-const adminListAiAgentRunMessages = async (input: {
-  ctx: TenantToggle<{ tenant: Tenant }>;
-  filter?: Filter<AiAgentRunMessage>;
-}) => {
-  const { ctx, filter } = input;
-  return aiAgentRunMessageRepository.findMany({ ctx, filter });
-};
+}) => adminListAiAgentRunMessages(input);
 
 const makeAiAgentRunMessageService = () => ({
   adminList: adminListAiAgentRunMessages,
