@@ -130,6 +130,26 @@ const aiAgentSessionInitializedHandler = inngestClient.createFunction(
       let iteration = 1;
 
       while (true) {
+        const currentRun = await step.run(
+          `ai-agent-run/${data.aiAgentRunId}/check-status-${iteration}`,
+          getAiAgentRun({
+            tenant: data.tenant,
+            aiAgentRunId: data.aiAgentRunId,
+          }),
+        );
+
+        if (
+          currentRun.status === "stopping" ||
+          currentRun.status === "stopped" ||
+          currentRun.status === "failed"
+        ) {
+          break;
+        }
+
+        if (iteration > 1000) {
+          break;
+        }
+
         const userInputEvent = await step.waitForEvent(
           `ai-agent-run/${data.aiAgentRunId}/wait-user-input-${iteration}`,
           {

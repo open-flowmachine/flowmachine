@@ -81,7 +81,7 @@ const markAiAgentRunAsInitialized =
       ctx: { tenant: input.tenant },
       id: input.aiAgentRunId,
       data: {
-        status: "initializing",
+        status: "initialized",
         sandbox: {
           integration: { externalId: input.sandboxId, provider: "daytona" },
         },
@@ -110,7 +110,9 @@ const getSandbox =
   };
 
 const startSandbox = async (input: { sandboxId: string }): Promise<Sandbox> => {
-  return daytonaClient.get(input.sandboxId);
+  const sandbox = await daytonaClient.get(input.sandboxId);
+  await sandbox.start();
+  return sandbox;
 };
 
 const stopSandbox = (input: { sandboxId: string }) => async () => {
@@ -382,21 +384,29 @@ const adminListNonActiveAiAgentRuns = () => async (): Promise<AiAgentRun[]> => {
 const adminMarkAiAgentRunAsStopping =
   (input: { id: string }) => async (): Promise<void> => {
     const { id } = input;
-    await aiAgentRunService.adminUpdate({
+    const result = await aiAgentRunService.adminUpdate({
       ctx: { dangerouslyDisableTenant: true },
       id,
       data: { status: "stopping" },
     });
+
+    if (result.isErr()) {
+      throw Err.from(result.error);
+    }
   };
 
 const adminMarkAiAgentRunAsStopped =
   (input: { id: string }) => async (): Promise<void> => {
     const { id } = input;
-    await aiAgentRunService.adminUpdate({
+    const result = await aiAgentRunService.adminUpdate({
       ctx: { dangerouslyDisableTenant: true },
       id,
       data: { status: "stopped" },
     });
+
+    if (result.isErr()) {
+      throw Err.from(result.error);
+    }
   };
 
 export {

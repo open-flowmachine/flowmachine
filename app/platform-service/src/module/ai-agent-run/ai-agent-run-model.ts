@@ -51,7 +51,7 @@ type StoppedAiAgentRun = BaseAiAgentRun & {
 };
 
 type FailedAiAgentRun = BaseAiAgentRun & {
-  status: "stopped";
+  status: "failed";
   sandbox: AiAgentRunSandbox | null;
 };
 
