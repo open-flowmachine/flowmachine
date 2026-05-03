@@ -1,12 +1,15 @@
 import type { Document } from "mongodb";
 
 import { UTCDate } from "@date-fns/utc";
+import z from "zod";
 
 import { type Id, newId } from "@/shared/model/model-id";
 
+const dateTimeSchema = z.date().or(z.iso.datetime());
+
 type ModelBaseFields = {
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: z.infer<typeof dateTimeSchema>;
+  updatedAt: z.infer<typeof dateTimeSchema>;
   _version: number;
 };
 
@@ -31,5 +34,5 @@ const newModel = <T extends Document>(input: T) => {
   } satisfies Model<T>;
 };
 
-export { newModel };
+export { dateTimeSchema, newModel };
 export type { Model, ModelBaseFields, ExcludedUpdateModelFields };

@@ -68,9 +68,7 @@ test("EditableAiAgentDetailsPage: given an AI agent with no projects, when the p
   mswServer.use(getByIdHandler);
 
   // when
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
   await waitForAgentToLoad();
 
@@ -89,15 +87,11 @@ test("EditableAiAgentDetailsPage: given an AI agent, when the page loads, then d
   mswServer.use(getByIdHandler);
 
   // when
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
 
   // then
-  expect(
-    await screen.findByText(AI_AGENT_WITHOUT_PROJECTS.id),
-  ).toBeVisible();
+  expect(await screen.findByText(AI_AGENT_WITHOUT_PROJECTS.id)).toBeVisible();
 });
 
 test("EditableAiAgentDetailsPage: given an AI agent, when the page loads, then displays agent name in details", async () => {
@@ -109,9 +103,7 @@ test("EditableAiAgentDetailsPage: given an AI agent, when the page loads, then d
   mswServer.use(getByIdHandler);
 
   // when
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
   await waitForAgentToLoad();
 
@@ -129,9 +121,7 @@ test("EditableAiAgentDetailsPage: given an AI agent with no projects, when the p
   mswServer.use(getByIdHandler);
 
   // when
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
 
   // then
@@ -147,9 +137,7 @@ test("EditableAiAgentDetailsPage: given an AI agent, when the page loads, then d
   mswServer.use(getByIdHandler);
 
   // when
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
 
   // then
@@ -165,9 +153,7 @@ test("EditableAiAgentDetailsPage: given an AI agent, when the page loads, then d
   mswServer.use(getByIdHandler);
 
   // when
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
 
   // then
@@ -183,9 +169,7 @@ test("EditableAiAgentDetailsPage: given an AI agent, when the page loads, then r
   mswServer.use(getByIdHandler);
 
   // when
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
 
   // then
@@ -241,9 +225,7 @@ test("EditableAiAgentDetailsPage: given clipboard is available and the page has 
   });
   mswServer.use(getByIdHandler);
 
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
   await waitForAgentToLoad();
 
@@ -265,9 +247,7 @@ test("EditableAiAgentDetailsPage: given the page has loaded, when Edit is clicke
   });
   mswServer.use(getByIdHandler);
 
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
   await waitForAgentToLoad();
 
@@ -288,9 +268,7 @@ test("EditableAiAgentDetailsPage: given the edit form is open, when rendered, th
   });
   mswServer.use(getByIdHandler);
 
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
   await screen.findByRole("button", { name: "Edit" });
 
@@ -309,9 +287,7 @@ test("EditableAiAgentDetailsPage: given the edit form is open, when Cancel is cl
   });
   mswServer.use(getByIdHandler);
 
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
   await waitForAgentToLoad();
   await userEvent.click(screen.getByRole("button", { name: "Edit" }));
@@ -333,9 +309,7 @@ test("EditableAiAgentDetailsPage: given a valid update, when Save is clicked and
   const updateHandler = aiAgentHandler.updateById();
   mswServer.use(getByIdHandler, updateHandler);
 
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
   await waitForAgentToLoad();
   await userEvent.click(screen.getByRole("button", { name: "Edit" }));
@@ -366,9 +340,7 @@ test("EditableAiAgentDetailsPage: given an update that fails, when Save is click
   });
   mswServer.use(getByIdHandler, updateHandler);
 
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
   await waitForAgentToLoad();
   await userEvent.click(screen.getByRole("button", { name: "Edit" }));
@@ -379,9 +351,7 @@ test("EditableAiAgentDetailsPage: given an update that fails, when Save is click
   updateHandler.resolveRequest();
 
   // then
-  expect(
-    await screen.findByText("Failed to update AI Agent"),
-  ).toBeVisible();
+  expect(await screen.findByText("Failed to update AI Agent")).toBeVisible();
 });
 
 test("EditableAiAgentDetailsPage: given Save is clicked, when update is in progress, then shows Saving...", async () => {
@@ -393,9 +363,7 @@ test("EditableAiAgentDetailsPage: given Save is clicked, when update is in progr
   const updateHandler = aiAgentHandler.updateById();
   mswServer.use(getByIdHandler, updateHandler);
 
-  testRender(
-    <EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />,
-  );
+  testRender(<EditableAiAgentDetailsPage id={AI_AGENT_WITHOUT_PROJECTS.id} />);
   getByIdHandler.resolveRequest();
   await waitForAgentToLoad();
   await userEvent.click(screen.getByRole("button", { name: "Edit" }));

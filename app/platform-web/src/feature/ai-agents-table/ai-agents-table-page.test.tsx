@@ -260,9 +260,9 @@ test("AiAgentsTablePage: given the delete dialog is open, when it appears, then 
   await screen.findByText("Delete AI agent");
 
   // then
-  expect(
-    screen.getByText(/Are you sure you want to delete/),
-  ).toHaveTextContent("Alpha Agent");
+  expect(screen.getByText(/Are you sure you want to delete/)).toHaveTextContent(
+    "Alpha Agent",
+  );
 });
 
 test("AiAgentsTablePage: given the delete dialog is open, when deletion is confirmed, then it calls the API and closes the dialog", async () => {
@@ -283,9 +283,7 @@ test("AiAgentsTablePage: given the delete dialog is open, when deletion is confi
   deleteHandler.resolveRequest();
 
   // then
-  await waitForElementToBeRemoved(() =>
-    screen.queryByText("Delete AI agent"),
-  );
+  await waitForElementToBeRemoved(() => screen.queryByText("Delete AI agent"));
 });
 
 test("AiAgentsTablePage: given the delete dialog is open, when Cancel is clicked, then it closes the dialog", async () => {
@@ -329,7 +327,5 @@ test("AiAgentsTablePage: given the delete dialog is open, when deletion is in pr
 
   deleteHandler.resolveRequest();
 
-  await waitForElementToBeRemoved(() =>
-    screen.queryByText("Delete AI agent"),
-  );
+  await waitForElementToBeRemoved(() => screen.queryByText("Delete AI agent"));
 });

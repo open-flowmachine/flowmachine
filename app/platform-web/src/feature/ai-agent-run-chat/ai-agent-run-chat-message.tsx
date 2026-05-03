@@ -88,7 +88,7 @@ export function AiAgentRunChatMessage({ message }: AiAgentRunChatMessageProps) {
 
   return (
     <div className="flex justify-start">
-      <div className="bg-muted text-foreground max-w-[90%] space-y-2 rounded-lg px-3 py-2 text-sm leading-relaxed [&_code]:bg-background/60 [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs [&_p]:my-2 [&_pre]:bg-background/80 [&_pre]:overflow-auto [&_pre]:rounded-md [&_pre]:p-3 [&_pre]:text-xs [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5 [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_h4]:font-semibold">
+      <div className="bg-muted text-foreground [&_code]:bg-background/60 [&_pre]:bg-background/80 max-w-[90%] space-y-2 rounded-lg px-3 py-2 text-sm leading-relaxed [&_code]:rounded [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-xs [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_h4]:font-semibold [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_pre]:overflow-auto [&_pre]:rounded-md [&_pre]:p-3 [&_pre]:text-xs [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_ul]:list-disc [&_ul]:pl-5">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
           {message.content}
         </ReactMarkdown>

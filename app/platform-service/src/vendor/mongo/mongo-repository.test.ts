@@ -201,9 +201,7 @@ test("makeMongoRepository insert: given a model, when called, then maps model to
 
 test("makeMongoRepository insert: given a database error, when called, then returns err with Mongo database error message", async () => {
   // given
-  mockCollection.insertOne.mockRejectedValueOnce(
-    new Error("duplicate key"),
-  );
+  mockCollection.insertOne.mockRejectedValueOnce(new Error("duplicate key"));
 
   // when
   const result = await repo.insert({ data: makeTestModel() });

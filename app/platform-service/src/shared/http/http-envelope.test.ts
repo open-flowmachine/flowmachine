@@ -42,7 +42,11 @@ test("okEnvelope: given undefined data, when called, then omits data from envelo
 
 test("okEnvelope: given custom status, code, and message, when called, then overrides defaults", () => {
   // given
-  const overrides = { status: 201, code: "created", message: "Resource created" };
+  const overrides = {
+    status: 201,
+    code: "created",
+    message: "Resource created",
+  };
 
   // when
   const result = okEnvelope(overrides);

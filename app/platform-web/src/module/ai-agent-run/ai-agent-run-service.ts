@@ -56,7 +56,9 @@ const makeAiAgentRunService = (input: { run: AiAgentRun }) => {
     getStatusDisplayName: () => statusToDisplayName[run.status],
     getStatusBadgeVariant: () => statusToVariant[run.status],
     getEndedReasonDisplayName: () =>
-      run.endedReason === null ? null : endedReasonToDisplayName[run.endedReason],
+      run.endedReason === null
+        ? null
+        : endedReasonToDisplayName[run.endedReason],
     getComposerHint: () => composerHintByStatus[run.status],
     getStartedAt: () => formatTimestamp(run.startedAt),
     getLastMessageAt: () => formatTimestamp(run.lastMessageAt),

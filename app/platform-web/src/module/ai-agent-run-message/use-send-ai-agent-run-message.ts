@@ -1,7 +1,4 @@
-import {
-  type UseMutationOptions,
-  useMutation,
-} from "@tanstack/react-query";
+import { type UseMutationOptions, useMutation } from "@tanstack/react-query";
 
 import type { HttpEnvelope } from "@/lib/http/http-schema";
 import type { Id } from "@/lib/schema";

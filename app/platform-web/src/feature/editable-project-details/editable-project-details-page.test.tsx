@@ -81,9 +81,7 @@ test("EditableProjectDetailsPage: given project data, when page loads, then disp
   projectGetByIdHandler.resolveRequest();
 
   // then
-  expect(
-    await screen.findByText(PROJECT_WITHOUT_INTEGRATION.id),
-  ).toBeVisible();
+  expect(await screen.findByText(PROJECT_WITHOUT_INTEGRATION.id)).toBeVisible();
 });
 
 test("EditableProjectDetailsPage: given project data, when page loads, then displays project name in details", async () => {
@@ -164,9 +162,7 @@ test("EditableProjectDetailsPage: given project with integration, when page load
   mswServer.use(projectGetByIdHandler);
 
   // when
-  testRender(
-    <EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />,
-  );
+  testRender(<EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />);
   projectGetByIdHandler.resolveRequest();
   await screen.findByRole("button", { name: "Edit" });
 
@@ -274,9 +270,7 @@ test("EditableProjectDetailsPage: given project data is loaded, when user clicks
   });
   mswServer.use(projectGetByIdHandler);
 
-  testRender(
-    <EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />,
-  );
+  testRender(<EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />);
   projectGetByIdHandler.resolveRequest();
   await screen.findByRole("button", { name: "Edit" });
 
@@ -324,9 +318,7 @@ test("EditableProjectDetailsPage: given edit form is submitted successfully, whe
   const updateHandler = projectHandler.updateById();
   mswServer.use(projectGetByIdHandler, updateHandler);
 
-  testRender(
-    <EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />,
-  );
+  testRender(<EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />);
   projectGetByIdHandler.resolveRequest();
   await waitForProjectToLoad();
   await userEvent.click(screen.getByRole("button", { name: "Edit" }));
@@ -338,9 +330,7 @@ test("EditableProjectDetailsPage: given edit form is submitted successfully, whe
   updateHandler.resolveRequest();
 
   // then
-  expect(
-    await screen.findByText("Project updated successfully"),
-  ).toBeVisible();
+  expect(await screen.findByText("Project updated successfully")).toBeVisible();
   expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
 });
 
@@ -356,9 +346,7 @@ test("EditableProjectDetailsPage: given edit form is submitted with server error
   });
   mswServer.use(projectGetByIdHandler, projectUpdateByIdHandler);
 
-  testRender(
-    <EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />,
-  );
+  testRender(<EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />);
   projectGetByIdHandler.resolveRequest();
   projectUpdateByIdHandler.resolveRequest();
   await waitForProjectToLoad();
@@ -379,9 +367,7 @@ test("EditableProjectDetailsPage: given edit form is submitted, when update is i
   const updateHandler = projectHandler.updateById();
   mswServer.use(projectGetByIdHandler, updateHandler);
 
-  testRender(
-    <EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />,
-  );
+  testRender(<EditableProjectDetailsPage id={PROJECT_WITH_INTEGRATION.id} />);
   projectGetByIdHandler.resolveRequest();
   await waitForProjectToLoad();
   await userEvent.click(screen.getByRole("button", { name: "Edit" }));

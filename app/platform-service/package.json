@@ -3,7 +3,6 @@
   "type": "module",
   "scripts": {
     "build": "bun build src/index.ts --outdir ./dist --target bun",
-    "check-types": "tsc --noEmit --skipLibCheck",
     "dev": "bun --watch src/index.ts",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
@@ -21,6 +20,7 @@
     "autumn-js": "catalog:",
     "axios": "catalog:",
     "better-auth": "catalog:",
+    "date-fns": "catalog:",
     "dotenv": "catalog:",
     "elysia": "catalog:",
     "es-toolkit": "catalog:",

@@ -306,9 +306,7 @@ test("EditableCredentialDetailsPage: given an API key credential, when the edit 
 
   // then
   expect(screen.getByLabelText("Name")).toHaveValue("Production API Token");
-  expect(screen.getByLabelText("API Key")).toHaveValue(
-    "sk-1234567890abcdef",
-  );
+  expect(screen.getByLabelText("API Key")).toHaveValue("sk-1234567890abcdef");
 });
 
 test("EditableCredentialDetailsPage: given a basic credential, when the edit form is opened, then is pre-populated with basic credential data", async () => {
@@ -402,9 +400,7 @@ test("EditableCredentialDetailsPage: given an update that fails, when Save is cl
   updateHandler.resolveRequest();
 
   // then
-  expect(
-    await screen.findByText("Failed to update credential"),
-  ).toBeVisible();
+  expect(await screen.findByText("Failed to update credential")).toBeVisible();
 });
 
 test("EditableCredentialDetailsPage: given Save is clicked, when update is in progress, then shows Saving...", async () => {

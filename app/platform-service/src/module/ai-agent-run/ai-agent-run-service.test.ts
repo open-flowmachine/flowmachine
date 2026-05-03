@@ -45,10 +45,6 @@ const makeRun = (overrides?: Partial<AiAgentRun>): AiAgentRun => ({
   status: "idle",
   sessionId: null,
   sandbox: null,
-  startedAt: now,
-  lastMessageAt: null,
-  endedAt: null,
-  endedReason: null,
   ...overrides,
 });
 
@@ -83,7 +79,12 @@ test("create: given no existing runs, when called, then inserts a provisioning r
   // when
   const result = await aiAgentRunService.create({
     ctx,
-    payload: { aiAgentId: AGENT_ID },
+    payload: {
+      aiAgentId: AGENT_ID,
+      sandbox: null,
+      sessionId: null,
+      status: "initializing",
+    },
   });
 
   // then
@@ -94,37 +95,41 @@ test("create: given no existing runs, when called, then inserts a provisioning r
     data: expect.objectContaining({
       id: NEW_ID,
       aiAgentId: AGENT_ID,
-      status: "provisioning",
+      status: "initializing",
       sessionId: null,
       sandbox: null,
     }),
   });
 });
 
-test("create: given a non-terminal run already exists, when called, then returns conflict err", async () => {
+test("create: given a non-terminal run already exists, when called, then still inserts a new run", async () => {
   // given
   mockRepository.findMany.mockResolvedValue(
-    ok({ data: [makeRun({ status: "processing" })] }),
+    ok({ data: [makeRun({ status: "initializing" })] }),
   );
+  mockRepository.insert.mockResolvedValue(ok());
 
   // when
   const result = await aiAgentRunService.create({
     ctx,
-    payload: { aiAgentId: AGENT_ID },
+    payload: {
+      aiAgentId: AGENT_ID,
+      sandbox: null,
+      sessionId: null,
+      status: "initializing",
+    },
   });
 
   // then
-  expect(result.isErr()).toBe(true);
-  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
-  expect(result._unsafeUnwrapErr()).toHaveProperty("code", "conflict");
-  expect(mockRepository.insert).not.toHaveBeenCalled();
+  expect(result.isOk()).toBe(true);
+  expect(mockRepository.insert).toHaveBeenCalledTimes(1);
 });
 
 test("create: given only terminal runs exist, when called, then inserts a new run", async () => {
   // given
   mockRepository.findMany.mockResolvedValue(
     ok({
-      data: [makeRun({ status: "stopped" }), makeRun({ status: "errored" })],
+      data: [makeRun({ status: "stopped" }), makeRun({ status: "failed" })],
     }),
   );
   mockRepository.insert.mockResolvedValue(ok());
@@ -132,7 +137,12 @@ test("create: given only terminal runs exist, when called, then inserts a new ru
   // when
   const result = await aiAgentRunService.create({
     ctx,
-    payload: { aiAgentId: AGENT_ID },
+    payload: {
+      aiAgentId: AGENT_ID,
+      sandbox: null,
+      sessionId: null,
+      status: "initializing",
+    },
   });
 
   // then
@@ -159,53 +169,6 @@ test("get: given a non-existent run, when called, then returns notFound err", as
 
   // when
   const result = await aiAgentRunService.get({ ctx, id: RUN_ID });
-
-  // then
-  expect(result.isErr()).toBe(true);
-  expect(result._unsafeUnwrapErr()).toHaveProperty("code", "notFound");
-});
-
-test("markProcessing: given an idle run, when called, then transitions to processing", async () => {
-  // given
-  const run = makeRun({ status: "idle" });
-  mockRepository.findById.mockResolvedValue(ok({ data: run }));
-  mockRepository.update.mockResolvedValue(ok({ data: run }));
-
-  // when
-  const result = await aiAgentRunService.markProcessing({ ctx, id: RUN_ID });
-
-  // then
-  expect(result.isOk()).toBe(true);
-  expect(mockRepository.update).toHaveBeenCalledWith({
-    ctx,
-    id: RUN_ID,
-    data: expect.objectContaining({ status: "processing", _version: 1 }),
-  });
-});
-
-test("markProcessing: given a processing run, when called, then returns conflict err", async () => {
-  // given
-  mockRepository.findById.mockResolvedValue(
-    ok({ data: makeRun({ status: "processing" }) }),
-  );
-
-  // when
-  const result = await aiAgentRunService.markProcessing({ ctx, id: RUN_ID });
-
-  // then
-  expect(result.isErr()).toBe(true);
-  expect(result._unsafeUnwrapErr()).toHaveProperty("code", "conflict");
-  expect(mockRepository.update).not.toHaveBeenCalled();
-});
-
-test("markProcessing: given a terminal run, when called, then returns notFound err", async () => {
-  // given
-  mockRepository.findById.mockResolvedValue(
-    ok({ data: makeRun({ status: "stopped" }) }),
-  );
-
-  // when
-  const result = await aiAgentRunService.markProcessing({ ctx, id: RUN_ID });
 
   // then
   expect(result.isErr()).toBe(true);

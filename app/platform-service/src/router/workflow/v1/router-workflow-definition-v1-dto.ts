@@ -1,5 +1,6 @@
 import z from "zod";
 
+import { dateTimeSchema } from "@/shared/model/model";
 import { idSchema } from "@/shared/model/model-id";
 
 const workflowDefinitionProjectSchema = z.object({
@@ -20,8 +21,8 @@ const workflowEdgeSchema = z.object({
 
 const workflowDefinitionResponseDtoSchema = z.object({
   id: idSchema,
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: dateTimeSchema,
+  updatedAt: dateTimeSchema,
   name: z.string(),
   description: z.string().optional(),
   projects: workflowDefinitionProjectSchema.array(),

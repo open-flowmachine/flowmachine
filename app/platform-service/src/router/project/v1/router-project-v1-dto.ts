@@ -1,6 +1,7 @@
 import z from "zod";
 
 import { projectProviders } from "@/module/project/project-model";
+import { dateTimeSchema } from "@/shared/model/model";
 import { idSchema } from "@/shared/model/model-id";
 
 const integrationSchema = z.object({
@@ -14,8 +15,8 @@ const integrationSchema = z.object({
 
 const projectResponseDtoSchema = z.object({
   id: idSchema,
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  createdAt: dateTimeSchema,
+  updatedAt: dateTimeSchema,
   name: z.string(),
   integration: integrationSchema.nullable(),
 });

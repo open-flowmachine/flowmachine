@@ -327,9 +327,9 @@ test("ProjectsTablePage: given the delete dialog is open, when shown, then shows
   await screen.findByText("Delete project");
 
   // then
-  expect(
-    screen.getByText(/Are you sure you want to delete/),
-  ).toHaveTextContent("Alpha Project");
+  expect(screen.getByText(/Are you sure you want to delete/)).toHaveTextContent(
+    "Alpha Project",
+  );
 });
 
 test("ProjectsTablePage: given the delete dialog is open, when deletion is confirmed, then calls API and closes dialog", async () => {

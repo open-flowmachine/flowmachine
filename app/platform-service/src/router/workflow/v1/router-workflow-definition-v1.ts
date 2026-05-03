@@ -1,12 +1,9 @@
 import Elysia from "elysia";
 
 import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-model";
-
-import { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";
-
-const workflowDefinitionService = makeWorkflowDefinitionService();
 import type { WorkflowDefinitionResponseDto } from "@/router/workflow/v1/router-workflow-definition-v1-dto";
 
+import { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";
 import { routerAuthGuard } from "@/router/router-auth-guard";
 import {
   deleteWorkflowDefinitionRequestParamsDtoSchema,
@@ -15,6 +12,8 @@ import {
   postWorkflowDefinitionRequestBodyDtoSchema,
 } from "@/router/workflow/v1/router-workflow-definition-v1-dto";
 import { errEnvelope, okEnvelope } from "@/shared/http/http-envelope";
+
+const workflowDefinitionService = makeWorkflowDefinitionService();
 
 const toDto = (definition: WorkflowDefinition) =>
   ({

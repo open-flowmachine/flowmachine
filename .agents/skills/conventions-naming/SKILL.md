@@ -7,18 +7,18 @@ description: Apply when creating or renaming folders, files, variables, function
 
 > For TypeScript type design (illegal states, enum replacement, branded types, escape hatches) → `conventions-typescript`.
 
-| Target                                       | Casing                               | Example                                       |
-| -------------------------------------------- | ------------------------------------ | --------------------------------------------- |
-| Folder                                       | `kebab-case`                         | `user-profile/`                               |
-| File (all, incl. `.ts` / `.tsx`)             | `kebab-case`                         | `user-card.tsx`, `auth-service.ts`            |
-| Test file                                    | `kebab-case` + `.test.ts(x)`         | `user-card.test.tsx`                          |
-| Variable                                     | `camelCase`                          | `currentUser`                                 |
-| Function                                     | `camelCase`                          | `getUserById`                                 |
-| Class                                        | `PascalCase`                         | `UserService`                                 |
-| Type / Interface                             | `PascalCase`                         | `UserProfile`                                 |
+| Target                                       | Casing                               | Example                                         |
+| -------------------------------------------- | ------------------------------------ | ----------------------------------------------- |
+| Folder                                       | `kebab-case`                         | `user-profile/`                                 |
+| File (all, incl. `.ts` / `.tsx`)             | `kebab-case`                         | `user-card.tsx`, `auth-service.ts`              |
+| Test file                                    | `kebab-case` + `.test.ts(x)`         | `user-card.test.tsx`                            |
+| Variable                                     | `camelCase`                          | `currentUser`                                   |
+| Function                                     | `camelCase`                          | `getUserById`                                   |
+| Class                                        | `PascalCase`                         | `UserService`                                   |
+| Type / Interface                             | `PascalCase`                         | `UserProfile`                                   |
 | Enum replacement (see rules)                 | value `camelCase`, type `PascalCase` | `statuses` / `Status`; `httpCodes` / `HttpCode` |
-| Module-level constant (primitive, immutable) | `SCREAMING_SNAKE_CASE`               | `MAX_RETRIES`                                 |
-| Module-level constant (non-primitive)        | `camelCase`                          | `handlers`, `status`                          |
+| Module-level constant (primitive, immutable) | `SCREAMING_SNAKE_CASE`               | `MAX_RETRIES`                                   |
+| Module-level constant (non-primitive)        | `camelCase`                          | `handlers`, `status`                            |
 
 ## Rules
 

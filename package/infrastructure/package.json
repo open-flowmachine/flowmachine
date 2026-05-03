@@ -1,0 +1,22 @@
+{
+  "name": "@flowmachine/infrastructure",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "tsc",
+    "cdk": "cdk",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "test": "bun test --randomize"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "catalog:",
+    "constructs": "catalog:"
+  },
+  "devDependencies": {
+    "@flowmachine/typescript-config": "workspace:*",
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
+    "cdk": "catalog:",
+    "typescript": "catalog:"
+  }
+}

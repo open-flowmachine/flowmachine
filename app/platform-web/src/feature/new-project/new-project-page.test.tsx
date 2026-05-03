@@ -80,9 +80,7 @@ test("NewProjectPage: given a valid form, when Save is clicked and the request s
   projectCreateHandler.resolveRequest();
 
   // then
-  expect(
-    await screen.findByText("Project created successfully"),
-  ).toBeVisible();
+  expect(await screen.findByText("Project created successfully")).toBeVisible();
 });
 
 test("NewProjectPage: given a valid form, when Save is clicked and the request succeeds, then the router redirects to /platform/project", async () => {

@@ -9,10 +9,10 @@ import { AiAgentRunChatDisconnectBanner } from "@/feature/ai-agent-run-chat/ai-a
 import { AiAgentRunChatHeader } from "@/feature/ai-agent-run-chat/ai-agent-run-chat-header";
 import { AiAgentRunChatMessageList } from "@/feature/ai-agent-run-chat/ai-agent-run-chat-message-list";
 import { AiAgentTabs } from "@/feature/ai-agent-tabs/ai-agent-tabs";
-import { useGetAiAgent } from "@/module/ai-agent/use-get-ai-agent";
+import { useListAiAgentRunMessages } from "@/module/ai-agent-run-message/use-list-ai-agent-run-messages";
 import { useAiAgentRunEventStream } from "@/module/ai-agent-run/use-ai-agent-run-event-stream";
 import { useGetAiAgentRun } from "@/module/ai-agent-run/use-get-ai-agent-run";
-import { useListAiAgentRunMessages } from "@/module/ai-agent-run-message/use-list-ai-agent-run-messages";
+import { useGetAiAgent } from "@/module/ai-agent/use-get-ai-agent";
 
 type AiAgentRunChatPageProps = {
   aiAgentId: string;

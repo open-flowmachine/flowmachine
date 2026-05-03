@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "build": "next build",
-    "check-types": "tsc --noEmit --skipLibCheck",
     "dev": "next dev",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",

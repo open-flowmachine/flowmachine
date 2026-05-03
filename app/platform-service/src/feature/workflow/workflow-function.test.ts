@@ -5,11 +5,11 @@ import { err, ok } from "neverthrow";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant } from "@/shared/model/model-tenant";
 
-import * as workflowEngineModule from "@/feature/workflow/workflow-engine";
 import {
   WORKFLOW_EXECUTION_INITIALIZED_EVENT,
   WORKFLOW_EXECUTION_TRIGGERED_EVENT,
 } from "@/feature/workflow/workflow-constant";
+import * as workflowEngineModule from "@/feature/workflow/workflow-engine";
 import * as workflowExecutionServiceModule from "@/module/workflow/workflow-execution-service";
 import { Err } from "@/shared/err/err";
 
@@ -44,9 +44,8 @@ const workflowEngineRunSpy = spyOn(
   "run",
 ).mockResolvedValue(undefined as never);
 
-const { workflowFunctions } = await import(
-  "@/feature/workflow/workflow-function"
-);
+const { workflowFunctions } =
+  await import("@/feature/workflow/workflow-function");
 const initializeWorkflowExecution = workflowFunctions[0];
 if (!initializeWorkflowExecution) {
   throw new Error(

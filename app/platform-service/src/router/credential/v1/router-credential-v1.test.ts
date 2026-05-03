@@ -45,9 +45,8 @@ const getSessionSpy = spyOn(
   user: { id: TEST_ID },
 } as never);
 
-const { credentialV1Router } = await import(
-  "@/router/credential/v1/router-credential-v1"
-);
+const { credentialV1Router } =
+  await import("@/router/credential/v1/router-credential-v1");
 
 // --- Helpers ---
 
