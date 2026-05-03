@@ -79,7 +79,12 @@ test("create: given no existing runs, when called, then inserts a provisioning r
   // when
   const result = await aiAgentRunService.create({
     ctx,
-    payload: { aiAgentId: AGENT_ID, sandbox: null, sessionId: null, status: "initializing" },
+    payload: {
+      aiAgentId: AGENT_ID,
+      sandbox: null,
+      sessionId: null,
+      status: "initializing",
+    },
   });
 
   // then
@@ -107,7 +112,12 @@ test("create: given a non-terminal run already exists, when called, then still i
   // when
   const result = await aiAgentRunService.create({
     ctx,
-    payload: { aiAgentId: AGENT_ID, sandbox: null, sessionId: null, status: "initializing" },
+    payload: {
+      aiAgentId: AGENT_ID,
+      sandbox: null,
+      sessionId: null,
+      status: "initializing",
+    },
   });
 
   // then
@@ -127,7 +137,12 @@ test("create: given only terminal runs exist, when called, then inserts a new ru
   // when
   const result = await aiAgentRunService.create({
     ctx,
-    payload: { aiAgentId: AGENT_ID, sandbox: null, sessionId: null, status: "initializing" },
+    payload: {
+      aiAgentId: AGENT_ID,
+      sandbox: null,
+      sessionId: null,
+      status: "initializing",
+    },
   });
 
   // then

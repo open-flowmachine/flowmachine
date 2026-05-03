@@ -3,6 +3,8 @@ import openapi, { fromTypes } from "@elysiajs/openapi";
 import { Elysia } from "elysia";
 import z from "zod";
 
+import { aiAgentRunMessageV1Router } from "@/router/ai-agent-run-message/v1/router-ai-agent-run-message-v1";
+import { aiAgentRunV1Router } from "@/router/ai-agent-run/v1/router-ai-agent-run-v1";
 import { aiAgentV1Router } from "@/router/ai-agent/v1/router-ai-agent-v1";
 import { authRouter } from "@/router/auth/router-auth";
 import { credentialV1Router } from "@/router/credential/v1/router-credential-v1";
@@ -28,6 +30,8 @@ const app = new Elysia()
     }),
   )
   .use(aiAgentV1Router)
+  .use(aiAgentRunV1Router)
+  .use(aiAgentRunMessageV1Router)
   .use(authRouter)
   .use(credentialV1Router)
   .use(healthRouter)

@@ -279,5 +279,3 @@ test("DELETE /api/v1/ai-agent/:id: given a service failure, when deleted, then r
   expect(json.status).toBe(500);
   expect(json.code).toBe("unknown");
 });
-
-
