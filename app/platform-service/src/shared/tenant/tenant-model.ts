@@ -10,18 +10,6 @@ const tenantSchema = z.object({
 });
 type Tenant = z.infer<typeof tenantSchema>;
 
-type TenantToggle<T extends Record<string, unknown>> = Omit<T, "tenant"> &
-  (
-    | {
-        dangerouslyDisableTenant: true;
-        tenant?: undefined;
-      }
-    | {
-        dangerouslyDisableTenant?: false | undefined;
-        tenant: Tenant;
-      }
-  );
-
 type TenantAware<T extends Record<string, unknown> = Record<string, unknown>> =
   T &
     (
@@ -52,5 +40,4 @@ export type {
   TenantUnaware,
   TenantAwareDisabled,
   TenantAwareEnabled,
-  TenantToggle,
 };

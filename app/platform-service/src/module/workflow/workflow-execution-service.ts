@@ -2,7 +2,7 @@ import { err, ok } from "neverthrow";
 
 import type { WorkflowExecution } from "@/module/workflow/workflow-execution-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import { workflowExecutionRepository } from "@/module/workflow/workflow-execution-repository";
 import { Err } from "@/shared/err/err";

@@ -2,7 +2,7 @@ import type { AiAgentRun } from "@/module/ai-agent-run/ai-agent-run-model";
 import type {
   TenantAware,
   TenantAwareEnabled,
-} from "@/shared/model/model-tenant";
+} from "@/shared/tenant/tenant-model";
 
 import { makeMongoRepository } from "@/vendor/mongo/mongo-repository";
 

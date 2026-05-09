@@ -3,7 +3,7 @@ import { err, ok } from "neverthrow";
 
 import type { GitRepository } from "@/module/git-repository/git-repository-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import * as gitRepositoryServiceModule from "@/module/git-repository/git-repository-service";
 import { Err } from "@/shared/err/err";

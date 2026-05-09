@@ -2,7 +2,7 @@ import { err, ok } from "neverthrow";
 
 import type { AiAgent } from "@/module/ai-agent/ai-agent-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant, TenantAware } from "@/shared/model/model-tenant";
+import type { Tenant, TenantAware } from "@/shared/tenant/tenant-model";
 
 import { aiAgentRepository } from "@/module/ai-agent/ai-agent-repository";
 import { Err } from "@/shared/err/err";

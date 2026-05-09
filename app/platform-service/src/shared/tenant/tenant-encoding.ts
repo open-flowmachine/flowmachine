@@ -1,8 +1,8 @@
 import { err, type Result } from "neverthrow";
 
 import { Err } from "@/shared/err/err";
-import { type Tenant, tenantSchema } from "@/shared/model/model-tenant";
 import { validate } from "@/shared/schema/schema-validation";
+import { type Tenant, tenantSchema } from "@/shared/tenant/tenant-model";
 
 const encodeTenant = (tenant: Tenant): string =>
   encodeURIComponent(`${tenant.type}:${tenant.id}`);

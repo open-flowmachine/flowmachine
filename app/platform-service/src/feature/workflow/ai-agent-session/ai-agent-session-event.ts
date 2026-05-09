@@ -6,7 +6,7 @@ import {
   AI_AGENT_SESSION_USER_INPUT_RECEIVED_EVENT,
 } from "@/feature/workflow/ai-agent-session/ai-agent-session-constant";
 import { idSchema } from "@/shared/model/model-id";
-import { tenantSchema } from "@/shared/model/model-tenant";
+import { tenantSchema } from "@/shared/tenant/tenant-model";
 import { makeInngestEventType } from "@/vendor/inngest/inngest-util";
 
 const aiAgentSessionInitializationRequestEvent = makeInngestEventType({

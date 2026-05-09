@@ -13,7 +13,7 @@ import type { Project } from "@/module/project/project-model";
 import type { makeProjectService } from "@/module/project/project-service";
 import type { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import { Err } from "@/shared/err/err";
 

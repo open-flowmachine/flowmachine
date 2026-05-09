@@ -12,7 +12,7 @@ import { makeAiAgentRunService } from "@/module/ai-agent-run/ai-agent-run-servic
 import { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
 import { Err } from "@/shared/err/err";
 import { type Id } from "@/shared/model/model-id";
-import { type Tenant } from "@/shared/model/model-tenant";
+import { type Tenant } from "@/shared/tenant/tenant-model";
 import { daytonaClient } from "@/vendor/daytona/daytona-client";
 import { getEnv } from "@/vendor/env/env";
 import { baseLog } from "@/vendor/pino/pino-log";

@@ -2,7 +2,7 @@ import type { ProjectIssueFieldDefinition } from "@/module/project/project-issue
 import type {
   TenantAware,
   TenantAwareEnabled,
-} from "@/shared/model/model-tenant";
+} from "@/shared/tenant/tenant-model";
 
 import { makeMongoRepository } from "@/vendor/mongo/mongo-repository";
 

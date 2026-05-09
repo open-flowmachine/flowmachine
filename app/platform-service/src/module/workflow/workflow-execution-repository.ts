@@ -2,7 +2,7 @@ import type { WorkflowExecution } from "@/module/workflow/workflow-execution-mod
 import type {
   TenantAware,
   TenantAwareEnabled,
-} from "@/shared/model/model-tenant";
+} from "@/shared/tenant/tenant-model";
 
 import { makeMongoRepository } from "@/vendor/mongo/mongo-repository";
 

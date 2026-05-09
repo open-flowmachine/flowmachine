@@ -7,7 +7,7 @@ import type {
   TenantAwareDisabled,
   TenantAwareEnabled,
   TenantUnaware,
-} from "@/shared/model/model-tenant";
+} from "@/shared/tenant/tenant-model";
 import type { MongoCtx, MongoDoc } from "@/vendor/mongo/mongo-type";
 
 import { safeFn } from "@/shared/err/err-util";

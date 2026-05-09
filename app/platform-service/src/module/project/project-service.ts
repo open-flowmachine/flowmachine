@@ -2,7 +2,7 @@ import { err, ok } from "neverthrow";
 
 import type { Project } from "@/module/project/project-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import { projectRepository } from "@/module/project/project-repository";
 import { Err } from "@/shared/err/err";

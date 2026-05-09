@@ -8,7 +8,7 @@ import type {
   Tenant,
   TenantAware,
   TenantAwareEnabled,
-} from "@/shared/model/model-tenant";
+} from "@/shared/tenant/tenant-model";
 
 import { Err } from "@/shared/err/err";
 import { mongoClient } from "@/vendor/mongo/mongo-client";

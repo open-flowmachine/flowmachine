@@ -2,7 +2,7 @@ import { err, ok } from "neverthrow";
 
 import type { GitRepository } from "@/module/git-repository/git-repository-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import { gitRepositoryRepository } from "@/module/git-repository/git-repository-repository";
 import { Err } from "@/shared/err/err";

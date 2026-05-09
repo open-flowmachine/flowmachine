@@ -1,7 +1,7 @@
 import Elysia from "elysia";
 import { isNil } from "es-toolkit";
 
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import { Err } from "@/shared/err/err";
 import { betterAuthClient } from "@/vendor/better-auth/better-auth-client";
