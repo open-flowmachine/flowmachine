@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 
 import { Err } from "@/shared/err/err";
-import { mapJiraError } from "@/vendor/jira/jira-err";
+import { mapJiraError } from "@/vendor/jira/jira-mapper";
 
 test("mapJiraError: given a plain Error, when mapped, then returns Err with jira message and unknown code", () => {
   // given

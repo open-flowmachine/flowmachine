@@ -1,9 +1,6 @@
 import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 
-import {
-  MOCK_BETTER_AUTH_URL,
-  MOCK_RESEND_FROM_ADDRESS,
-} from "@/test/env-mock.test";
+import { MOCK_BETTER_AUTH_URL, MOCK_RESEND_FROM_ADDRESS } from "@/setup.test";
 import { makeBetterAuthUtil } from "@/vendor/better-auth/better-auth-util";
 import { resendClient } from "@/vendor/resend/resend-client";
 

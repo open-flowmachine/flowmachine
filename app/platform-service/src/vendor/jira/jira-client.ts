@@ -1,12 +1,9 @@
 import axios from "axios";
 
-import { safeFn } from "@/shared/err/err-util";
-import { mapJiraError } from "@/vendor/jira/jira-err";
+import type { JiraClientConfig } from "@/vendor/jira/jira-type";
 
-type JiraClientConfig = {
-  apiKey: string;
-  domain: string;
-};
+import { safeFn } from "@/shared/err/err-util";
+import { mapJiraError } from "@/vendor/jira/jira-mapper";
 
 const makeHttpClient = (config: JiraClientConfig) =>
   axios.create({
@@ -104,4 +101,4 @@ const makeJiraClient = (config: JiraClientConfig) => ({
 type JiraClient = ReturnType<typeof makeJiraClient>;
 
 export { makeJiraClient };
-export type { JiraClient, JiraClientConfig };
+export type { JiraClient };

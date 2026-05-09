@@ -1,18 +1,12 @@
-import type { EventPayload, GetStepTools, Inngest } from "inngest";
 import type z from "zod";
+
+import type {
+  InngestFnInput,
+  MakeInngestFnInput,
+} from "@/vendor/inngest/inngest-type";
 
 import { validate } from "@/shared/schema/schema-validation";
 import { baseLog } from "@/vendor/pino/pino-log";
-
-type InngestFnInput<T = unknown> = {
-  event: Omit<EventPayload<T>, "data"> & { data: T };
-  step: GetStepTools<Inngest>;
-};
-
-type MakeInngestFnInput<T, K> = {
-  dataSchema: z.ZodType<T>;
-  handler: (input: InngestFnInput<T>) => Promise<K>;
-};
 
 const log = baseLog.child({ context: "inngest-step-fn" });
 

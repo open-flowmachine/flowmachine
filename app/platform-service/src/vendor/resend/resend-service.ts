@@ -1,6 +1,6 @@
 import { safeFn } from "@/shared/err/err-util";
 import { resendClient } from "@/vendor/resend/resend-client";
-import { mapResendError } from "@/vendor/resend/resend-err";
+import { mapResendError } from "@/vendor/resend/resend-mapper";
 
 const sendEmail = (input: {
   payload: { from: string; to: string; subject: string; bodyHtml: string };
