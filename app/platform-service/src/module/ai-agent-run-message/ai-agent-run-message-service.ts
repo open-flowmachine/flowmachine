@@ -11,7 +11,7 @@ import { newModel } from "@/shared/model/model";
 
 const adminListAiAgentRunMessages = async (input: {
   ctx: TenantToggle<{ tenant: Tenant }>;
-  filter?: Filter<AiAgentRunMessage>;
+  filter?: Filter<AiAgentRunMessage> | undefined;
 }) => {
   const { ctx, filter } = input;
   return aiAgentRunMessageRepository.findMany({ ctx, filter });

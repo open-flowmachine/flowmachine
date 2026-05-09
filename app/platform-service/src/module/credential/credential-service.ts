@@ -5,7 +5,7 @@ import type { Tenant } from "@/shared/model/model-tenant";
 
 import { credentialRepository } from "@/module/credential/credential-repository";
 import { Err } from "@/shared/err/err";
-import { newModel } from "@/shared/model/model";
+import { type PartialWithUndefined, newModel } from "@/shared/model/model";
 
 type CredentialPayload =
   | { type: "apiKey"; name: string; apiKey: string; expiredAt: Date }
@@ -59,7 +59,7 @@ const listCredentials = async (input: { ctx: { tenant: Tenant } }) => {
 const updateCredential = async (input: {
   ctx: { tenant: Tenant };
   id: Id;
-  data: Partial<CredentialPayload>;
+  data: PartialWithUndefined<CredentialPayload>;
 }) => {
   const { ctx, id, data } = input;
 

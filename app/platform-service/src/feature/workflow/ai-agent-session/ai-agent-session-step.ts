@@ -190,9 +190,9 @@ const parseStreamJsonEvents = (stdout: string): StreamJsonEvent[] => {
 type AppendInput = {
   role: "assistant" | "tool_use" | "tool_result" | "system";
   content: string;
-  toolName?: string;
-  toolInput?: Record<string, unknown>;
-  toolResult?: Record<string, unknown>;
+  toolName?: string | undefined;
+  toolInput?: Record<string, unknown> | undefined;
+  toolResult?: Record<string, unknown> | undefined;
 };
 
 type StreamJsonContentBlock = NonNullable<

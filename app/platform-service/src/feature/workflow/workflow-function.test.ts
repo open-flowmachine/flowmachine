@@ -66,17 +66,22 @@ const makeEngine = () =>
 type TriggerEvent = {
   name: string;
   data: Record<string, unknown>;
-  id?: string | undefined;
+  id?: string;
 };
 
 const triggerEvent = (
   data: Record<string, unknown>,
   overrides: { id?: string | undefined } = {},
-): TriggerEvent => ({
-  name: WORKFLOW_EXECUTION_TRIGGERED_EVENT,
-  data,
-  id: overrides.id,
-});
+): TriggerEvent => {
+  const event: TriggerEvent = {
+    name: WORKFLOW_EXECUTION_TRIGGERED_EVENT,
+    data,
+  };
+  if ("id" in overrides) {
+    Object.assign(event, { id: overrides.id });
+  }
+  return event;
+};
 
 // `ctx.step.*` are tinyspy mocks (from @inngest/test), not Bun mocks, so Bun's
 // `toHaveBeenCalled` matchers don't recognise them. Read `.mock.calls` directly.

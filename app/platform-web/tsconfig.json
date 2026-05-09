@@ -3,8 +3,6 @@
   "extends": "@flowmachine/typescript-config/app-nextjs.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "dist",
-    "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./src/*"]
     }

@@ -6,7 +6,11 @@ import type { Tenant } from "@/shared/model/model-tenant";
 
 import { workflowExecutionRepository } from "@/module/workflow/workflow-execution-repository";
 import { Err } from "@/shared/err/err";
-import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
+import {
+  type ExcludedUpdateModelFields,
+  type PartialWithUndefined,
+  newModel,
+} from "@/shared/model/model";
 
 const createWorkflowExecution = async (input: {
   ctx: { tenant: Tenant };
@@ -52,7 +56,7 @@ const getWorkflowExecution = async (input: {
 
 const listWorkflowExecutions = async (input: {
   ctx: { tenant: Tenant };
-  filter?: { workflowDefinitionId: Id };
+  filter?: { workflowDefinitionId: Id } | undefined;
 }) => {
   const { ctx, filter } = input;
 
@@ -67,7 +71,9 @@ const listWorkflowExecutions = async (input: {
 const updateWorkflowExecution = async (input: {
   ctx: { tenant: Tenant };
   id: Id;
-  data: Partial<Omit<WorkflowExecution, ExcludedUpdateModelFields>>;
+  data: PartialWithUndefined<
+    Omit<WorkflowExecution, ExcludedUpdateModelFields>
+  >;
 }) => {
   const { ctx, id, data } = input;
 

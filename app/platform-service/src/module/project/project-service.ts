@@ -6,7 +6,11 @@ import type { Tenant } from "@/shared/model/model-tenant";
 
 import { projectRepository } from "@/module/project/project-repository";
 import { Err } from "@/shared/err/err";
-import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
+import {
+  type ExcludedUpdateModelFields,
+  type PartialWithUndefined,
+  newModel,
+} from "@/shared/model/model";
 
 const createProject = async (input: {
   ctx: { tenant: Tenant };
@@ -53,7 +57,7 @@ const listProjects = async (input: { ctx: { tenant: Tenant } }) => {
 const updateProject = async (input: {
   ctx: { tenant: Tenant };
   id: Id;
-  data: Partial<Omit<Project, ExcludedUpdateModelFields>>;
+  data: PartialWithUndefined<Omit<Project, ExcludedUpdateModelFields>>;
 }) => {
   const { ctx, id, data } = input;
 

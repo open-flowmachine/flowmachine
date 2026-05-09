@@ -42,7 +42,6 @@
         "@inngest/test": "catalog:",
         "@total-typescript/ts-reset": "catalog:",
         "@types/bun": "catalog:",
-        "@types/node": "catalog:",
         "type-fest": "catalog:",
       },
     },

@@ -8,11 +8,15 @@ import type { Tenant, TenantToggle } from "@/shared/model/model-tenant";
 
 import { aiAgentRunRepository } from "@/module/ai-agent-run/ai-agent-run-repository";
 import { Err } from "@/shared/err/err";
-import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
+import {
+  type ExcludedUpdateModelFields,
+  type PartialWithUndefined,
+  newModel,
+} from "@/shared/model/model";
 
 const adminListAiAgentRuns = async (input: {
   ctx: TenantToggle<{ tenant: Tenant }>;
-  filter?: Filter<AiAgentRun>;
+  filter?: Filter<AiAgentRun> | undefined;
 }) => {
   const { ctx, filter } = input;
   return aiAgentRunRepository.findMany({
@@ -24,7 +28,7 @@ const adminListAiAgentRuns = async (input: {
 const adminUpdateAiAgentRun = async (input: {
   ctx: TenantToggle<{ tenant: Tenant }>;
   id: Id;
-  data: Partial<Omit<AiAgentRun, ExcludedUpdateModelFields>>;
+  data: PartialWithUndefined<Omit<AiAgentRun, ExcludedUpdateModelFields>>;
 }) => {
   const { ctx, id, data } = input;
 
@@ -68,13 +72,13 @@ const getAiAgentRun = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
 
 const listAiAgentRuns = async (input: {
   ctx: { tenant: Tenant };
-  filter?: Filter<AiAgentRun>;
+  filter?: Filter<AiAgentRun> | undefined;
 }) => adminListAiAgentRuns(input);
 
 const updateAiAgentRun = async (input: {
   ctx: { tenant: Tenant };
   id: Id;
-  data: Partial<Omit<AiAgentRun, ExcludedUpdateModelFields>>;
+  data: PartialWithUndefined<Omit<AiAgentRun, ExcludedUpdateModelFields>>;
 }) => adminUpdateAiAgentRun(input);
 
 const makeAiAgentRunService = () => ({

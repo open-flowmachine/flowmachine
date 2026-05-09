@@ -17,6 +17,8 @@ type ExcludedUpdateModelFields =
   | "id"
   | Exclude<keyof ModelBaseFields, "_version">;
 
+type PartialWithUndefined<T> = { [K in keyof T]?: T[K] | undefined };
+
 type Model<T extends Document> = T &
   ModelBaseFields & {
     id: Id;
@@ -35,4 +37,9 @@ const newModel = <T extends Document>(input: T) => {
 };
 
 export { dateTimeSchema, newModel };
-export type { Model, ModelBaseFields, ExcludedUpdateModelFields };
+export type {
+  Model,
+  ModelBaseFields,
+  ExcludedUpdateModelFields,
+  PartialWithUndefined,
+};

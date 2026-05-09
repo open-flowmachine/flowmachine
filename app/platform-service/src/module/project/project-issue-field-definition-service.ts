@@ -6,7 +6,11 @@ import type { Tenant } from "@/shared/model/model-tenant";
 
 import { projectIssueFieldDefinitionRepository } from "@/module/project/project-issue-field-definition-repository";
 import { Err } from "@/shared/err/err";
-import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
+import {
+  type ExcludedUpdateModelFields,
+  type PartialWithUndefined,
+  newModel,
+} from "@/shared/model/model";
 
 const createProjectIssueFieldDefinition = async (input: {
   ctx: { tenant: Tenant };
@@ -61,7 +65,7 @@ const getProjectIssueFieldDefinition = async (input: {
 
 const listProjectIssueFieldDefinitions = async (input: {
   ctx: { tenant: Tenant };
-  filter?: { projectId?: Id; name?: string };
+  filter?: { projectId?: Id; name?: string } | undefined;
 }) => {
   const { ctx, filter } = input;
 
@@ -82,7 +86,9 @@ const listProjectIssueFieldDefinitions = async (input: {
 const updateProjectIssueFieldDefinition = async (input: {
   ctx: { tenant: Tenant };
   id: Id;
-  data: Partial<Omit<ProjectIssueFieldDefinition, ExcludedUpdateModelFields>>;
+  data: PartialWithUndefined<
+    Omit<ProjectIssueFieldDefinition, ExcludedUpdateModelFields>
+  >;
 }) => {
   const { ctx, id, data } = input;
 

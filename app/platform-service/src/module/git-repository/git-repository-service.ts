@@ -6,7 +6,11 @@ import type { Tenant } from "@/shared/model/model-tenant";
 
 import { gitRepositoryRepository } from "@/module/git-repository/git-repository-repository";
 import { Err } from "@/shared/err/err";
-import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
+import {
+  type ExcludedUpdateModelFields,
+  type PartialWithUndefined,
+  newModel,
+} from "@/shared/model/model";
 
 const createGitRepository = async (input: {
   ctx: { tenant: Tenant };
@@ -55,7 +59,7 @@ const getGitRepository = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
 
 const listGitRepositories = async (input: {
   ctx: { tenant: Tenant };
-  filter?: { projectId: Id };
+  filter?: { projectId: Id } | undefined;
 }) => {
   const { ctx, filter } = input;
 
@@ -68,7 +72,7 @@ const listGitRepositories = async (input: {
 const updateGitRepository = async (input: {
   ctx: { tenant: Tenant };
   id: Id;
-  data: Partial<Omit<GitRepository, ExcludedUpdateModelFields>>;
+  data: PartialWithUndefined<Omit<GitRepository, ExcludedUpdateModelFields>>;
 }) => {
   const { ctx, id, data } = input;
 

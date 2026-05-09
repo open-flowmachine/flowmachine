@@ -53,8 +53,12 @@ const workflowEngine = new Engine({
 
     return {
       name: workflow.name,
-      description: workflow.description,
-      actions: workflow.actions,
+      ...(workflow.description !== undefined && {
+        description: workflow.description,
+      }),
+      actions: workflow.actions.map(({ inputs, ...rest }) =>
+        inputs !== undefined ? { ...rest, inputs } : rest,
+      ),
       edges: workflow.edges,
     };
   },

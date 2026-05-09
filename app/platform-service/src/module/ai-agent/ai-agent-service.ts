@@ -6,7 +6,11 @@ import type { Tenant } from "@/shared/model/model-tenant";
 
 import { aiAgentRepository } from "@/module/ai-agent/ai-agent-repository";
 import { Err } from "@/shared/err/err";
-import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
+import {
+  type ExcludedUpdateModelFields,
+  type PartialWithUndefined,
+  newModel,
+} from "@/shared/model/model";
 
 const createAiAgent = async (input: {
   ctx: { tenant: Tenant };
@@ -51,7 +55,7 @@ const getAiAgent = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
 
 const listAiAgents = async (input: {
   ctx: { tenant: Tenant };
-  filter?: { projectId: Id };
+  filter?: { projectId: Id } | undefined;
 }) => {
   const { ctx, filter } = input;
 
@@ -64,7 +68,7 @@ const listAiAgents = async (input: {
 const updateAiAgent = async (input: {
   ctx: { tenant: Tenant };
   id: Id;
-  data: Partial<Omit<AiAgent, ExcludedUpdateModelFields>>;
+  data: PartialWithUndefined<Omit<AiAgent, ExcludedUpdateModelFields>>;
 }) => {
   const { ctx, id, data } = input;
 

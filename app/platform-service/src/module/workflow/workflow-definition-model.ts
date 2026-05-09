@@ -5,7 +5,7 @@ type WorkflowAction = {
   id: string;
   kind: string;
   name: string;
-  inputs?: Record<string, unknown>;
+  inputs?: Record<string, unknown> | undefined;
 };
 
 type WorkflowEdge = {
@@ -15,7 +15,7 @@ type WorkflowEdge = {
 
 type WorkflowDefinition = Model<{
   name: string;
-  description?: string;
+  description?: string | undefined;
   projects: {
     id: Id;
   }[];

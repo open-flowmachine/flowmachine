@@ -5,7 +5,7 @@ import { err, ok } from "neverthrow";
 import type { Id } from "@/shared/model/model-id";
 import type { Tenant, TenantToggle } from "@/shared/model/model-tenant";
 
-import { type Model } from "@/shared/model/model";
+import { type Model, type PartialWithUndefined } from "@/shared/model/model";
 import { getEnv } from "@/vendor/env/env";
 import { mongoClient } from "@/vendor/mongo/mongo-client";
 import { mapMongoError } from "@/vendor/mongo/mongo-err";
@@ -82,7 +82,7 @@ const makeMongoRepository = <T extends Model<Document>>(input: {
     }
   };
 
-  const update = async (input: { id: Id; data: Partial<T> }) => {
+  const update = async (input: { id: Id; data: PartialWithUndefined<T> }) => {
     try {
       const { id, data } = input;
       const { id: _, _version, ...rest } = data;
@@ -138,7 +138,7 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
 
   const findMany = async (input: {
     ctx: TenantToggle<{ tenant: Tenant }>;
-    filter?: Filter<T>;
+    filter?: Filter<T> | undefined;
   }) => {
     try {
       const { ctx, filter } = input;
@@ -186,7 +186,7 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
   const update = async (input: {
     ctx: TenantToggle<{ tenant: Tenant }>;
     id: Id;
-    data: Partial<T>;
+    data: PartialWithUndefined<T>;
   }) => {
     try {
       const { ctx, id, data } = input;

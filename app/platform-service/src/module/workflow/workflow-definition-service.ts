@@ -6,13 +6,17 @@ import type { Tenant } from "@/shared/model/model-tenant";
 
 import { workflowDefinitionRepository } from "@/module/workflow/workflow-definition-repository";
 import { Err } from "@/shared/err/err";
-import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
+import {
+  type ExcludedUpdateModelFields,
+  type PartialWithUndefined,
+  newModel,
+} from "@/shared/model/model";
 
 const createWorkflowDefinition = async (input: {
   ctx: { tenant: Tenant };
   payload: {
     name: string;
-    description?: string;
+    description?: string | undefined;
     projects: WorkflowDefinition["projects"];
     actions: WorkflowDefinition["actions"];
     edges: WorkflowDefinition["edges"];
@@ -60,7 +64,7 @@ const getWorkflowDefinition = async (input: {
 
 const listWorkflowDefinitions = async (input: {
   ctx: { tenant: Tenant };
-  filter?: { projectId: Id };
+  filter?: { projectId: Id } | undefined;
 }) => {
   const { ctx, filter } = input;
 
@@ -73,7 +77,9 @@ const listWorkflowDefinitions = async (input: {
 const updateWorkflowDefinition = async (input: {
   ctx: { tenant: Tenant };
   id: Id;
-  data: Partial<Omit<WorkflowDefinition, ExcludedUpdateModelFields>>;
+  data: PartialWithUndefined<
+    Omit<WorkflowDefinition, ExcludedUpdateModelFields>
+  >;
 }) => {
   const { ctx, id, data } = input;
 

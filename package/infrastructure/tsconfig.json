@@ -1,8 +1,7 @@
 {
   "extends": "@flowmachine/typescript-config/library-bun.json",
   "compilerOptions": {
-    "rootDir": ".",
-    "types": ["bun"]
+    "rootDir": "."
   },
   "exclude": ["node_modules", "cdk.out"],
   "include": ["bin", "lib", "test"]
