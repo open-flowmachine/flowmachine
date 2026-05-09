@@ -2,7 +2,7 @@ import { err, ok } from "neverthrow";
 
 import type { AiAgent } from "@/module/ai-agent/ai-agent-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant, TenantAware } from "@/shared/model/model-tenant";
 
 import { aiAgentRepository } from "@/module/ai-agent/ai-agent-repository";
 import { Err } from "@/shared/err/err";
@@ -13,7 +13,7 @@ import {
 } from "@/shared/model/model";
 
 const createAiAgent = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   payload: {
     name: string;
     model: AiAgent["model"];
@@ -38,7 +38,7 @@ const createAiAgent = async (input: {
   return ok({ id: model.id });
 };
 
-const getAiAgent = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
+const getAiAgent = async (input: { ctx: TenantAware; id: Id }) => {
   const { ctx, id } = input;
 
   const result = await aiAgentRepository.findById({ ctx, id });
@@ -54,7 +54,7 @@ const getAiAgent = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
 };
 
 const listAiAgents = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   filter?: { projectId: Id } | undefined;
 }) => {
   const { ctx, filter } = input;
@@ -66,7 +66,7 @@ const listAiAgents = async (input: {
 };
 
 const updateAiAgent = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   id: Id;
   data: PartialWithUndefined<Omit<AiAgent, ExcludedUpdateModelFields>>;
 }) => {

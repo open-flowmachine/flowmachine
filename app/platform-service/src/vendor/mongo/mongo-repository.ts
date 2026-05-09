@@ -1,10 +1,23 @@
-import type { Document, Filter, IndexDescription, WithId } from "mongodb";
+import type {
+  ChangeStream,
+  Document,
+  Filter,
+  IndexDescription,
+  WithId,
+} from "mongodb";
 
 import { err, ok } from "neverthrow";
 
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant, TenantToggle } from "@/shared/model/model-tenant";
+import type {
+  TenantAware,
+  TenantAwareDisabled,
+  TenantAwareEnabled,
+  TenantUnaware,
+} from "@/shared/model/model-tenant";
+import type { MongoCtx } from "@/vendor/mongo/mongo-type";
 
+import { Err } from "@/shared/err/err";
 import { type Model, type PartialWithUndefined } from "@/shared/model/model";
 import { getEnv } from "@/vendor/env/env";
 import { mongoClient } from "@/vendor/mongo/mongo-client";
@@ -24,159 +37,83 @@ const mapFromMongoDoc = <T extends Model<Document>>(
   return { id: _id, ...rest } as T;
 };
 
-const getCollection = async (
-  collectionName: string,
-  collectionIndexes?: IndexDescription[],
-) => {
+const getCollection = async (input: {
+  collectionName: string;
+  collectionIndexes?: IndexDescription[] | undefined;
+  isTenantAware: boolean;
+}) => {
+  const { collectionName, collectionIndexes = [], isTenantAware } = input;
+
   const collection = mongoClient
     .db(getEnv().MONGO_DB_NAME)
     .collection<MongoDoc>(collectionName);
-  if (collectionIndexes?.length) {
-    await collection.createIndexes(collectionIndexes);
-  }
+
+  const indexes = isTenantAware
+    ? [{ key: { "tenant.id": 1, "tenant.type": 1 } }, ...collectionIndexes]
+    : collectionIndexes;
+  await collection.createIndexes(indexes);
+
   return collection;
 };
 
-const makeMongoRepository = <T extends Model<Document>>(input: {
+const makeMongoRepository = <
+  TModel extends Model<Document>,
+  TIsTenantAware extends TenantAwareDisabled | TenantAwareEnabled,
+  TCtx extends TIsTenantAware extends TenantAwareEnabled
+    ? TenantAware<MongoCtx>
+    : TenantUnaware<MongoCtx>,
+>(input: {
   collectionName: string;
-  collectionIndexes?: IndexDescription[];
+  collectionIndexes?: IndexDescription[] | undefined;
+  isTenantAware: TIsTenantAware;
 }) => {
-  const { collectionName, collectionIndexes } = input;
-
-  const collection = () => getCollection(collectionName, collectionIndexes);
-
-  const findMany = async () => {
-    try {
-      const col = await collection();
-      const docs = await col.find().toArray();
-
-      return ok({ data: docs.map((doc) => mapFromMongoDoc<T>(doc)) });
-    } catch (error) {
-      return err(mapMongoError(error));
-    }
-  };
-
-  const findById = async (input: { id: Id }) => {
-    try {
-      const { id } = input;
-
-      const col = await collection();
-      const data = await col.findOne({ _id: id });
-
-      return ok({ data: data ? mapFromMongoDoc<T>(data) : null });
-    } catch (error) {
-      return err(mapMongoError(error));
-    }
-  };
-
-  const insert = async (input: { data: T }) => {
-    try {
-      const { data } = input;
-
-      const col = await collection();
-      await col.insertOne(mapToMongoDoc(data));
-
-      return ok();
-    } catch (error) {
-      return err(mapMongoError(error));
-    }
-  };
-
-  const update = async (input: { id: Id; data: PartialWithUndefined<T> }) => {
-    try {
-      const { id, data } = input;
-      const { id: _, _version, ...rest } = data;
-
-      const col = await collection();
-      const updatedData = await col.findOneAndUpdate(
-        {
-          _id: id,
-          ...(_version !== undefined ? { _version } : {}),
-        },
-        { $set: rest, $inc: { _version: 1 } },
-        { returnDocument: "after" },
-      );
-      return ok({
-        data: updatedData ? mapFromMongoDoc<T>(updatedData) : null,
-      });
-    } catch (error) {
-      return err(mapMongoError(error));
-    }
-  };
-
-  const deleteById = async (input: { id: Id }) => {
-    try {
-      const { id } = input;
-      const col = await collection();
-      await col.deleteOne({ _id: id });
-      return ok();
-    } catch (error) {
-      return err(mapMongoError(error));
-    }
-  };
-
-  return {
-    findById,
-    findMany,
-    insert,
-    update,
-    deleteById,
-  };
-};
-
-const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
-  collectionName: string;
-  collectionIndexes?: IndexDescription[];
-}) => {
-  const { collectionName, collectionIndexes } = input;
+  const { collectionName, collectionIndexes, isTenantAware } = input;
 
   const collection = () =>
-    getCollection(collectionName, [
-      { key: { "tenant.id": 1, "tenant.type": 1 } },
-      ...(collectionIndexes ?? []),
-    ]);
+    getCollection({ collectionName, collectionIndexes, isTenantAware });
+
+  const tenantFilter = (ctx: TCtx) =>
+    isTenantAware
+      ? ctx.dangerouslyDisableTenant
+        ? {}
+        : { _tenant: ctx.tenant }
+      : {};
 
   const findMany = async (input: {
-    ctx: TenantToggle<{ tenant: Tenant }>;
-    filter?: Filter<T> | undefined;
+    ctx: TCtx;
+    filter?: Filter<TModel> | undefined;
   }) => {
     try {
       const { ctx, filter } = input;
       const col = await collection();
       const docs = await col
-        .find({ _tenant: ctx.tenant, ...filter } as Document)
+        .find({ ...tenantFilter(ctx), ...filter } as Document)
         .toArray();
-      return ok({ data: docs.map((doc) => mapFromMongoDoc<T>(doc)) });
+      return ok({ data: docs.map((doc) => mapFromMongoDoc<TModel>(doc)) });
     } catch (error) {
       return err(mapMongoError(error));
     }
   };
 
-  const findById = async (input: {
-    ctx: TenantToggle<{ tenant: Tenant }>;
-    id: Id;
-  }) => {
+  const findById = async (input: { ctx: TCtx; id: Id }) => {
     try {
       const { ctx, id } = input;
       const col = await collection();
-      const data = await col.findOne({ _id: id, _tenant: ctx.tenant });
-      return ok({ data: data ? mapFromMongoDoc<T>(data) : null });
+      const data = await col.findOne({ _id: id, ...tenantFilter(ctx) });
+      return ok({ data: data ? mapFromMongoDoc<TModel>(data) : null });
     } catch (error) {
       return err(mapMongoError(error));
     }
   };
 
-  const insert = async (input: {
-    ctx: TenantToggle<{ tenant: Tenant }>;
-    data: T;
-  }) => {
+  const insert = async (input: { ctx: TCtx; data: TModel }) => {
     try {
       const { ctx, data } = input;
       const col = await collection();
-      await col.insertOne({
-        ...mapToMongoDoc(data),
-        _tenant: ctx.tenant,
-      });
+      const doc = ctx.dangerouslyDisableTenant
+        ? mapToMongoDoc(data)
+        : { ...mapToMongoDoc(data), _tenant: ctx.tenant };
+      await col.insertOne(doc);
       return ok();
     } catch (error) {
       return err(mapMongoError(error));
@@ -184,9 +121,9 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
   };
 
   const update = async (input: {
-    ctx: TenantToggle<{ tenant: Tenant }>;
+    ctx: TCtx;
     id: Id;
-    data: PartialWithUndefined<T>;
+    data: PartialWithUndefined<TModel>;
   }) => {
     try {
       const { ctx, id, data } = input;
@@ -195,28 +132,25 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
       const updatedData = await col.findOneAndUpdate(
         {
           _id: id,
-          _tenant: ctx.tenant,
+          ...tenantFilter(ctx),
           ...(_version !== undefined ? { _version } : {}),
         },
         { $set: rest, $inc: { _version: 1 } },
         { returnDocument: "after" },
       );
       return ok({
-        data: updatedData ? mapFromMongoDoc<T>(updatedData) : null,
+        data: updatedData ? mapFromMongoDoc<TModel>(updatedData) : null,
       });
     } catch (error) {
       return err(mapMongoError(error));
     }
   };
 
-  const deleteById = async (input: {
-    ctx: TenantToggle<{ tenant: Tenant }>;
-    id: Id;
-  }) => {
+  const deleteById = async (input: { ctx: TCtx; id: Id }) => {
     try {
       const { ctx, id } = input;
       const col = await collection();
-      await col.deleteOne({ _id: id, _tenant: ctx.tenant });
+      await col.deleteOne({ _id: id, ...tenantFilter(ctx) });
       return ok();
     } catch (error) {
       return err(mapMongoError(error));
@@ -232,4 +166,101 @@ const makeTenantAwareMongoRepository = <T extends Model<Document>>(input: {
   };
 };
 
-export { makeMongoRepository, makeTenantAwareMongoRepository };
+const makeMongoChangeStream = <
+  TModel extends Model<Document>,
+  TIsTenantAware extends TenantAwareDisabled | TenantAwareEnabled,
+  TCtx extends TIsTenantAware extends TenantAwareEnabled
+    ? TenantAware<MongoCtx>
+    : TenantUnaware<MongoCtx>,
+>(input: {
+  collectionName: string;
+  isTenantAware: TIsTenantAware;
+}) => {
+  const { collectionName, isTenantAware } = input;
+
+  let stream: ChangeStream<MongoDoc> | null = null;
+
+  const getTenantMatch = (ctx: TCtx) =>
+    isTenantAware
+      ? ctx.dangerouslyDisableTenant
+        ? {}
+        : { "fullDocument._tenant": ctx.tenant }
+      : {};
+
+  const prefixFilterKeys = (filter: Document): Document => {
+    const prefixed: Document = {};
+    for (const key of Object.keys(filter)) {
+      prefixed[`fullDocument.${key}`] = filter[key];
+    }
+    return prefixed;
+  };
+
+  const subscribe = async (input: {
+    ctx: TCtx;
+    filter?: Filter<TModel> | undefined;
+    onChange: (data: TModel) => void;
+    onError?: ((err: Err) => void) | undefined;
+  }) => {
+    if (stream) {
+      return err(
+        Err.code("conflict", { message: "Change stream already subscribed" }),
+      );
+    }
+    try {
+      const { ctx, filter, onChange, onError } = input;
+
+      const col = mongoClient
+        .db(getEnv().MONGO_DB_NAME)
+        .collection<MongoDoc>(collectionName);
+
+      const pipeline: Document[] = [
+        {
+          $match: {
+            ...getTenantMatch(ctx),
+            ...prefixFilterKeys((filter ?? {}) as Document),
+          },
+        },
+      ];
+      const cs = col.watch(pipeline, { fullDocument: "updateLookup" });
+
+      cs.on("change", (event) => {
+        if (!("fullDocument" in event) || !event.fullDocument) {
+          return;
+        }
+        onChange(
+          mapFromMongoDoc<TModel>(event.fullDocument as WithId<MongoDoc>),
+        );
+      });
+
+      cs.on("error", (e) => {
+        onError?.(mapMongoError(e));
+      });
+
+      stream = cs;
+
+      return ok();
+    } catch (error) {
+      return err(mapMongoError(error));
+    }
+  };
+
+  const unsubscribe = async () => {
+    try {
+      if (!stream) {
+        return ok();
+      }
+      const cs = stream;
+
+      stream = null;
+      await cs.close();
+
+      return ok();
+    } catch (error) {
+      return err(mapMongoError(error));
+    }
+  };
+
+  return { subscribe, unsubscribe };
+};
+
+export { makeMongoRepository, makeMongoChangeStream };

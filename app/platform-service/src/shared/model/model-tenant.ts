@@ -22,5 +22,35 @@ type TenantToggle<T extends Record<string, unknown>> = Omit<T, "tenant"> &
       }
   );
 
+type TenantAware<T extends Record<string, unknown> = Record<string, unknown>> =
+  T &
+    (
+      | {
+          dangerouslyDisableTenant: true;
+          tenant?: undefined;
+        }
+      | {
+          dangerouslyDisableTenant?: false | undefined;
+          tenant: Tenant;
+        }
+    );
+
+type TenantUnaware<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> = T & {
+  dangerouslyDisableTenant?: false | undefined;
+  tenant?: undefined;
+};
+
+type TenantAwareEnabled = true;
+type TenantAwareDisabled = false;
+
 export { tenantSchema };
-export type { Tenant, TenantToggle };
+export type {
+  Tenant,
+  TenantAware,
+  TenantUnaware,
+  TenantAwareDisabled,
+  TenantAwareEnabled,
+  TenantToggle,
+};
