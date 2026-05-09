@@ -3,22 +3,13 @@ import type { Filter } from "mongodb";
 import { err, ok } from "neverthrow";
 
 import type { AiAgentRunMessage } from "@/module/ai-agent-run-message/ai-agent-run-message-model";
-import type { Id } from "@/shared/model/model-id";
-import type { Tenant, TenantAware } from "@/shared/tenant/tenant-model";
+import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { aiAgentRunMessageRepository } from "@/module/ai-agent-run-message/ai-agent-run-message-repository";
 import { newModel } from "@/shared/model/model";
 
-const adminListAiAgentRunMessages = async (input: {
-  ctx: TenantAware;
-  filter?: Filter<AiAgentRunMessage> | undefined;
-}) => {
-  const { ctx, filter } = input;
-  return aiAgentRunMessageRepository.findMany({ ctx, filter });
-};
-
 const createAiAgentRunMessage = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   payload: Omit<
     AiAgentRunMessage,
     "id" | "_version" | "createdAt" | "updatedAt"
@@ -39,12 +30,14 @@ const createAiAgentRunMessage = async (input: {
 };
 
 const listAiAgentRunMessages = async (input: {
-  ctx: { tenant: Tenant };
-  filter: { aiAgentRunId: Id };
-}) => adminListAiAgentRunMessages(input);
+  ctx: TenantAware;
+  filter?: Filter<AiAgentRunMessage> | undefined;
+}) => {
+  const { ctx, filter } = input;
+  return aiAgentRunMessageRepository.findMany({ ctx, filter });
+};
 
 const makeAiAgentRunMessageService = () => ({
-  adminList: adminListAiAgentRunMessages,
   create: createAiAgentRunMessage,
   list: listAiAgentRunMessages,
 });

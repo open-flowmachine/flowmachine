@@ -19,9 +19,9 @@ import {
   startSandbox,
   runTurn,
   stopSandbox,
-  adminListNonActiveAiAgentRuns,
-  adminMarkAiAgentRunAsStopping,
-  adminMarkAiAgentRunAsStopped,
+  listNonActiveAiAgentRuns,
+  markAiAgentRunAsStopping,
+  markAiAgentRunAsStopped,
   markAiAgentRunAsInitializing,
   markAiAgentRunAsInitialized,
 } from "@/feature/workflow/ai-agent-session/ai-agent-session-step";
@@ -207,8 +207,10 @@ const aiAgentSessionScheduledCleanUpHandler = inngestClient.createFunction(
       const { step } = input;
 
       const nonActiveAiAgentRuns = await step.run(
-        "ai-agent-run/admin-list-non-active",
-        adminListNonActiveAiAgentRuns(),
+        "ai-agent-run/list-non-active",
+        listNonActiveAiAgentRuns({
+          ctx: { dangerouslyDisableTenant: true },
+        }),
       );
 
       for (const aiAgentRun of nonActiveAiAgentRuns) {
@@ -218,7 +220,10 @@ const aiAgentSessionScheduledCleanUpHandler = inngestClient.createFunction(
 
         await step.run(
           `ai-agent-run/${aiAgentRun.id}/mark-as-stopping`,
-          adminMarkAiAgentRunAsStopping({ id: aiAgentRun.id }),
+          markAiAgentRunAsStopping({
+            ctx: { dangerouslyDisableTenant: true },
+            id: aiAgentRun.id,
+          }),
         );
         await step.run(
           `ai-agent-run/${aiAgentRun.id}/stop-sandbox`,
@@ -226,7 +231,10 @@ const aiAgentSessionScheduledCleanUpHandler = inngestClient.createFunction(
         );
         await step.run(
           `ai-agent-run/${aiAgentRun.id}/mark-as-stopped`,
-          adminMarkAiAgentRunAsStopped({ id: aiAgentRun.id }),
+          markAiAgentRunAsStopped({
+            ctx: { dangerouslyDisableTenant: true },
+            id: aiAgentRun.id,
+          }),
         );
       }
     },

@@ -2,7 +2,7 @@ import { err, ok } from "neverthrow";
 
 import type { Project } from "@/module/project/project-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/tenant/tenant-model";
+import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { projectRepository } from "@/module/project/project-repository";
 import { Err } from "@/shared/err/err";
@@ -13,7 +13,7 @@ import {
 } from "@/shared/model/model";
 
 const createProject = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   payload: { name: string; integration: Project["integration"] };
 }) => {
   const { ctx, payload } = input;
@@ -33,7 +33,7 @@ const createProject = async (input: {
   return ok({ id: model.id });
 };
 
-const getProject = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
+const getProject = async (input: { ctx: TenantAware; id: Id }) => {
   const { ctx, id } = input;
 
   const result = await projectRepository.findById({ ctx, id });
@@ -48,14 +48,14 @@ const getProject = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
   return ok({ data: result.value.data });
 };
 
-const listProjects = async (input: { ctx: { tenant: Tenant } }) => {
+const listProjects = async (input: { ctx: TenantAware }) => {
   const { ctx } = input;
 
   return projectRepository.findMany({ ctx });
 };
 
 const updateProject = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   id: Id;
   data: PartialWithUndefined<Omit<Project, ExcludedUpdateModelFields>>;
 }) => {
@@ -73,7 +73,7 @@ const updateProject = async (input: {
   return projectRepository.update({ ctx, id, data });
 };
 
-const deleteProject = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
+const deleteProject = async (input: { ctx: TenantAware; id: Id }) => {
   const { ctx, id } = input;
 
   return projectRepository.deleteById({ ctx, id });

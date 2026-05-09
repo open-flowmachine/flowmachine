@@ -2,7 +2,7 @@ import { err, ok } from "neverthrow";
 
 import type { GitRepository } from "@/module/git-repository/git-repository-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/tenant/tenant-model";
+import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { gitRepositoryRepository } from "@/module/git-repository/git-repository-repository";
 import { Err } from "@/shared/err/err";
@@ -13,7 +13,7 @@ import {
 } from "@/shared/model/model";
 
 const createGitRepository = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   payload: {
     name: string;
     url: string;
@@ -42,7 +42,7 @@ const createGitRepository = async (input: {
   return ok({ id: model.id });
 };
 
-const getGitRepository = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
+const getGitRepository = async (input: { ctx: TenantAware; id: Id }) => {
   const { ctx, id } = input;
 
   const result = await gitRepositoryRepository.findById({ ctx, id });
@@ -58,7 +58,7 @@ const getGitRepository = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
 };
 
 const listGitRepositories = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   filter?: { projectId: Id } | undefined;
 }) => {
   const { ctx, filter } = input;
@@ -70,7 +70,7 @@ const listGitRepositories = async (input: {
 };
 
 const updateGitRepository = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   id: Id;
   data: PartialWithUndefined<Omit<GitRepository, ExcludedUpdateModelFields>>;
 }) => {
@@ -88,10 +88,7 @@ const updateGitRepository = async (input: {
   return gitRepositoryRepository.update({ ctx, id, data });
 };
 
-const deleteGitRepository = async (input: {
-  ctx: { tenant: Tenant };
-  id: Id;
-}) => {
+const deleteGitRepository = async (input: { ctx: TenantAware; id: Id }) => {
   const { ctx, id } = input;
 
   return gitRepositoryRepository.deleteById({ ctx, id });

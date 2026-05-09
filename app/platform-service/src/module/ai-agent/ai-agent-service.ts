@@ -2,7 +2,7 @@ import { err, ok } from "neverthrow";
 
 import type { AiAgent } from "@/module/ai-agent/ai-agent-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant, TenantAware } from "@/shared/tenant/tenant-model";
+import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { aiAgentRepository } from "@/module/ai-agent/ai-agent-repository";
 import { Err } from "@/shared/err/err";
@@ -84,7 +84,7 @@ const updateAiAgent = async (input: {
   return aiAgentRepository.update({ ctx, id, data });
 };
 
-const deleteAiAgent = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
+const deleteAiAgent = async (input: { ctx: TenantAware; id: Id }) => {
   const { ctx, id } = input;
 
   return aiAgentRepository.deleteById({ ctx, id });

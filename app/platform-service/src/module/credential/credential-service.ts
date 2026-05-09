@@ -1,7 +1,7 @@
 import { err, ok } from "neverthrow";
 
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/tenant/tenant-model";
+import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { credentialRepository } from "@/module/credential/credential-repository";
 import { Err } from "@/shared/err/err";
@@ -18,7 +18,7 @@ type CredentialPayload =
     };
 
 const createCredential = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   payload: CredentialPayload;
 }) => {
   const { ctx, payload } = input;
@@ -35,7 +35,7 @@ const createCredential = async (input: {
   return ok({ id: model.id });
 };
 
-const getCredential = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
+const getCredential = async (input: { ctx: TenantAware; id: Id }) => {
   const { ctx, id } = input;
 
   const result = await credentialRepository.findById({ ctx, id });
@@ -50,14 +50,14 @@ const getCredential = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
   return ok({ data: result.value.data });
 };
 
-const listCredentials = async (input: { ctx: { tenant: Tenant } }) => {
+const listCredentials = async (input: { ctx: TenantAware }) => {
   const { ctx } = input;
 
   return credentialRepository.findMany({ ctx });
 };
 
 const updateCredential = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   id: Id;
   data: PartialWithUndefined<CredentialPayload>;
 }) => {
@@ -75,7 +75,7 @@ const updateCredential = async (input: {
   return credentialRepository.update({ ctx, id, data });
 };
 
-const deleteCredential = async (input: { ctx: { tenant: Tenant }; id: Id }) => {
+const deleteCredential = async (input: { ctx: TenantAware; id: Id }) => {
   const { ctx, id } = input;
 
   return credentialRepository.deleteById({ ctx, id });

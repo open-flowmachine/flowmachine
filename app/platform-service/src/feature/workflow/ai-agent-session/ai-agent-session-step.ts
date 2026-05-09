@@ -13,7 +13,7 @@ import { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
 import { Err } from "@/shared/err/err";
 import { safeFn, safeFnSync } from "@/shared/err/err-util";
 import { type Id } from "@/shared/model/model-id";
-import { type Tenant } from "@/shared/tenant/tenant-model";
+import { type Tenant, type TenantAware } from "@/shared/tenant/tenant-model";
 import { daytonaClient } from "@/vendor/daytona/daytona-client";
 import { getEnv } from "@/vendor/env/env";
 import { baseLog } from "@/vendor/pino/pino-log";
@@ -359,42 +359,46 @@ const appendUserMessage =
 // Batch steps
 // ---------------------------------------------------------------------------
 
-const adminListNonActiveAiAgentRuns = () => async (): Promise<AiAgentRun[]> => {
-  const result = await aiAgentRunService.adminList({
-    ctx: { dangerouslyDisableTenant: true },
-    filter: { status: "initialized" },
-  });
+const listNonActiveAiAgentRuns =
+  (input: { ctx: TenantAware }) => async (): Promise<AiAgentRun[]> => {
+    const { ctx } = input;
 
-  if (result.isErr()) {
-    throw Err.from(result.error);
-  }
+    const result = await aiAgentRunService.list({
+      ctx,
+      filter: { status: "initialized" },
+    });
 
-  const aiAgentRuns = result.value.data;
-  const recentActivityThreshold = sub(new UTCDate(), { minutes: 15 });
+    if (result.isErr()) {
+      throw Err.from(result.error);
+    }
 
-  const recentMessages = await aiAgentRunMessageService.adminList({
-    ctx: { dangerouslyDisableTenant: true },
-    filter: {
-      aiAgentRunId: { $in: aiAgentRuns.map((run) => run.id) },
-      createdAt: { $gte: recentActivityThreshold },
-    },
-  });
+    const aiAgentRuns = result.value.data;
+    const recentActivityThreshold = sub(new UTCDate(), { minutes: 15 });
 
-  if (recentMessages.isErr()) {
-    throw Err.from(recentMessages.error);
-  }
-  const activeRunIds = new Set(
-    recentMessages.value.data.map((message) => message.aiAgentRunId),
-  );
+    const recentMessages = await aiAgentRunMessageService.list({
+      ctx,
+      filter: {
+        aiAgentRunId: { $in: aiAgentRuns.map((run) => run.id) },
+        createdAt: { $gte: recentActivityThreshold },
+      },
+    });
 
-  return aiAgentRuns.filter((run) => !activeRunIds.has(run.id));
-};
+    if (recentMessages.isErr()) {
+      throw Err.from(recentMessages.error);
+    }
+    const activeRunIds = new Set(
+      recentMessages.value.data.map((message) => message.aiAgentRunId),
+    );
 
-const adminMarkAiAgentRunAsStopping =
-  (input: { id: string }) => async (): Promise<void> => {
-    const { id } = input;
-    const result = await aiAgentRunService.adminUpdate({
-      ctx: { dangerouslyDisableTenant: true },
+    return aiAgentRuns.filter((run) => !activeRunIds.has(run.id));
+  };
+
+const markAiAgentRunAsStopping =
+  (input: { ctx: TenantAware; id: string }) => async (): Promise<void> => {
+    const { ctx, id } = input;
+
+    const result = await aiAgentRunService.update({
+      ctx,
       id,
       data: { status: "stopping" },
     });
@@ -404,11 +408,12 @@ const adminMarkAiAgentRunAsStopping =
     }
   };
 
-const adminMarkAiAgentRunAsStopped =
-  (input: { id: string }) => async (): Promise<void> => {
-    const { id } = input;
-    const result = await aiAgentRunService.adminUpdate({
-      ctx: { dangerouslyDisableTenant: true },
+const markAiAgentRunAsStopped =
+  (input: { ctx: TenantAware; id: string }) => async (): Promise<void> => {
+    const { ctx, id } = input;
+
+    const result = await aiAgentRunService.update({
+      ctx,
       id,
       data: { status: "stopped" },
     });
@@ -429,7 +434,7 @@ export {
   stopSandbox,
   runTurn,
   appendUserMessage,
-  adminListNonActiveAiAgentRuns,
-  adminMarkAiAgentRunAsStopping,
-  adminMarkAiAgentRunAsStopped,
+  listNonActiveAiAgentRuns,
+  markAiAgentRunAsStopping,
+  markAiAgentRunAsStopped,
 };

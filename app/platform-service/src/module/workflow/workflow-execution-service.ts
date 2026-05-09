@@ -2,7 +2,7 @@ import { err, ok } from "neverthrow";
 
 import type { WorkflowExecution } from "@/module/workflow/workflow-execution-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/tenant/tenant-model";
+import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { workflowExecutionRepository } from "@/module/workflow/workflow-execution-repository";
 import { Err } from "@/shared/err/err";
@@ -13,7 +13,7 @@ import {
 } from "@/shared/model/model";
 
 const createWorkflowExecution = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   payload: {
     integration: WorkflowExecution["integration"];
     workflowDefinition: WorkflowExecution["workflowDefinition"];
@@ -36,10 +36,7 @@ const createWorkflowExecution = async (input: {
   return ok({ id: model.id });
 };
 
-const getWorkflowExecution = async (input: {
-  ctx: { tenant: Tenant };
-  id: Id;
-}) => {
+const getWorkflowExecution = async (input: { ctx: TenantAware; id: Id }) => {
   const { ctx, id } = input;
 
   const result = await workflowExecutionRepository.findById({ ctx, id });
@@ -55,7 +52,7 @@ const getWorkflowExecution = async (input: {
 };
 
 const listWorkflowExecutions = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   filter?: { workflowDefinitionId: Id } | undefined;
 }) => {
   const { ctx, filter } = input;
@@ -69,7 +66,7 @@ const listWorkflowExecutions = async (input: {
 };
 
 const updateWorkflowExecution = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   id: Id;
   data: PartialWithUndefined<
     Omit<WorkflowExecution, ExcludedUpdateModelFields>
@@ -89,10 +86,7 @@ const updateWorkflowExecution = async (input: {
   return workflowExecutionRepository.update({ ctx, id, data });
 };
 
-const deleteWorkflowExecution = async (input: {
-  ctx: { tenant: Tenant };
-  id: Id;
-}) => {
+const deleteWorkflowExecution = async (input: { ctx: TenantAware; id: Id }) => {
   const { ctx, id } = input;
 
   return workflowExecutionRepository.deleteById({ ctx, id });

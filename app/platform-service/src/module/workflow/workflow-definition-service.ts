@@ -2,7 +2,7 @@ import { err, ok } from "neverthrow";
 
 import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/tenant/tenant-model";
+import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { workflowDefinitionRepository } from "@/module/workflow/workflow-definition-repository";
 import { Err } from "@/shared/err/err";
@@ -13,7 +13,7 @@ import {
 } from "@/shared/model/model";
 
 const createWorkflowDefinition = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   payload: {
     name: string;
     description?: string | undefined;
@@ -44,10 +44,7 @@ const createWorkflowDefinition = async (input: {
   return ok({ id: model.id });
 };
 
-const getWorkflowDefinition = async (input: {
-  ctx: { tenant: Tenant };
-  id: Id;
-}) => {
+const getWorkflowDefinition = async (input: { ctx: TenantAware; id: Id }) => {
   const { ctx, id } = input;
 
   const result = await workflowDefinitionRepository.findById({ ctx, id });
@@ -63,7 +60,7 @@ const getWorkflowDefinition = async (input: {
 };
 
 const listWorkflowDefinitions = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   filter?: { projectId: Id } | undefined;
 }) => {
   const { ctx, filter } = input;
@@ -75,7 +72,7 @@ const listWorkflowDefinitions = async (input: {
 };
 
 const updateWorkflowDefinition = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   id: Id;
   data: PartialWithUndefined<
     Omit<WorkflowDefinition, ExcludedUpdateModelFields>
@@ -96,7 +93,7 @@ const updateWorkflowDefinition = async (input: {
 };
 
 const deleteWorkflowDefinition = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   id: Id;
 }) => {
   const { ctx, id } = input;

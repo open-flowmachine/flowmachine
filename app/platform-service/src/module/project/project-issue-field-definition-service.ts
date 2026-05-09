@@ -2,7 +2,7 @@ import { err, ok } from "neverthrow";
 
 import type { ProjectIssueFieldDefinition } from "@/module/project/project-issue-field-definition-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/tenant/tenant-model";
+import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { projectIssueFieldDefinitionRepository } from "@/module/project/project-issue-field-definition-repository";
 import { Err } from "@/shared/err/err";
@@ -13,7 +13,7 @@ import {
 } from "@/shared/model/model";
 
 const createProjectIssueFieldDefinition = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   payload: {
     name: string;
     type: ProjectIssueFieldDefinition["type"];
@@ -43,7 +43,7 @@ const createProjectIssueFieldDefinition = async (input: {
 };
 
 const getProjectIssueFieldDefinition = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   id: Id;
 }) => {
   const { ctx, id } = input;
@@ -64,7 +64,7 @@ const getProjectIssueFieldDefinition = async (input: {
 };
 
 const listProjectIssueFieldDefinitions = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   filter?: { projectId?: Id; name?: string } | undefined;
 }) => {
   const { ctx, filter } = input;
@@ -84,7 +84,7 @@ const listProjectIssueFieldDefinitions = async (input: {
 };
 
 const updateProjectIssueFieldDefinition = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   id: Id;
   data: PartialWithUndefined<
     Omit<ProjectIssueFieldDefinition, ExcludedUpdateModelFields>
@@ -108,7 +108,7 @@ const updateProjectIssueFieldDefinition = async (input: {
 };
 
 const deleteProjectIssueFieldDefinition = async (input: {
-  ctx: { tenant: Tenant };
+  ctx: TenantAware;
   id: Id;
 }) => {
   const { ctx, id } = input;
