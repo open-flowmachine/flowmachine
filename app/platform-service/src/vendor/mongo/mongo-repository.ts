@@ -1,7 +1,6 @@
 import type { Document, Filter, IndexDescription, WithId } from "mongodb";
 
-import { err, ok } from "neverthrow";
-
+import type { Err } from "@/shared/err/err";
 import type { Id } from "@/shared/model/model-id";
 import type {
   TenantAware,
@@ -11,7 +10,7 @@ import type {
 } from "@/shared/model/model-tenant";
 import type { MongoCtx, MongoDoc } from "@/vendor/mongo/mongo-type";
 
-import { Err } from "@/shared/err/err";
+import { safeFn } from "@/shared/err/err-util";
 import { type Model, type PartialWithUndefined } from "@/shared/model/model";
 import { getEnv } from "@/vendor/env/env";
 import { mongoClient } from "@/vendor/mongo/mongo-client";
@@ -21,6 +20,8 @@ import {
   mapToMongoDoc,
 } from "@/vendor/mongo/mongo-mapper";
 
+const getDb = () => mongoClient.db(getEnv().MONGO_DB_NAME);
+
 const getCollection = async (input: {
   collectionName: string;
   collectionIndexes?: IndexDescription[] | undefined;
@@ -28,12 +29,10 @@ const getCollection = async (input: {
 }) => {
   const { collectionName, collectionIndexes = [], isTenantAware } = input;
 
-  const collection = mongoClient
-    .db(getEnv().MONGO_DB_NAME)
-    .collection<MongoDoc>(collectionName);
+  const collection = getDb().collection<MongoDoc>(collectionName);
 
   const indexes = isTenantAware
-    ? [{ key: { "tenant.id": 1, "tenant.type": 1 } }, ...collectionIndexes]
+    ? [{ key: { "_tenant.id": 1, "_tenant.type": 1 } }, ...collectionIndexes]
     : collectionIndexes;
   await collection.createIndexes(indexes);
 
@@ -56,90 +55,79 @@ const makeMongoRepository = <
   const collection = () =>
     getCollection({ collectionName, collectionIndexes, isTenantAware });
 
-  const tenantFilter = (ctx: TCtx) =>
-    isTenantAware
-      ? ctx.dangerouslyDisableTenant
-        ? {}
-        : { _tenant: ctx.tenant }
-      : {};
+  const tenantFilter = (ctx: TCtx): Filter<TModel> =>
+    (isTenantAware && !ctx.dangerouslyDisableTenant
+      ? { _tenant: ctx.tenant }
+      : {}) as Filter<TModel>;
 
-  const findMany = async (input: {
+  const findMany = (input: {
     ctx: TCtx;
     filter?: Filter<TModel> | undefined;
-  }) => {
-    try {
+  }) =>
+    safeFn(async () => {
       const { ctx, filter } = input;
       const col = await collection();
       const docs = await col
-        .find({ ...tenantFilter(ctx), ...filter } as Document)
+        .find({ ...tenantFilter(ctx), ...filter } as Filter<MongoDoc>)
         .toArray();
-      return ok({ data: docs.map((doc) => mapFromMongoDoc<TModel>(doc)) });
-    } catch (error) {
-      return err(mapMongoError(error));
-    }
-  };
+      return { data: docs.map((doc) => mapFromMongoDoc<TModel>(doc)) };
+    }, mapMongoError);
 
-  const findById = async (input: { ctx: TCtx; id: Id }) => {
-    try {
+  const findById = (input: { ctx: TCtx; id: Id }) =>
+    safeFn(async () => {
       const { ctx, id } = input;
       const col = await collection();
-      const data = await col.findOne({ _id: id, ...tenantFilter(ctx) });
-      return ok({ data: data ? mapFromMongoDoc<TModel>(data) : null });
-    } catch (error) {
-      return err(mapMongoError(error));
-    }
-  };
+      const data = await col.findOne({
+        _id: id,
+        ...tenantFilter(ctx),
+      } as Filter<MongoDoc>);
+      return { data: data ? mapFromMongoDoc<TModel>(data) : null };
+    }, mapMongoError);
 
-  const insert = async (input: { ctx: TCtx; data: TModel }) => {
-    try {
+  const insert = (input: { ctx: TCtx; data: TModel }) =>
+    safeFn(async () => {
       const { ctx, data } = input;
       const col = await collection();
       const doc = ctx.dangerouslyDisableTenant
         ? mapToMongoDoc(data)
         : { ...mapToMongoDoc(data), _tenant: ctx.tenant };
       await col.insertOne(doc);
-      return ok();
-    } catch (error) {
-      return err(mapMongoError(error));
-    }
-  };
+    }, mapMongoError);
 
-  const update = async (input: {
+  const update = (input: {
     ctx: TCtx;
     id: Id;
-    data: PartialWithUndefined<TModel>;
-  }) => {
-    try {
-      const { ctx, id, data } = input;
-      const { id: _, _version, ...rest } = data;
+    data: Omit<PartialWithUndefined<TModel>, "id" | "_version">;
+    expectedVersion?: number;
+  }) =>
+    safeFn(async () => {
+      const { ctx, id, data, expectedVersion } = input;
       const col = await collection();
       const updatedData = await col.findOneAndUpdate(
         {
           _id: id,
           ...tenantFilter(ctx),
-          ...(_version !== undefined ? { _version } : {}),
-        },
-        { $set: rest, $inc: { _version: 1 } },
+          ...(expectedVersion !== undefined
+            ? { _version: expectedVersion }
+            : {}),
+        } as Filter<MongoDoc>,
+        { $set: data, $inc: { _version: 1 } },
         { returnDocument: "after" },
       );
-      return ok({
+      return {
         data: updatedData ? mapFromMongoDoc<TModel>(updatedData) : null,
-      });
-    } catch (error) {
-      return err(mapMongoError(error));
-    }
-  };
+      };
+    }, mapMongoError);
 
-  const deleteById = async (input: { ctx: TCtx; id: Id }) => {
-    try {
+  const deleteById = (input: { ctx: TCtx; id: Id }) =>
+    safeFn(async () => {
       const { ctx, id } = input;
       const col = await collection();
-      await col.deleteOne({ _id: id, ...tenantFilter(ctx) });
-      return ok();
-    } catch (error) {
-      return err(mapMongoError(error));
-    }
-  };
+      await col.deleteOne({
+        _id: id,
+        ...tenantFilter(ctx),
+      } as Filter<MongoDoc>);
+    }, mapMongoError);
 
   return {
     findById,
@@ -148,6 +136,24 @@ const makeMongoRepository = <
     update,
     deleteById,
   };
+};
+
+const prefixForChangeStream = (filter: Document): Document => {
+  const out: Document = {};
+  for (const [key, value] of Object.entries(filter)) {
+    if (key.startsWith("$")) {
+      out[key] = Array.isArray(value)
+        ? value.map((entry) =>
+            entry && typeof entry === "object"
+              ? prefixForChangeStream(entry as Document)
+              : entry,
+          )
+        : value;
+      continue;
+    }
+    out[`fullDocument.${key}`] = value;
+  }
+  return out;
 };
 
 const makeMongoChangeStream = <
@@ -163,38 +169,26 @@ const makeMongoChangeStream = <
   const { collectionName, isTenantAware } = input;
 
   const getTenantMatch = (ctx: TCtx) =>
-    isTenantAware
-      ? ctx.dangerouslyDisableTenant
-        ? {}
-        : { "fullDocument._tenant": ctx.tenant }
+    isTenantAware && !ctx.dangerouslyDisableTenant
+      ? { "fullDocument._tenant": ctx.tenant }
       : {};
 
-  const prefixFilterKeys = (filter: Document): Document => {
-    const prefixed: Document = {};
-    for (const key of Object.keys(filter)) {
-      prefixed[`fullDocument.${key}`] = filter[key];
-    }
-    return prefixed;
-  };
-
-  const subscribe = async (input: {
+  const subscribe = (input: {
     ctx: TCtx;
     filter?: Filter<TModel> | undefined;
     onChange: (data: TModel) => void;
     onError?: ((err: Err) => void) | undefined;
-  }) => {
-    try {
+  }) =>
+    safeFn(async () => {
       const { ctx, filter, onChange, onError } = input;
 
-      const col = mongoClient
-        .db(getEnv().MONGO_DB_NAME)
-        .collection<MongoDoc>(collectionName);
+      const col = getDb().collection<MongoDoc>(collectionName);
 
       const pipeline: Document[] = [
         {
           $match: {
             ...getTenantMatch(ctx),
-            ...prefixFilterKeys((filter ?? {}) as Document),
+            ...prefixForChangeStream((filter ?? {}) as Document),
           },
         },
       ];
@@ -213,20 +207,13 @@ const makeMongoChangeStream = <
         onError?.(mapMongoError(e));
       });
 
-      return ok({
-        unsubscribe: async () => {
-          try {
+      return {
+        unsubscribe: () =>
+          safeFn(async () => {
             await cs.close();
-            return ok();
-          } catch (error) {
-            return err(mapMongoError(error));
-          }
-        },
-      });
-    } catch (error) {
-      return err(mapMongoError(error));
-    }
-  };
+          }, mapMongoError),
+      };
+    }, mapMongoError);
 
   return { subscribe };
 };

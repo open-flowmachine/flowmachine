@@ -185,7 +185,7 @@ test("makeMongoRepository findMany: given a collection with configured indexes, 
 
   // then
   expect(mockCollection.createIndexes).toHaveBeenCalledWith([
-    { key: { "tenant.id": 1, "tenant.type": 1 } },
+    { key: { "_tenant.id": 1, "_tenant.type": 1 } },
     { key: { name: 1 } },
   ]);
 });
@@ -313,7 +313,7 @@ test("makeMongoRepository insert: given a database error, when called, then retu
   );
 });
 
-test("makeMongoRepository update: given a tenant ctx and _version, when called, then includes tenant and version in filter", async () => {
+test("makeMongoRepository update: given a tenant ctx and expectedVersion, when called, then includes tenant and version in filter", async () => {
   // given
   const updatedMongoDoc = {
     ...makeMongoDoc(),
@@ -326,7 +326,8 @@ test("makeMongoRepository update: given a tenant ctx and _version, when called, 
   const result = await repo.update({
     ctx,
     id: TEST_ID,
-    data: { name: "updated", _version: 1 } as Partial<Model<TestDoc>>,
+    data: { name: "updated" },
+    expectedVersion: 1,
   });
 
   // then
@@ -344,7 +345,7 @@ test("makeMongoRepository update: given a tenant ctx and _version, when called, 
   expect(data).not.toHaveProperty("_id");
 });
 
-test("makeMongoRepository update: given data without _version, when called, then omits _version from the filter but keeps tenant", async () => {
+test("makeMongoRepository update: given no expectedVersion, when called, then omits _version from the filter but keeps tenant", async () => {
   // given
   mockCollection.findOneAndUpdate.mockResolvedValue({
     ...makeMongoDoc(),
@@ -356,7 +357,7 @@ test("makeMongoRepository update: given data without _version, when called, then
   const result = await repo.update({
     ctx,
     id: TEST_ID,
-    data: { name: "updated" } as Partial<Model<TestDoc>>,
+    data: { name: "updated" },
   });
 
   // then
@@ -382,7 +383,8 @@ test("makeMongoRepository update: given dangerouslyDisableTenant, when called, t
   await repo.update({
     ctx: ctxDisabled,
     id: TEST_ID,
-    data: { _version: 1 } as Partial<Model<TestDoc>>,
+    data: {},
+    expectedVersion: 1,
   });
 
   // then
@@ -404,7 +406,8 @@ test("makeMongoRepository update: given a version mismatch, when called, then re
   const result = await repo.update({
     ctx,
     id: TEST_ID,
-    data: { _version: 1 } as Partial<Model<TestDoc>>,
+    data: {},
+    expectedVersion: 1,
   });
 
   // then
@@ -420,7 +423,8 @@ test("makeMongoRepository update: given a database error, when called, then retu
   const result = await repo.update({
     ctx,
     id: TEST_ID,
-    data: { _version: 1 } as Partial<Model<TestDoc>>,
+    data: {},
+    expectedVersion: 1,
   });
 
   // then
@@ -509,6 +513,33 @@ test("makeMongoChangeStream subscribe: given a tenant ctx and filter, when calle
         $match: {
           "fullDocument._tenant": tenant,
           "fullDocument.name": "x",
+        },
+      },
+    ],
+    { fullDocument: "updateLookup" },
+  );
+});
+
+test("makeMongoChangeStream subscribe: given a filter with nested $or operator, when called, then prefixes leaf keys but leaves operators unprefixed", async () => {
+  // given
+  const fake = makeFakeChangeStream();
+  mockCollection.watch.mockReturnValue(fake);
+  const stream = makeStream();
+
+  // when
+  await stream.subscribe({
+    ctx,
+    filter: { $or: [{ name: "x" }, { name: "y" }] } as never,
+    onChange: () => {},
+  });
+
+  // then
+  expect(mockCollection.watch).toHaveBeenCalledWith(
+    [
+      {
+        $match: {
+          "fullDocument._tenant": tenant,
+          $or: [{ "fullDocument.name": "x" }, { "fullDocument.name": "y" }],
         },
       },
     ],
