@@ -1,10 +1,4 @@
-import type {
-  ChangeStream,
-  Document,
-  Filter,
-  IndexDescription,
-  WithId,
-} from "mongodb";
+import type { Document, Filter, IndexDescription, WithId } from "mongodb";
 
 import { err, ok } from "neverthrow";
 
@@ -15,27 +9,17 @@ import type {
   TenantAwareEnabled,
   TenantUnaware,
 } from "@/shared/model/model-tenant";
-import type { MongoCtx } from "@/vendor/mongo/mongo-type";
+import type { MongoCtx, MongoDoc } from "@/vendor/mongo/mongo-type";
 
 import { Err } from "@/shared/err/err";
 import { type Model, type PartialWithUndefined } from "@/shared/model/model";
 import { getEnv } from "@/vendor/env/env";
 import { mongoClient } from "@/vendor/mongo/mongo-client";
-import { mapMongoError } from "@/vendor/mongo/mongo-err";
-
-type MongoDoc = Document & { _id: Id };
-
-const mapToMongoDoc = <T extends Model<Document>>(model: T) => {
-  const { id, ...rest } = model;
-  return { _id: id, ...rest };
-};
-
-const mapFromMongoDoc = <T extends Model<Document>>(
-  doc: WithId<MongoDoc>,
-): T => {
-  const { _id, ...rest } = doc;
-  return { id: _id, ...rest } as T;
-};
+import {
+  mapFromMongoDoc,
+  mapMongoError,
+  mapToMongoDoc,
+} from "@/vendor/mongo/mongo-mapper";
 
 const getCollection = async (input: {
   collectionName: string;
@@ -178,8 +162,6 @@ const makeMongoChangeStream = <
 }) => {
   const { collectionName, isTenantAware } = input;
 
-  let stream: ChangeStream<MongoDoc> | null = null;
-
   const getTenantMatch = (ctx: TCtx) =>
     isTenantAware
       ? ctx.dangerouslyDisableTenant
@@ -201,11 +183,6 @@ const makeMongoChangeStream = <
     onChange: (data: TModel) => void;
     onError?: ((err: Err) => void) | undefined;
   }) => {
-    if (stream) {
-      return err(
-        Err.code("conflict", { message: "Change stream already subscribed" }),
-      );
-    }
     try {
       const { ctx, filter, onChange, onError } = input;
 
@@ -236,31 +213,22 @@ const makeMongoChangeStream = <
         onError?.(mapMongoError(e));
       });
 
-      stream = cs;
-
-      return ok();
+      return ok({
+        unsubscribe: async () => {
+          try {
+            await cs.close();
+            return ok();
+          } catch (error) {
+            return err(mapMongoError(error));
+          }
+        },
+      });
     } catch (error) {
       return err(mapMongoError(error));
     }
   };
 
-  const unsubscribe = async () => {
-    try {
-      if (!stream) {
-        return ok();
-      }
-      const cs = stream;
-
-      stream = null;
-      await cs.close();
-
-      return ok();
-    } catch (error) {
-      return err(mapMongoError(error));
-    }
-  };
-
-  return { subscribe, unsubscribe };
+  return { subscribe };
 };
 
 export { makeMongoRepository, makeMongoChangeStream };

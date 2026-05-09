@@ -12,7 +12,10 @@ import type {
 
 import { Err } from "@/shared/err/err";
 import { mongoClient } from "@/vendor/mongo/mongo-client";
-import { makeMongoRepository } from "@/vendor/mongo/mongo-repository";
+import {
+  makeMongoChangeStream,
+  makeMongoRepository,
+} from "@/vendor/mongo/mongo-repository";
 
 // --- Mock setup ---
 
@@ -23,6 +26,7 @@ const mockCollection = {
   insertOne: mock(() => Promise.resolve()),
   findOneAndUpdate: mock(),
   deleteOne: mock(() => Promise.resolve()),
+  watch: mock(),
 };
 
 mockCollection.find.mockReturnValue({
@@ -77,8 +81,32 @@ const resetMocks = () => {
   mockCollection.findOneAndUpdate.mockReset();
   mockCollection.deleteOne.mockReset();
   mockCollection.deleteOne.mockResolvedValue(undefined);
+  mockCollection.watch.mockReset();
   dbSpy.mockClear();
 };
+
+const makeFakeChangeStream = () => {
+  const handlers = new Map<string, Array<(payload: unknown) => void>>();
+  return {
+    on: mock((event: string, handler: (payload: unknown) => void) => {
+      const list = handlers.get(event) ?? [];
+      list.push(handler);
+      handlers.set(event, list);
+    }),
+    close: mock(() => Promise.resolve()),
+    emit: (event: string, payload: unknown) => {
+      for (const handler of handlers.get(event) ?? []) {
+        handler(payload);
+      }
+    },
+  };
+};
+
+const makeStream = () =>
+  makeMongoChangeStream<Model<TestDoc>, TenantAwareEnabled, TenantAware>({
+    collectionName: "test-collection",
+    isTenantAware: true,
+  });
 
 const repo = makeMongoRepository<
   Model<TestDoc>,
@@ -439,6 +467,194 @@ test("makeMongoRepository deleteById: given a database error, when called, then 
   expect(result.isErr()).toBe(true);
   expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
   expect(result._unsafeUnwrapErr()).toHaveProperty(
+    "message",
+    "Mongo database error",
+  );
+});
+
+test("makeMongoChangeStream subscribe: given a tenant ctx, when called, then watches with tenant match in pipeline", async () => {
+  // given
+  const fake = makeFakeChangeStream();
+  mockCollection.watch.mockReturnValue(fake);
+  const stream = makeStream();
+
+  // when
+  const result = await stream.subscribe({ ctx, onChange: () => {} });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockCollection.watch).toHaveBeenCalledWith(
+    [{ $match: { "fullDocument._tenant": tenant } }],
+    { fullDocument: "updateLookup" },
+  );
+});
+
+test("makeMongoChangeStream subscribe: given a tenant ctx and filter, when called, then watches with tenant match and prefixed filter keys", async () => {
+  // given
+  const fake = makeFakeChangeStream();
+  mockCollection.watch.mockReturnValue(fake);
+  const stream = makeStream();
+
+  // when
+  await stream.subscribe({
+    ctx,
+    filter: { name: "x" },
+    onChange: () => {},
+  });
+
+  // then
+  expect(mockCollection.watch).toHaveBeenCalledWith(
+    [
+      {
+        $match: {
+          "fullDocument._tenant": tenant,
+          "fullDocument.name": "x",
+        },
+      },
+    ],
+    { fullDocument: "updateLookup" },
+  );
+});
+
+test("makeMongoChangeStream subscribe: given dangerouslyDisableTenant, when called, then watches with empty tenant match", async () => {
+  // given
+  const fake = makeFakeChangeStream();
+  mockCollection.watch.mockReturnValue(fake);
+  const stream = makeStream();
+
+  // when
+  await stream.subscribe({ ctx: ctxDisabled, onChange: () => {} });
+
+  // then
+  expect(mockCollection.watch).toHaveBeenCalledWith([{ $match: {} }], {
+    fullDocument: "updateLookup",
+  });
+});
+
+test("makeMongoChangeStream subscribe: given a change event with fullDocument, when fired, then onChange receives mapped model", async () => {
+  // given
+  const fake = makeFakeChangeStream();
+  mockCollection.watch.mockReturnValue(fake);
+  const stream = makeStream();
+  const onChange = mock(() => {});
+  await stream.subscribe({ ctx, onChange });
+
+  // when
+  fake.emit("change", { fullDocument: makeMongoDoc({ name: "streamed" }) });
+
+  // then
+  expect(onChange).toHaveBeenCalledTimes(1);
+  const received = (onChange.mock.calls as unknown[][])[0]![0] as Record<
+    string,
+    unknown
+  >;
+  expect(received).toHaveProperty("id", TEST_ID);
+  expect(received).toHaveProperty("name", "streamed");
+  expect(received).not.toHaveProperty("_id");
+});
+
+test("makeMongoChangeStream subscribe: given a change event without fullDocument, when fired, then onChange is not invoked", async () => {
+  // given
+  const fake = makeFakeChangeStream();
+  mockCollection.watch.mockReturnValue(fake);
+  const stream = makeStream();
+  const onChange = mock(() => {});
+  await stream.subscribe({ ctx, onChange });
+
+  // when
+  fake.emit("change", {});
+  fake.emit("change", { fullDocument: null });
+
+  // then
+  expect(onChange).not.toHaveBeenCalled();
+});
+
+test("makeMongoChangeStream subscribe: given an error event, when fired, then onError receives a mapped Err", async () => {
+  // given
+  const fake = makeFakeChangeStream();
+  mockCollection.watch.mockReturnValue(fake);
+  const stream = makeStream();
+  const onError = mock((_err: Err) => {});
+  await stream.subscribe({ ctx, onChange: () => {}, onError });
+
+  // when
+  fake.emit("error", new Error("boom"));
+
+  // then
+  expect(onError).toHaveBeenCalledTimes(1);
+  const received = (onError.mock.calls as unknown[][])[0]![0] as Err;
+  expect(received).toBeInstanceOf(Err);
+  expect(received).toHaveProperty("message", "Mongo database error");
+});
+
+test("makeMongoChangeStream subscribe: given multiple subscribe calls, when called, then each opens an independent watch", async () => {
+  // given
+  const first = makeFakeChangeStream();
+  const second = makeFakeChangeStream();
+  mockCollection.watch.mockReturnValueOnce(first).mockReturnValueOnce(second);
+  const stream = makeStream();
+
+  // when
+  const r1 = await stream.subscribe({ ctx, onChange: () => {} });
+  const r2 = await stream.subscribe({ ctx, onChange: () => {} });
+
+  // then
+  expect(r1.isOk()).toBe(true);
+  expect(r2.isOk()).toBe(true);
+  expect(mockCollection.watch).toHaveBeenCalledTimes(2);
+});
+
+test("makeMongoChangeStream subscribe: given watch throws, when called, then returns err with Mongo database error message", async () => {
+  // given
+  mockCollection.watch.mockImplementation(() => {
+    throw new Error("nope");
+  });
+  const stream = makeStream();
+
+  // when
+  const result = await stream.subscribe({ ctx, onChange: () => {} });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  expect(result._unsafeUnwrapErr()).toHaveProperty(
+    "message",
+    "Mongo database error",
+  );
+});
+
+test("makeMongoChangeStream subscribe: given a successful subscription, when unsubscribe is called, then closes the stream and returns ok", async () => {
+  // given
+  const fake = makeFakeChangeStream();
+  mockCollection.watch.mockReturnValue(fake);
+  const stream = makeStream();
+  const result = await stream.subscribe({ ctx, onChange: () => {} });
+
+  // when
+  const { unsubscribe } = result._unsafeUnwrap();
+  const closed = await unsubscribe();
+
+  // then
+  expect(closed.isOk()).toBe(true);
+  expect(fake.close).toHaveBeenCalledTimes(1);
+});
+
+test("makeMongoChangeStream subscribe: given a successful subscription, when unsubscribe close throws, then returns err with Mongo database error message", async () => {
+  // given
+  const fake = makeFakeChangeStream();
+  fake.close = mock(() => Promise.reject(new Error("fail")));
+  mockCollection.watch.mockReturnValue(fake);
+  const stream = makeStream();
+  const result = await stream.subscribe({ ctx, onChange: () => {} });
+
+  // when
+  const { unsubscribe } = result._unsafeUnwrap();
+  const closed = await unsubscribe();
+
+  // then
+  expect(closed.isErr()).toBe(true);
+  expect(closed._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  expect(closed._unsafeUnwrapErr()).toHaveProperty(
     "message",
     "Mongo database error",
   );
