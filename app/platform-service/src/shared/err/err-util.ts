@@ -13,4 +13,15 @@ const safeFn = async <T>(
   }
 };
 
-export { safeFn };
+const safeFnSync = <T>(
+  fn: () => T,
+  errMapper?: (error: unknown) => Err,
+): Result<T, Err> => {
+  try {
+    return ok(fn());
+  } catch (error) {
+    return err(errMapper ? errMapper(error) : Err.from(error));
+  }
+};
+
+export { safeFn, safeFnSync };

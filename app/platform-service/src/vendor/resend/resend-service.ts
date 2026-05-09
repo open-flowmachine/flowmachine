@@ -1,25 +1,19 @@
-import { err, ok } from "neverthrow";
-
+import { safeFn } from "@/shared/err/err-util";
 import { resendClient } from "@/vendor/resend/resend-client";
 import { mapResendError } from "@/vendor/resend/resend-err";
 
-const sendEmail = async (input: {
+const sendEmail = (input: {
   payload: { from: string; to: string; subject: string; bodyHtml: string };
 }) => {
-  const { payload } = input;
-  const { from, to, subject, bodyHtml } = payload;
-
-  try {
+  const { from, to, subject, bodyHtml } = input.payload;
+  return safeFn(async () => {
     await resendClient.emails.send({
       from,
       to,
       subject,
       html: bodyHtml,
     });
-    return ok();
-  } catch (error) {
-    return err(mapResendError(error));
-  }
+  }, mapResendError);
 };
 
 const makeResendService = () => ({ sendEmail });
