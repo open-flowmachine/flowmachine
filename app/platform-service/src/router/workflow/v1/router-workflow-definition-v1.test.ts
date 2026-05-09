@@ -3,7 +3,7 @@ import { err, ok } from "neverthrow";
 
 import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import * as workflowDefinitionServiceModule from "@/module/workflow/workflow-definition-service";
 import { Err } from "@/shared/err/err";

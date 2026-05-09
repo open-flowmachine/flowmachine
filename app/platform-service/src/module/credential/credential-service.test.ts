@@ -2,7 +2,7 @@ import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { Credential } from "@/module/credential/credential-model";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import { credentialRepository } from "@/module/credential/credential-repository";
 import { makeCredentialService } from "@/module/credential/credential-service";

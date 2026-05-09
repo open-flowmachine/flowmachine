@@ -4,7 +4,7 @@ import { err, ok } from "neverthrow";
 
 import type { AiAgentRun } from "@/module/ai-agent-run/ai-agent-run-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant, TenantToggle } from "@/shared/model/model-tenant";
+import type { Tenant, TenantAware } from "@/shared/tenant/tenant-model";
 
 import { aiAgentRunRepository } from "@/module/ai-agent-run/ai-agent-run-repository";
 import { Err } from "@/shared/err/err";
@@ -15,7 +15,7 @@ import {
 } from "@/shared/model/model";
 
 const adminListAiAgentRuns = async (input: {
-  ctx: TenantToggle<{ tenant: Tenant }>;
+  ctx: TenantAware;
   filter?: Filter<AiAgentRun> | undefined;
 }) => {
   const { ctx, filter } = input;
@@ -26,7 +26,7 @@ const adminListAiAgentRuns = async (input: {
 };
 
 const adminUpdateAiAgentRun = async (input: {
-  ctx: TenantToggle<{ tenant: Tenant }>;
+  ctx: TenantAware;
   id: Id;
   data: PartialWithUndefined<Omit<AiAgentRun, ExcludedUpdateModelFields>>;
 }) => {

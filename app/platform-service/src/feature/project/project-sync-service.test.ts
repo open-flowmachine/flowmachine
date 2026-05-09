@@ -8,7 +8,7 @@ import type { ProjectIssueFieldDefinition } from "@/module/project/project-issue
 import type { Project } from "@/module/project/project-model";
 import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import { Err } from "@/shared/err/err";
 

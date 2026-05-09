@@ -3,7 +3,7 @@ import { err, ok } from "neverthrow";
 
 import type { AiAgentRunMessage } from "@/module/ai-agent-run-message/ai-agent-run-message-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import * as aiAgentRunMessageServiceModule from "@/module/ai-agent-run-message/ai-agent-run-message-service";
 import { Err } from "@/shared/err/err";

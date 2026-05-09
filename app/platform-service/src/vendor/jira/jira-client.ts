@@ -1,12 +1,9 @@
 import axios from "axios";
-import { err, ok } from "neverthrow";
 
-import { mapJiraError } from "@/vendor/jira/jira-err";
+import type { JiraClientConfig } from "@/vendor/jira/jira-type";
 
-type JiraClientConfig = {
-  apiKey: string;
-  domain: string;
-};
+import { safeFn } from "@/shared/err/err-util";
+import { mapJiraError } from "@/vendor/jira/jira-mapper";
 
 const makeHttpClient = (config: JiraClientConfig) =>
   axios.create({
@@ -20,15 +17,15 @@ const makeHttpClient = (config: JiraClientConfig) =>
 
 const createCustomField =
   (config: JiraClientConfig) =>
-  async (input: {
+  (input: {
     body: {
       name: string;
       type: string;
       searcherKey?: string;
       description?: string;
     };
-  }) => {
-    try {
+  }) =>
+    safeFn(async () => {
       const { data } = await makeHttpClient(config).post<{
         id: string;
         key: string;
@@ -36,84 +33,61 @@ const createCustomField =
         custom: boolean;
         schema?: { type: string; custom?: string };
       }>("/field", input.body);
-      return ok(data);
-    } catch (error) {
-      return err(mapJiraError(error));
-    }
-  };
+      return data;
+    }, mapJiraError);
 
 const createCustomFieldContextOptions =
   (config: JiraClientConfig) =>
-  async (input: {
+  (input: {
     params: { fieldId: string; contextId: string };
     body: { options: { value: string; disabled?: boolean }[] };
-  }) => {
-    try {
+  }) =>
+    safeFn(async () => {
       const { data } = await makeHttpClient(config).post<{
         options: { id: string; value: string; disabled: boolean }[];
       }>(
         `/field/${input.params.fieldId}/context/${input.params.contextId}/option`,
         input.body,
       );
-      return ok(data);
-    } catch (error) {
-      return err(mapJiraError(error));
-    }
-  };
+      return data;
+    }, mapJiraError);
 
 const createCustomFieldAssociations =
   (config: JiraClientConfig) =>
-  async (input: {
+  (input: {
     body: {
       associationContexts: { type: string; identifier: string }[];
       fields: { type: string; identifier: string }[];
     };
-  }) => {
-    try {
+  }) =>
+    safeFn(async () => {
       await makeHttpClient(config).put("/field/association", input.body);
-      return ok(undefined);
-    } catch (error) {
-      return err(mapJiraError(error));
-    }
-  };
+    }, mapJiraError);
 
 const getCustomFieldContexts =
-  (config: JiraClientConfig) =>
-  async (input: { params: { fieldId: string } }) => {
-    try {
+  (config: JiraClientConfig) => (input: { params: { fieldId: string } }) =>
+    safeFn(async () => {
       const { data } = await makeHttpClient(config).get<{
         values: { id: string }[];
       }>(`/field/${input.params.fieldId}/context`);
-      return ok(data);
-    } catch (error) {
-      return err(mapJiraError(error));
-    }
-  };
+      return data;
+    }, mapJiraError);
 
 const getProject =
-  (config: JiraClientConfig) =>
-  async (input: { params: { projectId: string } }) => {
-    try {
+  (config: JiraClientConfig) => (input: { params: { projectId: string } }) =>
+    safeFn(async () => {
       const { data } = await makeHttpClient(config).get<{
         id: string;
         key: string;
       }>(`/project/${input.params.projectId}`);
-      return ok(data);
-    } catch (error) {
-      return err(mapJiraError(error));
-    }
-  };
+      return data;
+    }, mapJiraError);
 
 const deleteField =
-  (config: JiraClientConfig) =>
-  async (input: { params: { fieldId: string } }) => {
-    try {
+  (config: JiraClientConfig) => (input: { params: { fieldId: string } }) =>
+    safeFn(async () => {
       await makeHttpClient(config).delete(`/field/${input.params.fieldId}`);
-      return ok(undefined);
-    } catch (error) {
-      return err(mapJiraError(error));
-    }
-  };
+    }, mapJiraError);
 
 const makeJiraClient = (config: JiraClientConfig) => ({
   createCustomField: createCustomField(config),
@@ -127,4 +101,4 @@ const makeJiraClient = (config: JiraClientConfig) => ({
 type JiraClient = ReturnType<typeof makeJiraClient>;
 
 export { makeJiraClient };
-export type { JiraClient, JiraClientConfig };
+export type { JiraClient };

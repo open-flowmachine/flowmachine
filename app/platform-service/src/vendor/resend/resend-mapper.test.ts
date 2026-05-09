@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 
 import { Err } from "@/shared/err/err";
-import { mapResendError } from "@/vendor/resend/resend-err";
+import { mapResendError } from "@/vendor/resend/resend-mapper";
 
 test("mapResendError: given a plain Error, when mapped, then returns Err with resend message and unknown code", () => {
   // given

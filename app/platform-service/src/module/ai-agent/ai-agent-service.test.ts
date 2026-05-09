@@ -2,7 +2,7 @@ import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { AiAgent } from "@/module/ai-agent/ai-agent-model";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import { aiAgentRepository } from "@/module/ai-agent/ai-agent-repository";
 import { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";

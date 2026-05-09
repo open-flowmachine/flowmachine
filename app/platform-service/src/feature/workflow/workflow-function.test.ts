@@ -3,7 +3,7 @@ import { afterAll, beforeEach, expect, mock, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import {
   WORKFLOW_EXECUTION_INITIALIZED_EVENT,

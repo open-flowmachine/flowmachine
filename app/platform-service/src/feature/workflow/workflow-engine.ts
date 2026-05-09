@@ -4,8 +4,8 @@ import z from "zod";
 import { workflowActionDefinitions } from "@/feature/workflow/workflow-action-definition";
 import { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";
 import { idSchema } from "@/shared/model/model-id";
-import { tenantSchema } from "@/shared/model/model-tenant";
 import { validate } from "@/shared/schema/schema-validation";
+import { tenantSchema } from "@/shared/tenant/tenant-model";
 import { baseLog } from "@/vendor/pino/pino-log";
 
 const eventDataSchema = z.object({

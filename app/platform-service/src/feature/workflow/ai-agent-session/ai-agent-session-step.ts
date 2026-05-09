@@ -11,8 +11,9 @@ import { makeAiAgentRunMessageService } from "@/module/ai-agent-run-message/ai-a
 import { makeAiAgentRunService } from "@/module/ai-agent-run/ai-agent-run-service";
 import { makeAiAgentService } from "@/module/ai-agent/ai-agent-service";
 import { Err } from "@/shared/err/err";
+import { safeFn, safeFnSync } from "@/shared/err/err-util";
 import { type Id } from "@/shared/model/model-id";
-import { type Tenant } from "@/shared/model/model-tenant";
+import { type Tenant } from "@/shared/tenant/tenant-model";
 import { daytonaClient } from "@/vendor/daytona/daytona-client";
 import { getEnv } from "@/vendor/env/env";
 import { baseLog } from "@/vendor/pino/pino-log";
@@ -116,11 +117,15 @@ const startSandbox = async (input: { sandboxId: string }): Promise<Sandbox> => {
 };
 
 const stopSandbox = (input: { sandboxId: string }) => async () => {
-  try {
+  const result = await safeFn(async () => {
     const sandbox = await daytonaClient.get(input.sandboxId);
     await daytonaClient.stop(sandbox);
-  } catch (error) {
-    log.warn({ error, sandboxId: input.sandboxId }, "sandbox teardown skipped");
+  });
+  if (result.isErr()) {
+    log.warn(
+      { error: result.error, sandboxId: input.sandboxId },
+      "sandbox teardown skipped",
+    );
   }
 };
 
@@ -178,11 +183,15 @@ const parseStreamJsonEvents = (stdout: string): StreamJsonEvent[] => {
     if (!line) {
       continue;
     }
-    try {
-      events.push(JSON.parse(line) as StreamJsonEvent);
-    } catch (error) {
-      log.warn({ error, line }, "unable to parse stream-json line");
+    const result = safeFnSync(() => JSON.parse(line) as StreamJsonEvent);
+    if (result.isErr()) {
+      log.warn(
+        { error: result.error, line },
+        "unable to parse stream-json line",
+      );
+      continue;
     }
+    events.push(result.value);
   }
   return events;
 };

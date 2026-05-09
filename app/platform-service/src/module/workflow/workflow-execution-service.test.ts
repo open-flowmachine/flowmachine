@@ -2,7 +2,7 @@ import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { WorkflowExecution } from "@/module/workflow/workflow-execution-model";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import { workflowExecutionRepository } from "@/module/workflow/workflow-execution-repository";
 import { makeWorkflowExecutionService } from "@/module/workflow/workflow-execution-service";

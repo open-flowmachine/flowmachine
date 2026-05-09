@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import { aiAgentRunMessageRepository } from "@/module/ai-agent-run-message/ai-agent-run-message-repository";
 import { makeAiAgentRunMessageService } from "@/module/ai-agent-run-message/ai-agent-run-message-service";

@@ -3,7 +3,7 @@ import { err, ok } from "neverthrow";
 
 import type { Credential } from "@/module/credential/credential-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import * as credentialServiceModule from "@/module/credential/credential-service";
 import { Err } from "@/shared/err/err";

@@ -1,10 +1,18 @@
 import type { WorkflowExecution } from "@/module/workflow/workflow-execution-model";
+import type {
+  TenantAware,
+  TenantAwareEnabled,
+} from "@/shared/tenant/tenant-model";
 
-import { makeTenantAwareMongoRepository } from "@/vendor/mongo/mongo-repository";
+import { makeMongoRepository } from "@/vendor/mongo/mongo-repository";
 
-const workflowExecutionRepository =
-  makeTenantAwareMongoRepository<WorkflowExecution>({
-    collectionName: "workflow-execution",
-  });
+const workflowExecutionRepository = makeMongoRepository<
+  WorkflowExecution,
+  TenantAwareEnabled,
+  TenantAware
+>({
+  collectionName: "workflow-execution",
+  isTenantAware: true,
+});
 
 export { workflowExecutionRepository };

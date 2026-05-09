@@ -2,7 +2,7 @@ import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-model";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import { workflowDefinitionRepository } from "@/module/workflow/workflow-definition-repository";
 import { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";

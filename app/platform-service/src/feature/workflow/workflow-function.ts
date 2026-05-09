@@ -10,8 +10,8 @@ import { workflowEngine } from "@/feature/workflow/workflow-engine";
 import { makeWorkflowExecutionService } from "@/module/workflow/workflow-execution-service";
 import { Err } from "@/shared/err/err";
 import { idSchema } from "@/shared/model/model-id";
-import { tenantSchema } from "@/shared/model/model-tenant";
 import { validate } from "@/shared/schema/schema-validation";
+import { tenantSchema } from "@/shared/tenant/tenant-model";
 import { inngestClient } from "@/vendor/inngest/inngest-client";
 
 const workflowExecutionService = makeWorkflowExecutionService();

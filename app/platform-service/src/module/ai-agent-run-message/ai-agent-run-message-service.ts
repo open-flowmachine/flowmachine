@@ -4,13 +4,13 @@ import { err, ok } from "neverthrow";
 
 import type { AiAgentRunMessage } from "@/module/ai-agent-run-message/ai-agent-run-message-model";
 import type { Id } from "@/shared/model/model-id";
-import type { Tenant, TenantToggle } from "@/shared/model/model-tenant";
+import type { Tenant, TenantAware } from "@/shared/tenant/tenant-model";
 
 import { aiAgentRunMessageRepository } from "@/module/ai-agent-run-message/ai-agent-run-message-repository";
 import { newModel } from "@/shared/model/model";
 
 const adminListAiAgentRunMessages = async (input: {
-  ctx: TenantToggle<{ tenant: Tenant }>;
+  ctx: TenantAware;
   filter?: Filter<AiAgentRunMessage> | undefined;
 }) => {
   const { ctx, filter } = input;

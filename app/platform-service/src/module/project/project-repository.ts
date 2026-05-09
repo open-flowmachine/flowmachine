@@ -1,9 +1,18 @@
 import type { Project } from "@/module/project/project-model";
+import type {
+  TenantAware,
+  TenantAwareEnabled,
+} from "@/shared/tenant/tenant-model";
 
-import { makeTenantAwareMongoRepository } from "@/vendor/mongo/mongo-repository";
+import { makeMongoRepository } from "@/vendor/mongo/mongo-repository";
 
-const projectRepository = makeTenantAwareMongoRepository<Project>({
+const projectRepository = makeMongoRepository<
+  Project,
+  TenantAwareEnabled,
+  TenantAware
+>({
   collectionName: "project",
+  isTenantAware: true,
 });
 
 export { projectRepository };

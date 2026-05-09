@@ -2,7 +2,7 @@ import { afterAll, beforeEach, expect, spyOn, test } from "bun:test";
 import { err, ok } from "neverthrow";
 
 import type { ProjectIssueFieldDefinition } from "@/module/project/project-issue-field-definition-model";
-import type { Tenant } from "@/shared/model/model-tenant";
+import type { Tenant } from "@/shared/tenant/tenant-model";
 
 import { projectIssueFieldDefinitionRepository } from "@/module/project/project-issue-field-definition-repository";
 import { makeProjectIssueFieldDefinitionService } from "@/module/project/project-issue-field-definition-service";
