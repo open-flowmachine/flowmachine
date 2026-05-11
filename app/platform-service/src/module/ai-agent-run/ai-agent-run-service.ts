@@ -1,5 +1,6 @@
 import type { Filter } from "mongodb";
 
+import { merge } from "es-toolkit";
 import { err, ok } from "neverthrow";
 
 import type { AiAgentRun } from "@/module/ai-agent-run/ai-agent-run-model";
@@ -8,11 +9,7 @@ import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { aiAgentRunRepository } from "@/module/ai-agent-run/ai-agent-run-repository";
 import { Err } from "@/shared/err/err";
-import {
-  type ExcludedUpdateModelFields,
-  type PartialWithUndefined,
-  newModel,
-} from "@/shared/model/model";
+import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
 
 const createAiAgentRun = async (input: {
   ctx: TenantAware;
@@ -53,18 +50,26 @@ const listAiAgentRuns = async (input: {
 const updateAiAgentRun = async (input: {
   ctx: TenantAware;
   id: Id;
-  data: PartialWithUndefined<Omit<AiAgentRun, ExcludedUpdateModelFields>>;
+  data: ExactPartial<Omit<AiAgentRun, ExcludedUpdateModelFields>>;
 }) => {
-  const { ctx, id, data } = input;
+  const { ctx, id, data: partialUpdatedData } = input;
 
   const findResult = await aiAgentRunRepository.findById({ ctx, id });
+
   if (findResult.isErr()) {
     return err(findResult.error);
   }
   if (!findResult.value.data) {
     return err(Err.code("notFound"));
   }
-  return aiAgentRunRepository.update({ ctx, id, data });
+  const currentData = findResult.value.data;
+
+  return aiAgentRunRepository.update({
+    ctx,
+    id,
+    data: merge(currentData, partialUpdatedData),
+    expectedVersion: findResult.value.data._version,
+  });
 };
 
 const makeAiAgentRunService = () => ({

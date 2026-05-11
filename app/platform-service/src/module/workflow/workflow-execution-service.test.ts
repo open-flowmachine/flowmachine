@@ -281,6 +281,7 @@ test("update: given workflow execution exists, when updated, then returns update
       integration: { externalId: "ext-updated", provider: "inngest" },
       _version: 1,
     }),
+    expectedVersion: 1,
   });
 });
 

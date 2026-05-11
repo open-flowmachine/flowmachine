@@ -7,8 +7,11 @@ import type { Id } from "@/shared/model/model-id";
 import type {
   Tenant,
   TenantAware,
+  TenantAwareDisabled,
   TenantAwareEnabled,
+  TenantUnaware,
 } from "@/shared/tenant/tenant-model";
+import type { MongoCtx } from "@/vendor/mongo/mongo-type";
 
 import { Err } from "@/shared/err/err";
 import { mongoClient } from "@/vendor/mongo/mongo-client";
@@ -436,6 +439,26 @@ test("makeMongoRepository update: given a database error, when called, then retu
   );
 });
 
+test("makeMongoRepository update: given data containing _version, when called, then strips _version from $set", async () => {
+  // given
+  mockCollection.findOneAndUpdate.mockResolvedValue(makeMongoDoc());
+
+  // when
+  await repo.update({
+    ctx,
+    id: TEST_ID,
+    data: { name: "updated", _version: 99 } as never,
+    expectedVersion: 1,
+  });
+
+  // then
+  expect(mockCollection.findOneAndUpdate).toHaveBeenCalledWith(
+    { _id: TEST_ID, _tenant: tenant, _version: 1 },
+    { $set: { name: "updated" }, $inc: { _version: 1 } },
+    { returnDocument: "after" },
+  );
+});
+
 test("makeMongoRepository deleteById: given a tenant ctx, when called, then deletes by _id and tenant", async () => {
   // given
 
@@ -689,4 +712,56 @@ test("makeMongoChangeStream subscribe: given a successful subscription, when uns
     "message",
     "Mongo database error",
   );
+});
+
+test("makeMongoRepository: given isTenantAware false, when findMany is called, then omits tenant from filter and creates only configured indexes", async () => {
+  // given
+  const tenantUnawareRepo = makeMongoRepository<
+    Model<TestDoc>,
+    TenantAwareDisabled,
+    TenantUnaware<MongoCtx>
+  >({
+    collectionName: "test-unaware-collection",
+    collectionIndexes: [{ key: { name: 1 } }],
+    isTenantAware: false,
+  });
+  const ctxUnaware: TenantUnaware<MongoCtx> = {};
+  mockCollection.find.mockReturnValue({
+    toArray: mock(() => Promise.resolve([])),
+  });
+
+  // when
+  await tenantUnawareRepo.findMany({ ctx: ctxUnaware });
+
+  // then
+  expect(mockCollection.find).toHaveBeenCalledWith({});
+  expect(mockCollection.createIndexes).toHaveBeenCalledWith([
+    { key: { name: 1 } },
+  ]);
+});
+
+test("makeMongoChangeStream subscribe: given isTenantAware false, when called, then watches with empty tenant match", async () => {
+  // given
+  const tenantUnawareStream = makeMongoChangeStream<
+    Model<TestDoc>,
+    TenantAwareDisabled,
+    TenantUnaware<MongoCtx>
+  >({
+    collectionName: "test-unaware-collection",
+    isTenantAware: false,
+  });
+  const ctxUnaware: TenantUnaware<MongoCtx> = {};
+  const fake = makeFakeChangeStream();
+  mockCollection.watch.mockReturnValue(fake);
+
+  // when
+  await tenantUnawareStream.subscribe({
+    ctx: ctxUnaware,
+    onChange: () => {},
+  });
+
+  // then
+  expect(mockCollection.watch).toHaveBeenCalledWith([{ $match: {} }], {
+    fullDocument: "updateLookup",
+  });
 });

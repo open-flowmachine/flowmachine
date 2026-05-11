@@ -266,6 +266,7 @@ test("update: given an existing git repository, when updated, then returns the u
     ctx,
     id: TEST_ID,
     data: expect.objectContaining({ name: "Updated", _version: 1 }),
+    expectedVersion: 1,
   });
 });
 

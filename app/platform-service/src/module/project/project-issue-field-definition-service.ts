@@ -1,3 +1,4 @@
+import { merge } from "es-toolkit";
 import { err, ok } from "neverthrow";
 
 import type { ProjectIssueFieldDefinition } from "@/module/project/project-issue-field-definition-model";
@@ -6,11 +7,7 @@ import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { projectIssueFieldDefinitionRepository } from "@/module/project/project-issue-field-definition-repository";
 import { Err } from "@/shared/err/err";
-import {
-  type ExcludedUpdateModelFields,
-  type PartialWithUndefined,
-  newModel,
-} from "@/shared/model/model";
+import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
 
 const createProjectIssueFieldDefinition = async (input: {
   ctx: TenantAware;
@@ -86,11 +83,11 @@ const listProjectIssueFieldDefinitions = async (input: {
 const updateProjectIssueFieldDefinition = async (input: {
   ctx: TenantAware;
   id: Id;
-  data: PartialWithUndefined<
+  data: ExactPartial<
     Omit<ProjectIssueFieldDefinition, ExcludedUpdateModelFields>
   >;
 }) => {
-  const { ctx, id, data } = input;
+  const { ctx, id, data: partialUpdatedData } = input;
 
   const findResult = await projectIssueFieldDefinitionRepository.findById({
     ctx,
@@ -103,8 +100,14 @@ const updateProjectIssueFieldDefinition = async (input: {
   if (!findResult.value.data) {
     return err(Err.code("notFound"));
   }
+  const currentData = findResult.value.data;
 
-  return projectIssueFieldDefinitionRepository.update({ ctx, id, data });
+  return projectIssueFieldDefinitionRepository.update({
+    ctx,
+    id,
+    data: merge(currentData, partialUpdatedData),
+    expectedVersion: findResult.value.data._version,
+  });
 };
 
 const deleteProjectIssueFieldDefinition = async (input: {

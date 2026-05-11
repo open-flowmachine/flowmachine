@@ -1,3 +1,4 @@
+import { merge } from "es-toolkit";
 import { err, ok } from "neverthrow";
 
 import type { GitRepository } from "@/module/git-repository/git-repository-model";
@@ -6,11 +7,7 @@ import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { gitRepositoryRepository } from "@/module/git-repository/git-repository-repository";
 import { Err } from "@/shared/err/err";
-import {
-  type ExcludedUpdateModelFields,
-  type PartialWithUndefined,
-  newModel,
-} from "@/shared/model/model";
+import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
 
 const createGitRepository = async (input: {
   ctx: TenantAware;
@@ -72,9 +69,9 @@ const listGitRepositories = async (input: {
 const updateGitRepository = async (input: {
   ctx: TenantAware;
   id: Id;
-  data: PartialWithUndefined<Omit<GitRepository, ExcludedUpdateModelFields>>;
+  data: ExactPartial<Omit<GitRepository, ExcludedUpdateModelFields>>;
 }) => {
-  const { ctx, id, data } = input;
+  const { ctx, id, data: partialUpdatedData } = input;
 
   const findResult = await gitRepositoryRepository.findById({ ctx, id });
 
@@ -84,8 +81,14 @@ const updateGitRepository = async (input: {
   if (!findResult.value.data) {
     return err(Err.code("notFound"));
   }
+  const currentData = findResult.value.data;
 
-  return gitRepositoryRepository.update({ ctx, id, data });
+  return gitRepositoryRepository.update({
+    ctx,
+    id,
+    data: merge(currentData, partialUpdatedData),
+    expectedVersion: findResult.value.data._version,
+  });
 };
 
 const deleteGitRepository = async (input: { ctx: TenantAware; id: Id }) => {

@@ -1,3 +1,4 @@
+import { merge } from "es-toolkit";
 import { err, ok } from "neverthrow";
 
 import type { Project } from "@/module/project/project-model";
@@ -6,11 +7,7 @@ import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { projectRepository } from "@/module/project/project-repository";
 import { Err } from "@/shared/err/err";
-import {
-  type ExcludedUpdateModelFields,
-  type PartialWithUndefined,
-  newModel,
-} from "@/shared/model/model";
+import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
 
 const createProject = async (input: {
   ctx: TenantAware;
@@ -57,9 +54,9 @@ const listProjects = async (input: { ctx: TenantAware }) => {
 const updateProject = async (input: {
   ctx: TenantAware;
   id: Id;
-  data: PartialWithUndefined<Omit<Project, ExcludedUpdateModelFields>>;
+  data: ExactPartial<Omit<Project, ExcludedUpdateModelFields>>;
 }) => {
-  const { ctx, id, data } = input;
+  const { ctx, id, data: partialUpdatedData } = input;
 
   const findResult = await projectRepository.findById({ ctx, id });
 
@@ -69,8 +66,14 @@ const updateProject = async (input: {
   if (!findResult.value.data) {
     return err(Err.code("notFound"));
   }
+  const currentData = findResult.value.data;
 
-  return projectRepository.update({ ctx, id, data });
+  return projectRepository.update({
+    ctx,
+    id,
+    data: merge(currentData, partialUpdatedData),
+    expectedVersion: findResult.value.data._version,
+  });
 };
 
 const deleteProject = async (input: { ctx: TenantAware; id: Id }) => {

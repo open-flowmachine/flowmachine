@@ -168,3 +168,191 @@ test("list: given repository fails, when listed, then returns err", async () => 
   expect(result.isErr()).toBe(true);
   expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
 });
+
+test("create: given valid payload, when inserted, then returns new id and calls repository with model fields", async () => {
+  // given
+  mockRepository.insert.mockResolvedValue(ok());
+
+  // when
+  const result = await service.create({
+    ctx,
+    payload: {
+      name: "Priority",
+      type: "select",
+      options: [{ value: "high", label: "High" }],
+      integration: null,
+      project: { id: PROJECT_ID },
+    },
+  });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(result._unsafeUnwrap()).toEqual({ id: NEW_ID });
+  expect(mockRepository.insert).toHaveBeenCalledWith({
+    ctx,
+    data: expect.objectContaining({
+      id: NEW_ID,
+      _version: 1,
+      name: "Priority",
+      type: "select",
+      options: [{ value: "high", label: "High" }],
+      integration: null,
+      project: { id: PROJECT_ID },
+    }),
+  });
+});
+
+test("create: given repository insert fails, when inserted, then returns err", async () => {
+  // given
+  mockRepository.insert.mockResolvedValue(
+    err(Err.code("unknown", { message: "Mongo database error" })),
+  );
+
+  // when
+  const result = await service.create({
+    ctx,
+    payload: {
+      name: "Priority",
+      type: "select",
+      options: [],
+      integration: null,
+      project: { id: PROJECT_ID },
+    },
+  });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+});
+
+test("get: given definition exists, when fetched by id, then returns the definition", async () => {
+  // given
+  const definition = makeFieldDefinition();
+  mockRepository.findById.mockResolvedValue(ok({ data: definition }));
+
+  // when
+  const result = await service.get({ ctx, id: TEST_ID });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(result._unsafeUnwrap()).toEqual({ data: definition } as never);
+  expect(mockRepository.findById).toHaveBeenCalledWith({ ctx, id: TEST_ID });
+});
+
+test("get: given definition does not exist, when fetched by id, then returns notFound err", async () => {
+  // given
+  mockRepository.findById.mockResolvedValue(ok({ data: null }));
+
+  // when
+  const result = await service.get({ ctx, id: TEST_ID });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  expect(result._unsafeUnwrapErr()).toHaveProperty("code", "notFound");
+});
+
+test("get: given repository fails, when fetched by id, then returns err", async () => {
+  // given
+  mockRepository.findById.mockResolvedValue(
+    err(Err.code("unknown", { message: "Mongo database error" })),
+  );
+
+  // when
+  const result = await service.get({ ctx, id: TEST_ID });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+});
+
+test("update: given definition exists, when updated, then returns updated data", async () => {
+  // given
+  const existing = makeFieldDefinition();
+  const updated = makeFieldDefinition({ name: "Updated", _version: 2 });
+  mockRepository.findById.mockResolvedValue(ok({ data: existing }));
+  mockRepository.update.mockResolvedValue(ok({ data: updated }));
+
+  // when
+  const result = await service.update({
+    ctx,
+    id: TEST_ID,
+    data: { name: "Updated", _version: 1 },
+  });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(result._unsafeUnwrap()).toEqual({ data: updated } as never);
+  expect(mockRepository.update).toHaveBeenCalledWith({
+    ctx,
+    id: TEST_ID,
+    data: expect.objectContaining({ name: "Updated", _version: 1 }),
+    expectedVersion: 1,
+  });
+});
+
+test("update: given definition does not exist, when updated, then returns notFound err", async () => {
+  // given
+  mockRepository.findById.mockResolvedValue(ok({ data: null }));
+
+  // when
+  const result = await service.update({
+    ctx,
+    id: TEST_ID,
+    data: { name: "Updated", _version: 1 },
+  });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+  expect(result._unsafeUnwrapErr()).toHaveProperty("code", "notFound");
+});
+
+test("update: given repository update fails, when updated, then returns err", async () => {
+  // given
+  const existing = makeFieldDefinition();
+  mockRepository.findById.mockResolvedValue(ok({ data: existing }));
+  mockRepository.update.mockResolvedValue(
+    err(Err.code("unknown", { message: "Mongo database error" })),
+  );
+
+  // when
+  const result = await service.update({
+    ctx,
+    id: TEST_ID,
+    data: { name: "Updated", _version: 1 },
+  });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+});
+
+test("delete: given valid id, when deleted, then calls repository deleteById", async () => {
+  // given
+  mockRepository.deleteById.mockResolvedValue(ok());
+
+  // when
+  const result = await service.delete({ ctx, id: TEST_ID });
+
+  // then
+  expect(result.isOk()).toBe(true);
+  expect(mockRepository.deleteById).toHaveBeenCalledWith({
+    ctx,
+    id: TEST_ID,
+  });
+});
+
+test("delete: given repository delete fails, when deleted, then returns err", async () => {
+  // given
+  mockRepository.deleteById.mockResolvedValue(
+    err(Err.code("unknown", { message: "Mongo database error" })),
+  );
+
+  // when
+  const result = await service.delete({ ctx, id: TEST_ID });
+
+  // then
+  expect(result.isErr()).toBe(true);
+  expect(result._unsafeUnwrapErr()).toBeInstanceOf(Err);
+});

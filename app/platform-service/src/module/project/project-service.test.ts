@@ -198,6 +198,7 @@ test("update: given project exists, when updated, then returns updated data", as
     ctx,
     id: TEST_ID,
     data: expect.objectContaining({ name: "Updated", _version: 1 }),
+    expectedVersion: 1,
   });
 });
 

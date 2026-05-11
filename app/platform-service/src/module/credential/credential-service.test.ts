@@ -263,6 +263,7 @@ test("update: given an existing credential, when updated, then returns the updat
     ctx,
     id: TEST_ID,
     data: expect.objectContaining({ type: "apiKey", name: "Updated Key" }),
+    expectedVersion: 1,
   });
 });
 

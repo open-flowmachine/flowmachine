@@ -1,3 +1,4 @@
+import { merge } from "es-toolkit";
 import { err, ok } from "neverthrow";
 
 import type { WorkflowExecution } from "@/module/workflow/workflow-execution-model";
@@ -6,11 +7,7 @@ import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { workflowExecutionRepository } from "@/module/workflow/workflow-execution-repository";
 import { Err } from "@/shared/err/err";
-import {
-  type ExcludedUpdateModelFields,
-  type PartialWithUndefined,
-  newModel,
-} from "@/shared/model/model";
+import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
 
 const createWorkflowExecution = async (input: {
   ctx: TenantAware;
@@ -68,11 +65,9 @@ const listWorkflowExecutions = async (input: {
 const updateWorkflowExecution = async (input: {
   ctx: TenantAware;
   id: Id;
-  data: PartialWithUndefined<
-    Omit<WorkflowExecution, ExcludedUpdateModelFields>
-  >;
+  data: ExactPartial<Omit<WorkflowExecution, ExcludedUpdateModelFields>>;
 }) => {
-  const { ctx, id, data } = input;
+  const { ctx, id, data: partialUpdatedData } = input;
 
   const findResult = await workflowExecutionRepository.findById({ ctx, id });
 
@@ -82,8 +77,14 @@ const updateWorkflowExecution = async (input: {
   if (!findResult.value.data) {
     return err(Err.code("notFound"));
   }
+  const currentData = findResult.value.data;
 
-  return workflowExecutionRepository.update({ ctx, id, data });
+  return workflowExecutionRepository.update({
+    ctx,
+    id,
+    data: merge(currentData, partialUpdatedData),
+    expectedVersion: findResult.value.data._version,
+  });
 };
 
 const deleteWorkflowExecution = async (input: { ctx: TenantAware; id: Id }) => {

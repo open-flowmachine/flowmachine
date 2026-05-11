@@ -1,11 +1,13 @@
+import { merge } from "es-toolkit";
 import { err, ok } from "neverthrow";
 
+import type { Credential } from "@/module/credential/credential-model";
 import type { Id } from "@/shared/model/model-id";
 import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { credentialRepository } from "@/module/credential/credential-repository";
 import { Err } from "@/shared/err/err";
-import { type PartialWithUndefined, newModel } from "@/shared/model/model";
+import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
 
 type CredentialPayload =
   | { type: "apiKey"; name: string; apiKey: string; expiredAt: Date }
@@ -59,9 +61,9 @@ const listCredentials = async (input: { ctx: TenantAware }) => {
 const updateCredential = async (input: {
   ctx: TenantAware;
   id: Id;
-  data: PartialWithUndefined<CredentialPayload>;
+  data: ExactPartial<Omit<Credential, ExcludedUpdateModelFields>>;
 }) => {
-  const { ctx, id, data } = input;
+  const { ctx, id, data: partialUpdatedData } = input;
 
   const findResult = await credentialRepository.findById({ ctx, id });
 
@@ -71,8 +73,14 @@ const updateCredential = async (input: {
   if (!findResult.value.data) {
     return err(Err.code("notFound"));
   }
+  const currentData = findResult.value.data;
 
-  return credentialRepository.update({ ctx, id, data });
+  return credentialRepository.update({
+    ctx,
+    id,
+    data: merge(currentData, partialUpdatedData),
+    expectedVersion: findResult.value.data._version,
+  });
 };
 
 const deleteCredential = async (input: { ctx: TenantAware; id: Id }) => {

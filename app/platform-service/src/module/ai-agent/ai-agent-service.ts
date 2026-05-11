@@ -1,3 +1,4 @@
+import { merge } from "es-toolkit";
 import { err, ok } from "neverthrow";
 
 import type { AiAgent } from "@/module/ai-agent/ai-agent-model";
@@ -6,11 +7,7 @@ import type { TenantAware } from "@/shared/tenant/tenant-model";
 
 import { aiAgentRepository } from "@/module/ai-agent/ai-agent-repository";
 import { Err } from "@/shared/err/err";
-import {
-  type ExcludedUpdateModelFields,
-  type PartialWithUndefined,
-  newModel,
-} from "@/shared/model/model";
+import { type ExcludedUpdateModelFields, newModel } from "@/shared/model/model";
 
 const createAiAgent = async (input: {
   ctx: TenantAware;
@@ -68,9 +65,9 @@ const listAiAgents = async (input: {
 const updateAiAgent = async (input: {
   ctx: TenantAware;
   id: Id;
-  data: PartialWithUndefined<Omit<AiAgent, ExcludedUpdateModelFields>>;
+  data: ExactPartial<Omit<AiAgent, ExcludedUpdateModelFields>>;
 }) => {
-  const { ctx, id, data } = input;
+  const { ctx, id, data: partialUpdatedData } = input;
 
   const findResult = await aiAgentRepository.findById({ ctx, id });
 
@@ -80,8 +77,14 @@ const updateAiAgent = async (input: {
   if (!findResult.value.data) {
     return err(Err.code("notFound"));
   }
+  const currentData = findResult.value.data;
 
-  return aiAgentRepository.update({ ctx, id, data });
+  return aiAgentRepository.update({
+    ctx,
+    id,
+    data: merge(currentData, partialUpdatedData),
+    expectedVersion: findResult.value.data._version,
+  });
 };
 
 const deleteAiAgent = async (input: { ctx: TenantAware; id: Id }) => {

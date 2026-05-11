@@ -261,6 +261,7 @@ test("update: given workflow definition exists, when updated, then returns updat
     ctx,
     id: TEST_ID,
     data: expect.objectContaining({ name: "Updated", _version: 1 }),
+    expectedVersion: 1,
   });
 });
 

@@ -1,5 +1,7 @@
 import type { Document, Filter, IndexDescription, WithId } from "mongodb";
 
+import { omit } from "es-toolkit";
+
 import type { Err } from "@/shared/err/err";
 import type { Id } from "@/shared/model/model-id";
 import type {
@@ -11,7 +13,7 @@ import type {
 import type { MongoCtx, MongoDoc } from "@/vendor/mongo/mongo-type";
 
 import { safeFn } from "@/shared/err/err-util";
-import { type Model, type PartialWithUndefined } from "@/shared/model/model";
+import { type Model } from "@/shared/model/model";
 import { getEnv } from "@/vendor/env/env";
 import { mongoClient } from "@/vendor/mongo/mongo-client";
 import {
@@ -97,12 +99,14 @@ const makeMongoRepository = <
   const update = (input: {
     ctx: TCtx;
     id: Id;
-    data: Omit<PartialWithUndefined<TModel>, "id" | "_version">;
+    data: Omit<ExactPartial<TModel>, "id" | "_version">;
     expectedVersion?: number;
   }) =>
     safeFn(async () => {
       const { ctx, id, data, expectedVersion } = input;
+
       const col = await collection();
+      const trimmedData = omit(data, ["_version"]);
       const updatedData = await col.findOneAndUpdate(
         {
           _id: id,
@@ -111,9 +115,10 @@ const makeMongoRepository = <
             ? { _version: expectedVersion }
             : {}),
         } as Filter<MongoDoc>,
-        { $set: data, $inc: { _version: 1 } },
+        { $set: trimmedData, $inc: { _version: 1 } },
         { returnDocument: "after" },
       );
+
       return {
         data: updatedData ? mapFromMongoDoc<TModel>(updatedData) : null,
       };
