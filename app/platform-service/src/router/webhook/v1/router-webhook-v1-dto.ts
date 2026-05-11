@@ -2,6 +2,7 @@ import z from "zod";
 
 const webhookJiraQueryDtoSchema = z.object({
   tenant: z.string().min(1),
+  projectId: z.string().min(1),
 });
 
 const jiraIssueUpdatedEventDtoSchema = z.object({

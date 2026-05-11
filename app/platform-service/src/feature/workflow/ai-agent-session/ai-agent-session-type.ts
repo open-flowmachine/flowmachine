@@ -1,5 +1,5 @@
-const aiAgentSessionMode = ["fireAndForget", "interactive"] as const;
-type AiAgentSessionMode = (typeof aiAgentSessionMode)[number];
+const aiAgentSessionModes = ["fireAndForget", "interactive"] as const;
+type AiAgentSessionMode = (typeof aiAgentSessionModes)[number];
 
-export { aiAgentSessionMode };
+export { aiAgentSessionModes };
 export type { AiAgentSessionMode };

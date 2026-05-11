@@ -25,70 +25,69 @@ const webhookV1Router = new Elysia({ name: "webhookV1Router" }).group(
       async ({ query, headers, body }) => {
         const rawBody = typeof body === "string" ? body : JSON.stringify(body);
 
-        // 1. Decode tenant from URL-encoded query parameter
         const tenantResult = decodeTenant(query.tenant);
+
         if (tenantResult.isErr()) {
           throw tenantResult.error;
         }
         const tenant = tenantResult.value;
 
-        // 2. Validate webhook signature (X-Hub-Signature) against project secret
         const signatureHeader = headers["x-hub-signature"];
+
         if (!signatureHeader) {
           throw Err.code("unauthorized", {
             message: "Missing webhook signature",
           });
         }
-
-        const projectsResult = await projectService.list({
+        const projectResult = await projectService.get({
           ctx: { tenant },
+          id: query.projectId,
         });
-        if (projectsResult.isErr()) {
-          throw Err.code("unknown");
-        }
 
-        const project = projectsResult.value.data.find(
-          (p) =>
-            p.integration?.webhookSecret &&
-            verifyWebhookSignature(
-              rawBody,
-              p.integration.webhookSecret,
-              signatureHeader,
-            ),
-        );
-        if (!project) {
+        if (projectResult.isErr()) {
+          throw Err.from(projectResult.error);
+        }
+        const project = projectResult.value.data;
+
+        if (project.integration?.provider !== "jira") {
+          throw Err.code("notFound");
+        }
+        if (
+          !verifyWebhookSignature(
+            rawBody,
+            project.integration.webhookSecret,
+            signatureHeader,
+          )
+        ) {
           throw Err.code("unauthorized", {
             message: "Invalid webhook signature",
           });
         }
 
-        // 3. Parse Jira issue updated event body
         const parsedBody = typeof body === "string" ? JSON.parse(body) : body;
         const bodyResult = validate(jiraIssueUpdatedEventDtoSchema, parsedBody);
+
         if (bodyResult.isErr()) {
           throw Err.code("badRequest", {
             message: "Invalid Jira issue updated event payload",
           });
         }
-
         const { issue } = bodyResult.value;
         const title = issue.fields.summary;
-        const summary = issue.fields.description ?? "";
+        const summary = issue.fields.description ?? "Untitled";
 
-        // 4. Find active workflow definitions for this project
         const workflowsResult = await workflowDefinitionService.list({
           ctx: { tenant },
           filter: { projectId: project.id },
         });
+
         if (workflowsResult.isErr()) {
           throw Err.code("unknown");
         }
-
         const activeWorkflows = workflowsResult.value.data.filter(
           (w) => w.isActive,
         );
 
-        // 5. Trigger workflow executions via Inngest
         if (activeWorkflows.length > 0) {
           await inngestClient.send(
             activeWorkflows.map((w) => ({

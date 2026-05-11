@@ -92,6 +92,7 @@ const aiAgentSessionInitializeRequestHandler = inngestClient.createFunction(
             tenant: data.tenant,
             aiAgentId: data.aiAgentId,
             aiAgentRunId: aiAgentRun.id,
+            aiAgentSessionMode: data.aiAgentSessionMode,
           },
         }),
       );
@@ -127,9 +128,9 @@ const aiAgentSessionInitializedHandler = inngestClient.createFunction(
       });
 
       let sessionId = aiAgentRun.sessionId;
-      let iteration = 1;
+      let iteration = 0;
 
-      while (true) {
+      while (iteration < 999) {
         const currentRun = await step.run(
           `ai-agent-run/${data.aiAgentRunId}/check-status-${iteration}`,
           getAiAgentRun({
@@ -143,10 +144,6 @@ const aiAgentSessionInitializedHandler = inngestClient.createFunction(
           currentRun.status === "stopped" ||
           currentRun.status === "failed"
         ) {
-          break;
-        }
-
-        if (iteration > 1000) {
           break;
         }
 

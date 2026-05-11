@@ -26,14 +26,14 @@ const CREDENTIAL_ID = "019606a0-0000-7000-8000-000000000004" as Id;
 const TENANT: Tenant = { id: TENANT_ID, type: "organization" };
 const WEBHOOK_SECRET = "test-webhook-secret";
 
-const mockListProjects = mock();
+const mockGetProject = mock();
 const mockListWorkflowDefinitions = mock();
 
 const projectServiceSpy = spyOn(
   projectServiceModule,
   "makeProjectService",
 ).mockReturnValue({
-  list: mockListProjects,
+  get: mockGetProject,
 } as unknown as ReturnType<typeof projectServiceModule.makeProjectService>);
 
 const workflowDefinitionServiceSpy = spyOn(
@@ -108,7 +108,7 @@ const sign = (rawBody: string, secret: string) =>
   `sha256=${createHmac("sha256", secret).update(rawBody).digest("hex")}`;
 
 const resetMocks = () => {
-  mockListProjects.mockReset();
+  mockGetProject.mockReset();
   mockListWorkflowDefinitions.mockReset();
   mockInngestSend.mockReset();
 };
@@ -119,9 +119,11 @@ const postJira = (input: {
   body: unknown;
   signature?: string;
   tenantQuery?: string;
+  projectId?: string;
 }) => {
   const rawBody = JSON.stringify(input.body);
   const tenantQuery = input.tenantQuery ?? encodeTenant(TENANT);
+  const projectId = input.projectId ?? PROJECT_ID;
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
   };
@@ -129,11 +131,14 @@ const postJira = (input: {
     headers["x-hub-signature"] = input.signature;
   }
   return app.handle(
-    new Request(`http://localhost/api/v1/webhook/jira?tenant=${tenantQuery}`, {
-      method: "POST",
-      headers,
-      body: rawBody,
-    }),
+    new Request(
+      `http://localhost/api/v1/webhook/jira?tenant=${tenantQuery}&projectId=${projectId}`,
+      {
+        method: "POST",
+        headers,
+        body: rawBody,
+      },
+    ),
   );
 };
 
@@ -151,7 +156,7 @@ test("POST /api/v1/webhook/jira: given a valid signature and an active workflow,
   // given
   const project = makeProject();
   const workflow = makeWorkflow();
-  mockListProjects.mockResolvedValue(ok({ data: [project] }));
+  mockGetProject.mockResolvedValue(ok({ data: project }));
   mockListWorkflowDefinitions.mockResolvedValue(ok({ data: [workflow] }));
   mockInngestSend.mockResolvedValue(undefined as never);
   const body = buildJiraEvent();
@@ -167,6 +172,10 @@ test("POST /api/v1/webhook/jira: given a valid signature and an active workflow,
   // then
   expect(json.status).toBe(200);
   expect(json.code).toBe("ok");
+  expect(mockGetProject).toHaveBeenCalledWith({
+    ctx: { tenant: TENANT },
+    id: PROJECT_ID,
+  });
   expect(mockInngestSend).toHaveBeenCalledTimes(1);
   expect(mockInngestSend).toHaveBeenCalledWith([
     {
@@ -185,7 +194,7 @@ test("POST /api/v1/webhook/jira: given inactive workflows, when posted, then doe
   // given
   const project = makeProject();
   const inactiveWorkflow = makeWorkflow({ isActive: false });
-  mockListProjects.mockResolvedValue(ok({ data: [project] }));
+  mockGetProject.mockResolvedValue(ok({ data: project }));
   mockListWorkflowDefinitions.mockResolvedValue(
     ok({ data: [inactiveWorkflow] }),
   );
@@ -215,14 +224,58 @@ test("POST /api/v1/webhook/jira: given a missing signature header, when posted, 
 
   // then
   expect(json.code).toBe("unauthorized");
-  expect(mockListProjects).not.toHaveBeenCalled();
+  expect(mockGetProject).not.toHaveBeenCalled();
+  expect(mockInngestSend).not.toHaveBeenCalled();
+});
+
+test("POST /api/v1/webhook/jira: given the project is not found, when posted, then returns notFound errEnvelope", async () => {
+  // given
+  mockGetProject.mockResolvedValue(err(Err.code("notFound")));
+  const body = buildJiraEvent();
+
+  // when
+  const response = await postJira({
+    body,
+    signature: sign(JSON.stringify(body), WEBHOOK_SECRET),
+  });
+  const json = await response.json();
+
+  // then
+  expect(json.code).toBe("notFound");
+  expect(mockInngestSend).not.toHaveBeenCalled();
+});
+
+test("POST /api/v1/webhook/jira: given the project provider is not jira, when posted, then returns notFound errEnvelope", async () => {
+  // given
+  const project = makeProject({
+    integration: {
+      domain: "example.com",
+      externalId: "10000",
+      externalKey: "LIN",
+      provider: "linear",
+      webhookSecret: WEBHOOK_SECRET,
+      credentialId: CREDENTIAL_ID,
+    },
+  });
+  mockGetProject.mockResolvedValue(ok({ data: project }));
+  const body = buildJiraEvent();
+
+  // when
+  const response = await postJira({
+    body,
+    signature: sign(JSON.stringify(body), WEBHOOK_SECRET),
+  });
+  const json = await response.json();
+
+  // then
+  expect(json.code).toBe("notFound");
   expect(mockInngestSend).not.toHaveBeenCalled();
 });
 
 test("POST /api/v1/webhook/jira: given an invalid signature, when posted, then returns unauthorized errEnvelope", async () => {
   // given
   const project = makeProject();
-  mockListProjects.mockResolvedValue(ok({ data: [project] }));
+  mockGetProject.mockResolvedValue(ok({ data: project }));
   const body = buildJiraEvent();
 
   // when
@@ -251,14 +304,14 @@ test("POST /api/v1/webhook/jira: given an invalid tenant query, when posted, the
 
   // then
   expect(json.code).toBe("badRequest");
-  expect(mockListProjects).not.toHaveBeenCalled();
+  expect(mockGetProject).not.toHaveBeenCalled();
   expect(mockInngestSend).not.toHaveBeenCalled();
 });
 
 test("POST /api/v1/webhook/jira: given an invalid jira event payload, when posted, then returns badRequest errEnvelope", async () => {
   // given
   const project = makeProject();
-  mockListProjects.mockResolvedValue(ok({ data: [project] }));
+  mockGetProject.mockResolvedValue(ok({ data: project }));
   const body = { webhookEvent: "jira:issue_updated", issue: { id: "x" } };
 
   // when
@@ -273,9 +326,9 @@ test("POST /api/v1/webhook/jira: given an invalid jira event payload, when poste
   expect(mockInngestSend).not.toHaveBeenCalled();
 });
 
-test("POST /api/v1/webhook/jira: given the project list service fails, when posted, then returns unknown errEnvelope", async () => {
+test("POST /api/v1/webhook/jira: given the project service fails, when posted, then returns unknown errEnvelope", async () => {
   // given
-  mockListProjects.mockResolvedValue(err(Err.code("unknown")));
+  mockGetProject.mockResolvedValue(err(Err.code("unknown")));
   const body = buildJiraEvent();
 
   // when
