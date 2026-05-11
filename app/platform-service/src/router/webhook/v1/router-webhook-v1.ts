@@ -1,10 +1,16 @@
 import Elysia from "elysia";
 
+import type { ProjectIssueFieldDefinitionEntityType } from "@/module/project/project-issue-field-definition-constant";
+import type { ProjectIssueFieldDefinition } from "@/module/project/project-issue-field-definition-model";
+
 import { WORKFLOW_EXECUTION_TRIGGERED_EVENT } from "@/feature/workflow/workflow-constant";
+import { projectIssueFieldDefinitionNames } from "@/module/project/project-issue-field-definition-constant";
+import { makeProjectIssueFieldDefinitionService } from "@/module/project/project-issue-field-definition-service";
 import { makeProjectService } from "@/module/project/project-service";
 import { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";
 import {
   jiraIssueUpdatedEventDtoSchema,
+  jiraSelectFieldValueSchema,
   webhookJiraQueryDtoSchema,
 } from "@/router/webhook/v1/router-webhook-v1-dto";
 import { Err } from "@/shared/err/err";
@@ -15,7 +21,40 @@ import { verifyWebhookSignature } from "@/shared/webhook/webhook-signature";
 import { inngestClient } from "@/vendor/inngest/inngest-client";
 
 const projectService = makeProjectService();
+const projectIssueFieldDefinitionService =
+  makeProjectIssueFieldDefinitionService();
 const workflowDefinitionService = makeWorkflowDefinitionService();
+
+const findFieldDefinitionByName = (
+  definitions: ProjectIssueFieldDefinition[],
+  entityType: ProjectIssueFieldDefinitionEntityType,
+) => {
+  const fieldName = projectIssueFieldDefinitionNames[entityType];
+  return definitions.find((d) => d.name === fieldName);
+};
+
+const extractCustomFieldValue = (
+  fields: Record<string, unknown>,
+  definition: ProjectIssueFieldDefinition | undefined,
+  entityType: ProjectIssueFieldDefinitionEntityType,
+) => {
+  const fieldName = projectIssueFieldDefinitionNames[entityType];
+
+  if (!definition?.integration?.externalKey) {
+    throw Err.code("badRequest", {
+      message: `Project missing "${fieldName}" custom field`,
+    });
+  }
+  const raw = fields[definition.integration.externalKey];
+  const parsed = validate(jiraSelectFieldValueSchema, raw);
+
+  if (parsed.isErr()) {
+    throw Err.code("badRequest", {
+      message: `Issue missing "${fieldName}" value`,
+    });
+  }
+  return parsed.value.value;
+};
 
 const webhookV1Router = new Elysia({ name: "webhookV1Router" }).group(
   "/api/v1/webhook",
@@ -76,31 +115,78 @@ const webhookV1Router = new Elysia({ name: "webhookV1Router" }).group(
         const title = issue.fields.summary;
         const summary = issue.fields.description ?? "Untitled";
 
-        const workflowsResult = await workflowDefinitionService.list({
-          ctx: { tenant },
-          filter: { projectId: project.id },
-        });
+        const fieldDefinitionsResult =
+          await projectIssueFieldDefinitionService.list({
+            ctx: { tenant },
+            filter: { projectId: project.id },
+          });
 
-        if (workflowsResult.isErr()) {
-          throw Err.code("unknown");
+        if (fieldDefinitionsResult.isErr()) {
+          throw Err.from(fieldDefinitionsResult.error);
         }
-        const activeWorkflows = workflowsResult.value.data.filter(
-          (w) => w.isActive,
+        const fieldDefinitions = fieldDefinitionsResult.value.data;
+
+        const workflowDefinitionField = findFieldDefinitionByName(
+          fieldDefinitions,
+          "workflowDefinition",
+        );
+        const aiAgentField = findFieldDefinitionByName(
+          fieldDefinitions,
+          "aiAgent",
+        );
+        const gitRepositoryField = findFieldDefinitionByName(
+          fieldDefinitions,
+          "gitRepository",
         );
 
-        if (activeWorkflows.length > 0) {
-          await inngestClient.send(
-            activeWorkflows.map((w) => ({
-              name: WORKFLOW_EXECUTION_TRIGGERED_EVENT,
-              data: {
-                tenant,
-                workflowDefinitionId: w.id,
-                title,
-                summary,
-              },
-            })),
-          );
+        const workflowDefinitionId = extractCustomFieldValue(
+          issue.fields,
+          workflowDefinitionField,
+          "workflowDefinition",
+        );
+        const aiAgentId = extractCustomFieldValue(
+          issue.fields,
+          aiAgentField,
+          "aiAgent",
+        );
+        const gitRepositoryId = extractCustomFieldValue(
+          issue.fields,
+          gitRepositoryField,
+          "gitRepository",
+        );
+
+        const workflowResult = await workflowDefinitionService.get({
+          ctx: { tenant },
+          id: workflowDefinitionId,
+        });
+
+        if (workflowResult.isErr()) {
+          throw Err.from(workflowResult.error);
         }
+        const workflow = workflowResult.value.data;
+
+        if (!workflow.isActive) {
+          throw Err.code("badRequest", {
+            message: "Workflow definition is not active",
+          });
+        }
+        if (!workflow.projects.some((p) => p.id === project.id)) {
+          throw Err.code("badRequest", {
+            message: "Workflow definition does not belong to project",
+          });
+        }
+
+        await inngestClient.send({
+          name: WORKFLOW_EXECUTION_TRIGGERED_EVENT,
+          data: {
+            tenant,
+            workflowDefinitionId,
+            aiAgentId,
+            gitRepositoryId,
+            title,
+            summary,
+          },
+        });
 
         return okEnvelope();
       },

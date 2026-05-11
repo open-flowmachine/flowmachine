@@ -15,6 +15,7 @@ import type { makeWorkflowDefinitionService } from "@/module/workflow/workflow-d
 import type { Id } from "@/shared/model/model-id";
 import type { TenantAware } from "@/shared/tenant/tenant-model";
 
+import { projectIssueFieldDefinitionNames } from "@/module/project/project-issue-field-definition-constant";
 import { Err } from "@/shared/err/err";
 
 type ExternalProjectService = {
@@ -47,11 +48,7 @@ type SyncInput = {
   payload: { projectId: Id };
 };
 
-const entityTypeToFieldName = {
-  aiAgent: "AI Agent",
-  gitRepository: "Git Repository",
-  workflowDefinition: "Workflow Definition",
-} as const satisfies Record<string, string>;
+const entityTypeToFieldName = projectIssueFieldDefinitionNames;
 
 const entityTypeToFieldType = {
   aiAgent: "select",
