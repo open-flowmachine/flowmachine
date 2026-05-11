@@ -5,36 +5,34 @@ description: Apply when creating or renaming folders, files, variables, function
 
 # Naming Conventions
 
-> For TypeScript type design (illegal states, enum replacement, branded types, escape hatches) → `conventions-typescript`.
+> TypeScript type design (illegal states, branded types, escape hatches) → `conventions-typescript`. Test-file layout (sibling, no `__tests__/`, no `.spec.`).
 
-| Target                                       | Casing                               | Example                                         |
-| -------------------------------------------- | ------------------------------------ | ----------------------------------------------- |
-| Folder                                       | `kebab-case`                         | `user-profile/`                                 |
-| File (all, incl. `.ts` / `.tsx`)             | `kebab-case`                         | `user-card.tsx`, `auth-service.ts`              |
-| Test file                                    | `kebab-case` + `.test.ts(x)`         | `user-card.test.tsx`                            |
-| Variable                                     | `camelCase`                          | `currentUser`                                   |
-| Function                                     | `camelCase`                          | `getUserById`                                   |
-| Class                                        | `PascalCase`                         | `UserService`                                   |
-| Type / Interface                             | `PascalCase`                         | `UserProfile`                                   |
-| Enum replacement (see rules)                 | value `camelCase`, type `PascalCase` | `statuses` / `Status`; `httpCodes` / `HttpCode` |
-| Module-level constant (primitive, immutable) | `SCREAMING_SNAKE_CASE`               | `MAX_RETRIES`                                   |
-| Module-level constant (non-primitive)        | `camelCase`                          | `handlers`, `status`                            |
+| Target                                    | Casing                                           | Example                          |
+| ----------------------------------------- | ------------------------------------------------ | -------------------------------- |
+| Folder / file (incl. `.ts` / `.tsx`)      | `kebab-case`                                     | `user-profile/`, `user-card.tsx` |
+| Test file                                 | `kebab-case.test.ts(x)`                          | `user-card.test.tsx`             |
+| Variable / function                       | `camelCase`                                      | `currentUser`, `getUserById`     |
+| Boolean (variable / field / function)     | `camelCase` with `is` / `has` / `should` / `can` | `isVerified`, `hasAccess`        |
+| Class / type / interface                  | `PascalCase`                                     | `UserService`, `UserProfile`     |
+| Generic type parameter                    | `PascalCase`, `T`-prefixed when named            | `T`, `TEntity`                   |
+| Enum replacement                          | value `camelCase` **plural**, type `PascalCase`  | `statuses` / `Status`            |
+| Module-level const (primitive, immutable) | `SCREAMING_SNAKE_CASE`                           | `MAX_RETRIES`                    |
+| Module-level const (non-primitive)        | `camelCase`                                      | `eventHandlers`, `defaultConfig` |
+| Environment variable                      | `SCREAMING_SNAKE_CASE`                           | `STRIPE_WEBHOOK_SECRET`          |
 
 ## Rules
 
-- React component files follow the file rule — `user-card.tsx`, not `UserCard.tsx`.
-- Compound file suffixes from `architecture-hexagonal` (`.port.ts`, `.use-case.ts`, `.adapter.ts`) are appended after the kebab-case stem; each dotted segment is its own kebab-case token (`create-user.use-case.ts`, `user-repo.port.ts`).
-- Types coverage: branded types, domain events, integration events, and commands are all types → `PascalCase`. Test-file layout (sibling, no `__tests__/`, no `.spec.`) lives in `architecture-hexagonal` → TESTING.md.
-- Acronyms in `PascalCase`/`camelCase`: only the first letter is uppercase (`UserId`, `HttpCode`, `parseUrl`, not `UserID`/`HTTPCode`/`parseURL`). Keeps identifiers readable and grep-friendly.
-- Native `enum` is banned (see `conventions-typescript`). Replace with an `as const` value + derived union. Value side is `camelCase`; derived type is `PascalCase`.
-  - String-literal enum → `as const` **array**: `const statuses = ["idle", "ready"] as const; type Status = (typeof statuses)[number]`.
-  - Complex-value enum (numbers, objects, functions, …) → `as const` **object**: `const httpCodes = { ok: 200, notFound: 404 } as const; type HttpCode = (typeof httpCodes)[keyof typeof httpCodes]`.
-- In-function `const` locals stay `camelCase` regardless of immutability — the `SCREAMING_SNAKE_CASE` rule applies only to module-level primitives.
+- Acronyms — only the first letter is uppercase: `parseUrl`, `UserId`, `HttpCode`. Not `parseURL` / `UserID` / `HTTPCode`. Keeps identifiers grep-friendly.
+- Native `enum` is banned (→ `conventions-typescript`). Replace with `as const` + derived union; value **plural** (a collection), type **singular** (one member):
+  - String-literal → array: `const statuses = ["idle", "ready"] as const; type Status = (typeof statuses)[number]`
+  - Complex values → object: `const httpCodes = { ok: 200, notFound: 404 } as const; type HttpCode = (typeof httpCodes)[keyof typeof httpCodes]`
+- In-function `const` stays `camelCase` — `SCREAMING_SNAKE_CASE` is module-level primitives only.
+- Booleans take a predicate prefix so call sites self-document: `if (user.isVerified)`, not `if (user.verified)`.
+- Event handlers split by role: the **prop** is `on*` (`onSubmit`), the **implementation** is `handle*` (`handleSubmit`). Keeps prop-vs-handler grep-distinguishable.
+- Don't abbreviate beyond well-known short forms (`id`, `url`, `db`, `ctx`, `req`, `res`, `props`, `ref`). Loop indices and lambda args (`i`, `x`) are exempt.
 
 ## Namespacing
 
-- Namespace via **folders**, not the TypeScript `namespace` keyword.
-- Folder path = namespace path; each segment stays `kebab-case` (e.g. `user/profile/avatar.ts` → conceptually `user.profile.avatar`).
-- Namespace import aliases: `PascalCase` (treat the module as a container).
-  - `import * as UserService from "@/user/service"`
-- Barrel re-exports (`index.ts`) keep each symbol's own casing — no renaming on re-export.
+- Namespace via **folders**, not the TS `namespace` keyword. Folder path = namespace (`user/profile/avatar.ts`).
+- Wildcard import alias is `PascalCase` — `import * as UserService from "@/user/service"`.
+- Barrel `index.ts` re-exports preserve each symbol's casing — no renaming on re-export.
