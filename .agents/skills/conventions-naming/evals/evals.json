@@ -1,0 +1,223 @@
+{
+  "skill_name": "conventions-naming",
+  "notes": "Mixed task-execution evals (positive triggers) and trigger-only evals (negatives + near-misses). Each eval names the rule under test so failures are easy to attribute. Realistic prompts \u2014 file paths, casual phrasing, half-formed thinking.",
+  "evals": [
+    {
+      "id": 1,
+      "rule": "module-level primitive constant \u2192 SCREAMING_SNAKE_CASE",
+      "should_trigger": true,
+      "prompt": "in app/platform-service/src/config.ts add a constant for the max retry count, set it to 5",
+      "expected_output": "Adds `MAX_RETRIES = 5` (or `MAX_RETRY_COUNT = 5`) at module scope. Not `maxRetries`, not `MaxRetries`.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "rule": "module-level non-primitive constant \u2192 camelCase",
+      "should_trigger": true,
+      "prompt": "add a module-level lookup object that maps event type strings to their handler functions in app/platform-service/src/events/registry.ts",
+      "expected_output": "`const eventHandlers = { ... } as const;` \u2014 camelCase identifier because the value is a non-primitive (object). Not `EVENT_HANDLERS`.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "rule": "React component file \u2192 kebab-case .tsx",
+      "should_trigger": true,
+      "prompt": "create a new react component for showing a user's avatar in app/platform-web/src/components/",
+      "expected_output": "File created as `user-avatar.tsx`. Component export is `UserAvatar` (PascalCase). Not `UserAvatar.tsx`, not `userAvatar.tsx`.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "rule": "test file naming",
+      "should_trigger": true,
+      "prompt": "add a colocated test file for user-card.tsx",
+      "expected_output": "Creates `user-card.test.tsx` sibling. Not `user-card.spec.tsx`, not in a `__tests__/` folder.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "rule": "acronym in identifier \u2014 only first letter uppercase",
+      "should_trigger": true,
+      "prompt": "I have these helpers that don't match the codebase style \u2014 parseURL, getUserID, fetchJSON, toHTML. fix the names",
+      "expected_output": "Renamed to `parseUrl`, `getUserId`, `fetchJson`, `toHtml`. Reasoning cites the grep-friendly acronym rule.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "rule": "enum replacement \u2014 string-literal \u2192 as const array",
+      "should_trigger": true,
+      "prompt": "replace this with the project pattern:\n\nenum OrderStatus { Pending = 'pending', Shipped = 'shipped', Delivered = 'delivered' }",
+      "expected_output": "`const orderStatuses = ['pending', 'shipped', 'delivered'] as const; type OrderStatus = (typeof orderStatuses)[number];` \u2014 value camelCase plural, type PascalCase.",
+      "files": []
+    },
+    {
+      "id": 7,
+      "rule": "enum replacement \u2014 complex values \u2192 as const object",
+      "should_trigger": true,
+      "prompt": "convert this to our preferred pattern:\n\nenum HttpCode { OK = 200, NotFound = 404, InternalError = 500 }",
+      "expected_output": "`const httpCodes = { ok: 200, notFound: 404, internalError: 500 } as const; type HttpCode = (typeof httpCodes)[keyof typeof httpCodes];` \u2014 value side camelCase keys.",
+      "files": []
+    },
+    {
+      "id": 8,
+      "rule": "native enum is banned",
+      "should_trigger": true,
+      "prompt": "ok I'm going to add an enum for log levels \u2014 TRACE, DEBUG, INFO, WARN, ERROR. where should this live?",
+      "expected_output": "Refuses native enum. Suggests `as const` array (string-literal enum). Provides correct casing for value (`logLevels`) and type (`LogLevel`).",
+      "files": []
+    },
+    {
+      "id": 9,
+      "rule": "in-function const stays camelCase regardless of immutability",
+      "should_trigger": true,
+      "prompt": "inside this function I have const PI_TIMES_TWO = Math.PI * 2; \u2014 keep it correct per our conventions",
+      "expected_output": "Renames to `piTimesTwo` (camelCase). Explains that SCREAMING_SNAKE_CASE is module-level only.",
+      "files": []
+    },
+    {
+      "id": 10,
+      "rule": "class \u2192 PascalCase",
+      "should_trigger": true,
+      "prompt": "create a service class that wraps stripe billing in app/platform-service/src/billing/",
+      "expected_output": "File `stripe-billing-service.ts` (kebab-case). Class `StripeBillingService` (PascalCase). Acronym rule: not `StripeBillingSVC` or `STRIPEBillingService`.",
+      "files": []
+    },
+    {
+      "id": 11,
+      "rule": "type / interface \u2192 PascalCase",
+      "should_trigger": true,
+      "prompt": "define a type for the payload our webhook receives from jira",
+      "expected_output": "Type named with PascalCase, e.g. `JiraWebhookPayload`. Acronym rule applied: `Jira` not `JIRA`.",
+      "files": []
+    },
+    {
+      "id": 12,
+      "rule": "folder \u2192 kebab-case",
+      "should_trigger": true,
+      "prompt": "I'm starting a new bounded context for invoicing \u2014 what should the folder be called and where does it go?",
+      "expected_output": "Folder `invoicing/` (kebab-case, single word). If compound: e.g. `payment-processing/`. Not `Invoicing/`, not `invoicingContext/`.",
+      "files": []
+    },
+    {
+      "id": 13,
+      "rule": "namespace import alias \u2192 PascalCase",
+      "should_trigger": true,
+      "prompt": "I want to do a wildcard import of our user service module \u2014 what should the alias look like?",
+      "expected_output": "`import * as UserService from \"@/user/service\";` \u2014 PascalCase alias, treating module as a container.",
+      "files": []
+    },
+    {
+      "id": 14,
+      "rule": "namespace via folders, not `namespace` keyword",
+      "should_trigger": true,
+      "prompt": "should I wrap these avatar helpers in `namespace UserProfileAvatar { ... }` to scope them?",
+      "expected_output": "Rejects TS `namespace` keyword. Suggests folder structure `user/profile/avatar.ts` instead \u2014 the path IS the namespace.",
+      "files": []
+    },
+    {
+      "id": 15,
+      "rule": "rename diff review",
+      "should_trigger": true,
+      "prompt": "review this diff for naming \u2014 does it follow our conventions?\n\n+ export const MAX_USERS = 100;\n+ export const handlerMap = { ... };\n+ export class user_service {}\n+ export function GetUserByID(id: string) {}\n+ export type user_profile = { ... };",
+      "expected_output": "Flags: `user_service` \u2192 `UserService`, `GetUserByID` \u2192 `getUserById` (both case and acronym), `user_profile` \u2192 `UserProfile`. `MAX_USERS` and `handlerMap` are correct.",
+      "files": []
+    },
+    {
+      "id": 16,
+      "rule": "function \u2192 camelCase",
+      "should_trigger": true,
+      "prompt": "write me a helper that converts a uuidv7 to a short display id",
+      "expected_output": "Function named `toShortDisplayId` or similar \u2014 camelCase. Acronym rule applied (`Id` not `ID`).",
+      "files": []
+    },
+    {
+      "id": 17,
+      "rule": "variable \u2192 camelCase",
+      "should_trigger": true,
+      "prompt": "in this function declare a local for the currently signed-in user fetched from context",
+      "expected_output": "`const currentUser = ...` \u2014 camelCase local. Not `current_user`, not `CurrentUser`.",
+      "should_trigger_negative_intent": false,
+      "files": []
+    },
+    {
+      "id": 18,
+      "rule": "branded types coverage (delegated to typescript skill but PascalCase is here)",
+      "should_trigger": true,
+      "prompt": "create a branded type for user ids so I can't accidentally pass a tenant id where a user id is expected",
+      "expected_output": "Branded type named `UserId` (PascalCase, `Id` acronym rule). Refers to conventions-typescript for the branding mechanics.",
+      "files": []
+    },
+    {
+      "id": 19,
+      "rule": "negative \u2014 pure algorithm, no naming question",
+      "should_trigger": false,
+      "prompt": "write a fibonacci function in typescript",
+      "expected_output": "Skill should NOT trigger \u2014 no naming question raised. (Though the model should still produce `fibonacci`/`fib`, the skill is not what's load-bearing here.)",
+      "files": []
+    },
+    {
+      "id": 20,
+      "rule": "negative \u2014 formatting, not naming",
+      "should_trigger": false,
+      "prompt": "run oxfmt across the whole repo and tell me what changed",
+      "expected_output": "Skill should NOT trigger \u2014 formatting (whitespace, quotes) is orthogonal to casing/naming.",
+      "files": []
+    },
+    {
+      "id": 21,
+      "rule": "negative \u2014 near-miss, talking about a JS variable but only its value",
+      "should_trigger": false,
+      "prompt": "what's a good default value for `maxRetries` \u2014 3 or 5?",
+      "expected_output": "Skill should NOT trigger \u2014 variable already named, question is about the value, not the name.",
+      "files": []
+    },
+    {
+      "id": 22,
+      "rule": "negative \u2014 environment / shell variable",
+      "should_trigger": false,
+      "prompt": "add a new env var STRIPE_WEBHOOK_SECRET to turbo.json globalEnv and document it",
+      "expected_output": "Skill should NOT trigger \u2014 env vars are conventionally SCREAMING_SNAKE_CASE everywhere; the project doesn't need this skill to confirm that. (If this becomes a recurring question, ADD the rule to the skill.)",
+      "files": []
+    },
+    {
+      "id": 23,
+      "rule": "near-miss positive \u2014 sneaky: looks like a value question but is a naming question",
+      "should_trigger": true,
+      "prompt": "what should I call the file for the handler that processes incoming jira webhooks? and the class inside it?",
+      "expected_output": "File: `process-jira-webhook.ts` (kebab-case, `Jira` acronym rule). Class: `ProcessJiraWebhookHandler` or similar (PascalCase).",
+      "files": []
+    },
+    {
+      "id": 24,
+      "rule": "ambiguous casual phrasing \u2014 should still trigger",
+      "should_trigger": true,
+      "prompt": "ugh I keep forgetting \u2014 is it user_card.tsx or UserCard.tsx or user-card.tsx in this repo??",
+      "expected_output": "Answers `user-card.tsx`. References the file-naming rule.",
+      "files": []
+    },
+    {
+      "id": 25,
+      "rule": "barrel re-export \u2014 no renaming",
+      "should_trigger": true,
+      "prompt": "I'm setting up an index.ts barrel for the user module \u2014 can I rename exports to be shorter on the way out?",
+      "expected_output": "No \u2014 barrel re-exports keep each symbol's own casing, no renaming on re-export.",
+      "files": []
+    },
+    {
+      "id": 26,
+      "rule": "gap probe \u2014 boolean naming",
+      "should_trigger": true,
+      "prompt": "I have a function that checks whether a user is verified \u2014 what should I name it and the boolean field on the user type?",
+      "expected_output": "Currently UNDERSPECIFIED in the skill. A consistent answer (e.g. `isVerified` / `isUserVerified`) is reasonable but the skill should be extended to cover boolean prefixes. Treat any inconsistent answer as a skill gap, not a model failure.",
+      "files": []
+    },
+    {
+      "id": 27,
+      "rule": "gap probe \u2014 generic type parameter",
+      "should_trigger": true,
+      "prompt": "I'm writing a generic Repository<???> type \u2014 what should the generic parameter be named?",
+      "expected_output": "Currently UNDERSPECIFIED in the skill. Common answers: `T`, `TEntity`, `Entity`. Flag as skill gap if the model picks inconsistently across evals.",
+      "files": []
+    }
+  ]
+}
