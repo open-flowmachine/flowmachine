@@ -19,6 +19,8 @@ const workflowExecutionService = makeWorkflowExecutionService();
 const initializeWorkflowExecutionEventDataSchema = z.object({
   tenant: tenantSchema,
   workflowDefinitionId: idSchema,
+  aiAgentId: idSchema,
+  gitRepositoryId: idSchema,
   title: z.string().optional(),
   summary: z.string().optional(),
 });
@@ -38,8 +40,14 @@ const initializeWorkflowExecution = inngestClient.createFunction(
       console.error("Invalid event data:", validationResult.error);
       return;
     }
-    const { tenant, workflowDefinitionId, title, summary } =
-      validationResult.value;
+    const {
+      tenant,
+      workflowDefinitionId,
+      aiAgentId,
+      gitRepositoryId,
+      title,
+      summary,
+    } = validationResult.value;
 
     const workflowExecutionId = await step.run(
       "create-workflow-execution",
@@ -70,6 +78,8 @@ const initializeWorkflowExecution = inngestClient.createFunction(
         tenant,
         workflowDefinitionId,
         workflowExecutionId,
+        aiAgentId,
+        gitRepositoryId,
         title,
         summary,
       },

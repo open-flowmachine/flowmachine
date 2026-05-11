@@ -10,6 +10,8 @@ import { inngestClient } from "@/vendor/inngest/inngest-client";
 
 const TENANT_ID = "019606a0-0000-7000-8000-000000000001" as Id;
 const WORKFLOW_DEFINITION_ID = "019606a0-0000-7000-8000-000000000002" as Id;
+const AI_AGENT_ID = "019606a0-0000-7000-8000-000000000003" as Id;
+const GIT_REPOSITORY_ID = "019606a0-0000-7000-8000-000000000004" as Id;
 
 const mockInngestSend = spyOn(inngestClient, "send");
 
@@ -48,6 +50,8 @@ test("POST /api/v1/workflow-execution: given a valid body, when posted, then sen
   const response = await request("POST", "/api/v1/workflow-execution", {
     tenant: { id: TENANT_ID, type: "organization" },
     workflowDefinitionId: WORKFLOW_DEFINITION_ID,
+    aiAgentId: AI_AGENT_ID,
+    gitRepositoryId: GIT_REPOSITORY_ID,
   });
   const json = await response.json();
 
@@ -60,6 +64,8 @@ test("POST /api/v1/workflow-execution: given a valid body, when posted, then sen
     data: {
       tenant: { id: TENANT_ID, type: "organization" },
       workflowDefinitionId: WORKFLOW_DEFINITION_ID,
+      aiAgentId: AI_AGENT_ID,
+      gitRepositoryId: GIT_REPOSITORY_ID,
     },
   });
 });
@@ -86,6 +92,8 @@ test("POST /api/v1/workflow-execution: given a body with an invalid tenant type,
   const response = await request("POST", "/api/v1/workflow-execution", {
     tenant: { id: TENANT_ID, type: "not-a-valid-type" },
     workflowDefinitionId: WORKFLOW_DEFINITION_ID,
+    aiAgentId: AI_AGENT_ID,
+    gitRepositoryId: GIT_REPOSITORY_ID,
   });
 
   // then

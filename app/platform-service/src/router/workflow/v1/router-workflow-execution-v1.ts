@@ -16,6 +16,8 @@ const workflowExecutionV1Router = new Elysia({
         data: {
           tenant: body.tenant,
           workflowDefinitionId: body.workflowDefinitionId,
+          aiAgentId: body.aiAgentId,
+          gitRepositoryId: body.gitRepositoryId,
         },
       });
       return okEnvelope();

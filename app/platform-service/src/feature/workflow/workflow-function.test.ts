@@ -18,6 +18,8 @@ import { Err } from "@/shared/err/err";
 const TENANT_ID = "019606a0-0000-7000-8000-000000000001" as Id;
 const WORKFLOW_DEFINITION_ID = "019606a0-0000-7000-8000-000000000002" as Id;
 const WORKFLOW_EXECUTION_ID = "019606a0-0000-7000-8000-000000000003" as Id;
+const AI_AGENT_ID = "019606a0-0000-7000-8000-000000000004" as Id;
+const GIT_REPOSITORY_ID = "019606a0-0000-7000-8000-000000000005" as Id;
 const TENANT: Tenant = { id: TENANT_ID, type: "organization" };
 
 const mockCreateWorkflowExecution = mock();
@@ -111,6 +113,8 @@ test("initializeWorkflowExecution: given valid event data, when executed, then c
         {
           tenant: TENANT,
           workflowDefinitionId: WORKFLOW_DEFINITION_ID,
+          aiAgentId: AI_AGENT_ID,
+          gitRepositoryId: GIT_REPOSITORY_ID,
           title: "a title",
           summary: "a summary",
         },
@@ -138,6 +142,8 @@ test("initializeWorkflowExecution: given valid event data, when executed, then c
         tenant: TENANT,
         workflowDefinitionId: WORKFLOW_DEFINITION_ID,
         workflowExecutionId: WORKFLOW_EXECUTION_ID,
+        aiAgentId: AI_AGENT_ID,
+        gitRepositoryId: GIT_REPOSITORY_ID,
         title: "a title",
         summary: "a summary",
       },
@@ -172,6 +178,8 @@ test("initializeWorkflowExecution: given the execution service returns an error,
       triggerEvent({
         tenant: TENANT,
         workflowDefinitionId: WORKFLOW_DEFINITION_ID,
+        aiAgentId: AI_AGENT_ID,
+        gitRepositoryId: GIT_REPOSITORY_ID,
       }),
     ],
   });
@@ -200,6 +208,8 @@ test("initializeWorkflowExecution: given event.id is undefined, when executed, t
         {
           tenant: TENANT,
           workflowDefinitionId: WORKFLOW_DEFINITION_ID,
+          aiAgentId: AI_AGENT_ID,
+          gitRepositoryId: GIT_REPOSITORY_ID,
         },
         { id: undefined },
       ),
