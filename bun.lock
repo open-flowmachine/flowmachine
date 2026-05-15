@@ -112,11 +112,11 @@
       "dependencies": {
         "aws-cdk-lib": "catalog:",
         "constructs": "catalog:",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@flowmachine/typescript-config": "workspace:*",
         "@types/bun": "catalog:",
-        "@types/node": "catalog:",
         "cdk": "catalog:",
         "typescript": "catalog:",
       },

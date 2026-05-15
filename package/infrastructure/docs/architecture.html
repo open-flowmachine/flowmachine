@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Flow Machine — Infrastructure Architecture</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --panel: #121833;
+    --panel-2: #1a2347;
+    --line: #2a3566;
+    --text: #e6ebff;
+    --muted: #9aa6d4;
+    --accent: #5eead4;
+    --aws: #ff9900;
+    --route53: #8c4fff;
+    --alb: #d33;
+    --ecs: #2e7d32;
+    --ecr: #1976d2;
+    --acm: #c2185b;
+    --logs: #6d4c41;
+    --vpc: #455a64;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(180deg, #070b1c 0%, #0b1020 100%);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  header {
+    padding: 32px 48px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  h1 { margin: 0 0 8px; font-size: 28px; letter-spacing: 0.3px; }
+  h2 { margin: 32px 0 12px; font-size: 20px; color: var(--accent); }
+  h3 { margin: 16px 0 6px; font-size: 15px; color: var(--text); }
+  p, li { color: var(--muted); font-size: 14px; }
+  code {
+    background: #0f1530;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 12.5px;
+    color: #ffd479;
+  }
+  main { padding: 24px 48px 64px; max-width: 1280px; margin: 0 auto; }
+  .diagram {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 16px 0 32px;
+    overflow-x: auto;
+  }
+  svg { display: block; margin: 0 auto; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 12px 20px; margin-top: 16px;
+    font-size: 12px; color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .card h3 { margin-top: 0; color: var(--accent); }
+  .pill {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    background: #1f2a55; color: #cfd7ff; font-size: 11px;
+    margin-right: 6px;
+  }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+  th, td {
+    text-align: left; padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  th { color: var(--text); font-weight: 600; }
+  td { color: var(--muted); }
+  .gap-list { margin: 0; padding-left: 18px; }
+  footer { color: var(--muted); font-size: 12px; padding: 24px 48px; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Flow Machine — AWS Infrastructure</h1>
+  <p>CDK stack: <code>package/infrastructure/lib/infrastructure-stack.ts</code></p>
+</header>
+
+<main>
+  <h2>Architecture Diagram</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 1180 720" width="100%" style="max-width: 1180px;">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+                markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#9aa6d4"/>
+        </marker>
+        <style>
+          .lbl { font: 600 12px -apple-system, sans-serif; fill: #e6ebff; }
+          .sub { font: 11px -apple-system, sans-serif; fill: #9aa6d4; }
+          .tag { font: 700 10px -apple-system, sans-serif; fill: #fff; }
+          .edge { stroke: #6b7bbf; stroke-width: 1.5; fill: none; }
+          .edge-dash { stroke: #6b7bbf; stroke-width: 1.3; stroke-dasharray: 4 4; fill: none; }
+        </style>
+      </defs>
+
+      <!-- Internet user -->
+      <g transform="translate(40,40)">
+        <circle cx="40" cy="40" r="28" fill="#1a2347" stroke="#5eead4" stroke-width="1.5"/>
+        <text x="40" y="44" text-anchor="middle" class="lbl">User</text>
+        <text x="40" y="92" text-anchor="middle" class="sub">Browser / API client</text>
+      </g>
+
+      <!-- Route 53 -->
+      <g transform="translate(180,40)">
+        <rect width="170" height="80" rx="8" fill="#2a1a47" stroke="#8c4fff" stroke-width="1.5"/>
+        <text x="85" y="28" text-anchor="middle" class="lbl">Route 53</text>
+        <text x="85" y="48" text-anchor="middle" class="sub">flowmachine.io zone</text>
+        <text x="85" y="64" text-anchor="middle" class="sub">A-records → ALBs</text>
+      </g>
+
+      <!-- ACM -->
+      <g transform="translate(380,40)">
+        <rect width="160" height="80" rx="8" fill="#3a1a2e" stroke="#c2185b" stroke-width="1.5"/>
+        <text x="80" y="28" text-anchor="middle" class="lbl">ACM</text>
+        <text x="80" y="48" text-anchor="middle" class="sub">TLS certs (DNS</text>
+        <text x="80" y="64" text-anchor="middle" class="sub">validation via R53)</text>
+      </g>
+
+      <!-- ECR -->
+      <g transform="translate(570,40)">
+        <rect width="160" height="80" rx="8" fill="#0f2747" stroke="#1976d2" stroke-width="1.5"/>
+        <text x="80" y="28" text-anchor="middle" class="lbl">ECR</text>
+        <text x="80" y="48" text-anchor="middle" class="sub">platform-web</text>
+        <text x="80" y="64" text-anchor="middle" class="sub">platform-service</text>
+      </g>
+
+      <!-- CloudWatch Logs -->
+      <g transform="translate(760,40)">
+        <rect width="170" height="80" rx="8" fill="#2a1e16" stroke="#6d4c41" stroke-width="1.5"/>
+        <text x="85" y="28" text-anchor="middle" class="lbl">CloudWatch Logs</text>
+        <text x="85" y="48" text-anchor="middle" class="sub">1-week retention</text>
+        <text x="85" y="64" text-anchor="middle" class="sub">Container Insights v2</text>
+      </g>
+
+      <!-- CI/CD -->
+      <g transform="translate(960,40)">
+        <rect width="180" height="80" rx="8" fill="#1a2347" stroke="#5eead4" stroke-width="1.2" stroke-dasharray="4 4"/>
+        <text x="90" y="28" text-anchor="middle" class="lbl">CI / CDK Deploy</text>
+        <text x="90" y="48" text-anchor="middle" class="sub">cdk deploy</text>
+        <text x="90" y="64" text-anchor="middle" class="sub">--context imageTag=…</text>
+      </g>
+
+      <!-- VPC container -->
+      <g transform="translate(60,170)">
+        <rect width="1080" height="510" rx="14" fill="#0f1530" stroke="#455a64" stroke-width="1.8"/>
+        <text x="20" y="28" class="lbl" fill="#9aa6d4">VPC · 2 AZs · 1 NAT Gateway</text>
+
+        <!-- Public subnet row -->
+        <rect x="20" y="50" width="1040" height="160" rx="10" fill="#13193a" stroke="#2a3566"/>
+        <text x="36" y="74" class="sub">Public subnets (ALB, NAT)</text>
+
+        <!-- ALB Web -->
+        <g transform="translate(80,90)">
+          <rect width="200" height="90" rx="8" fill="#3a1414" stroke="#d33" stroke-width="1.5"/>
+          <text x="100" y="28" text-anchor="middle" class="lbl">ALB · PlatformWeb</text>
+          <text x="100" y="48" text-anchor="middle" class="sub">HTTPS · HTTP→HTTPS redirect</text>
+          <text x="100" y="64" text-anchor="middle" class="sub">dev.platform.flowmachine.io</text>
+          <text x="100" y="80" text-anchor="middle" class="sub">health: /</text>
+        </g>
+
+        <!-- ALB Service -->
+        <g transform="translate(560,90)">
+          <rect width="220" height="90" rx="8" fill="#3a1414" stroke="#d33" stroke-width="1.5"/>
+          <text x="110" y="28" text-anchor="middle" class="lbl">ALB · PlatformService</text>
+          <text x="110" y="48" text-anchor="middle" class="sub">HTTPS · HTTP→HTTPS redirect</text>
+          <text x="110" y="64" text-anchor="middle" class="sub">dev.service.platform.flowmachine.io</text>
+          <text x="110" y="80" text-anchor="middle" class="sub">health: /health</text>
+        </g>
+
+        <!-- NAT -->
+        <g transform="translate(870,100)">
+          <rect width="150" height="70" rx="8" fill="#1f2a55" stroke="#5eead4"/>
+          <text x="75" y="28" text-anchor="middle" class="lbl">NAT Gateway</text>
+          <text x="75" y="50" text-anchor="middle" class="sub">egress for private</text>
+        </g>
+
+        <!-- Private subnet row -->
+        <rect x="20" y="230" width="1040" height="260" rx="10" fill="#13193a" stroke="#2a3566"/>
+        <text x="36" y="254" class="sub">Private subnets · ECS Cluster (Fargate)</text>
+
+        <!-- Cluster outer -->
+        <rect x="40" y="270" width="1000" height="200" rx="10" fill="#10331a" stroke="#2e7d32" stroke-width="1.3"/>
+        <text x="56" y="292" class="sub" fill="#a5d6a7">ECS Cluster — Container Insights v2</text>
+
+        <!-- Web service -->
+        <g transform="translate(80,310)">
+          <rect width="420" height="140" rx="10" fill="#14241a" stroke="#2e7d32"/>
+          <text x="16" y="24" class="lbl">Fargate Service · PlatformWeb</text>
+          <text x="16" y="42" class="sub">desiredCount: 1 · 256 CPU · 512 MiB</text>
+          <g transform="translate(16,56)">
+            <rect width="180" height="72" rx="8" fill="#0d1a12" stroke="#66bb6a"/>
+            <text x="90" y="22" text-anchor="middle" class="lbl">Container</text>
+            <text x="90" y="40" text-anchor="middle" class="sub">image: platform-web:&lt;tag&gt;</text>
+            <text x="90" y="56" text-anchor="middle" class="sub">PORT=3000 · NODE_ENV=production</text>
+          </g>
+          <g transform="translate(220,56)">
+            <rect width="180" height="72" rx="8" fill="#0d1a12" stroke="#66bb6a" stroke-dasharray="3 3"/>
+            <text x="90" y="22" text-anchor="middle" class="lbl">Task Definition</text>
+            <text x="90" y="40" text-anchor="middle" class="sub">Fargate · awsLogs driver</text>
+            <text x="90" y="56" text-anchor="middle" class="sub">streamPrefix: platform-web</text>
+          </g>
+        </g>
+
+        <!-- Service service -->
+        <g transform="translate(540,310)">
+          <rect width="460" height="140" rx="10" fill="#14241a" stroke="#2e7d32"/>
+          <text x="16" y="24" class="lbl">Fargate Service · PlatformService</text>
+          <text x="16" y="42" class="sub">desiredCount: 1 · 256 CPU · 512 MiB</text>
+          <g transform="translate(16,56)">
+            <rect width="200" height="72" rx="8" fill="#0d1a12" stroke="#66bb6a"/>
+            <text x="100" y="22" text-anchor="middle" class="lbl">Container</text>
+            <text x="100" y="40" text-anchor="middle" class="sub">image: platform-service:&lt;tag&gt;</text>
+            <text x="100" y="56" text-anchor="middle" class="sub">PORT=8000 · NODE_ENV=production</text>
+          </g>
+          <g transform="translate(236,56)">
+            <rect width="200" height="72" rx="8" fill="#0d1a12" stroke="#66bb6a" stroke-dasharray="3 3"/>
+            <text x="100" y="22" text-anchor="middle" class="lbl">Task Definition</text>
+            <text x="100" y="40" text-anchor="middle" class="sub">Fargate · awsLogs driver</text>
+            <text x="100" y="56" text-anchor="middle" class="sub">streamPrefix: platform-service</text>
+          </g>
+        </g>
+      </g>
+
+      <!-- Edges -->
+      <!-- User -> Route53 -->
+      <path class="edge" marker-end="url(#arrow)" d="M 100 80 C 140 80, 160 80, 180 80" />
+      <!-- Route53 -> ALBs (dashed: DNS) -->
+      <path class="edge-dash" marker-end="url(#arrow)" d="M 265 120 C 265 200, 240 230, 240 260" />
+      <path class="edge-dash" marker-end="url(#arrow)" d="M 265 120 C 265 200, 700 230, 730 260" />
+      <!-- ACM -> ALBs -->
+      <path class="edge-dash" marker-end="url(#arrow)" d="M 460 120 C 460 200, 280 230, 250 258" />
+      <path class="edge-dash" marker-end="url(#arrow)" d="M 460 120 C 460 200, 680 230, 700 258" />
+      <!-- ECR -> Tasks -->
+      <path class="edge-dash" marker-end="url(#arrow)" d="M 650 120 C 650 280, 380 360, 380 410" />
+      <path class="edge-dash" marker-end="url(#arrow)" d="M 650 120 C 650 280, 800 360, 820 410" />
+      <!-- Logs <- Tasks -->
+      <path class="edge-dash" marker-end="url(#arrow)" d="M 380 410 C 380 200, 845 200, 845 120" />
+      <path class="edge-dash" marker-end="url(#arrow)" d="M 820 410 C 820 200, 845 200, 845 120" />
+      <!-- CI -> ECR (push) and CI -> Stack (deploy) -->
+      <path class="edge" marker-end="url(#arrow)" d="M 1050 120 C 1050 90, 850 90, 810 90" />
+
+      <!-- User -> ALB Web (real traffic) -->
+      <path class="edge" marker-end="url(#arrow)" d="M 80 95 C 80 250, 200 250, 240 260" stroke="#5eead4"/>
+      <!-- User -> ALB Service -->
+      <path class="edge" marker-end="url(#arrow)" d="M 80 95 C 80 250, 600 250, 720 260" stroke="#5eead4"/>
+
+      <!-- ALB -> Task (target) -->
+      <path class="edge" marker-end="url(#arrow)" d="M 240 350 C 240 380, 200 390, 200 410" />
+      <path class="edge" marker-end="url(#arrow)" d="M 720 350 C 720 380, 700 390, 700 410" />
+    </svg>
+    <div class="legend">
+      <span><i class="swatch" style="background:#8c4fff"></i>Route 53</span>
+      <span><i class="swatch" style="background:#c2185b"></i>ACM</span>
+      <span><i class="swatch" style="background:#1976d2"></i>ECR</span>
+      <span><i class="swatch" style="background:#6d4c41"></i>CloudWatch Logs</span>
+      <span><i class="swatch" style="background:#d33"></i>ALB (ELBv2)</span>
+      <span><i class="swatch" style="background:#2e7d32"></i>ECS Fargate</span>
+      <span><i class="swatch" style="background:#455a64"></i>VPC</span>
+      <span><i class="swatch" style="background:#5eead4"></i>Live traffic</span>
+      <span style="opacity:0.8">— — — config / control plane</span>
+    </div>
+  </div>
+
+  <h2>What the stack provisions</h2>
+
+  <div class="grid">
+    <div class="card">
+      <h3>Shared (created once)</h3>
+      <ul>
+        <li><span class="pill">VPC</span> 2 AZs, 1 NAT gateway</li>
+        <li><span class="pill">ECS</span> Fargate cluster with Container Insights v2</li>
+        <li><span class="pill">DNS</span> Route 53 hosted zone lookup for <code>flowmachine.io</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Per service (looped)</h3>
+      <ul>
+        <li>CloudWatch log group (1-week retention)</li>
+        <li>ECR repo reference (existing)</li>
+        <li>ACM cert (DNS-validated)</li>
+        <li>Fargate task definition (256 CPU / 512 MiB)</li>
+        <li>ALB-fronted Fargate service (HTTPS, redirect HTTP)</li>
+        <li>Route 53 alias record → ALB</li>
+        <li>Custom health check on target group</li>
+        <li><code>CfnOutput</code>: URL + ALB DNS</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Services defined</h3>
+      <table>
+        <tr><th>Service</th><th>Host</th><th>Port</th><th>Health</th></tr>
+        <tr><td>platform-web</td><td>dev.platform.flowmachine.io</td><td>3000</td><td>/</td></tr>
+        <tr><td>platform-service</td><td>dev.service.platform.flowmachine.io</td><td>8000</td><td>/health</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h2>Code walkthrough</h2>
+
+  <div class="card" style="margin-bottom:16px;">
+    <h3>Inputs</h3>
+    <p><code>InfrastructureStackProps</code> extends <code>cdk.StackProps</code> with <code>imageTag: string</code> — the Docker tag to deploy (likely git SHA from CI).</p>
+    <p><code>ServiceSpec</code> describes one service: <code>id</code>, <code>repoName</code>, <code>hostname</code>, <code>containerPort</code>, <code>healthCheckPath</code>.</p>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <h3>Constructor (lines 43–64)</h3>
+    <ol>
+      <li>Create VPC — 2 AZs, 1 NAT.</li>
+      <li>Create ECS cluster in that VPC with Container Insights v2.</li>
+      <li>Look up the existing Route 53 hosted zone.</li>
+      <li>Loop <code>SERVICES</code> → <code>createService(...)</code> for each.</li>
+    </ol>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <h3>createService (lines 66–141)</h3>
+    <ol>
+      <li><b>LogGroup</b> — 1-week retention, destroyed with the stack.</li>
+      <li><b>ECR repo</b> — imported by name (managed outside).</li>
+      <li><b>ACM cert</b> — DNS-validated against the zone.</li>
+      <li><b>Task definition</b> — Fargate, 256 CPU / 512 MiB.</li>
+      <li><b>Container</b> — image from ECR, port mapping, awslogs driver, <code>NODE_ENV</code> + <code>PORT</code>.</li>
+      <li><b>ApplicationLoadBalancedFargateService</b> — public ALB, HTTPS-only, redirectHTTP, private subnets, R53 alias.</li>
+      <li><b>Health check</b> — overrides target group path.</li>
+      <li><b>Outputs</b> — public URL + ALB DNS.</li>
+    </ol>
+  </div>
+
+  <h2>Traffic path</h2>
+  <div class="card">
+    <ol>
+      <li>User hits <code>https://dev.platform.flowmachine.io</code>.</li>
+      <li>Route 53 resolves to the ALB (alias A-record).</li>
+      <li>ALB terminates TLS using the ACM cert, redirects HTTP→HTTPS.</li>
+      <li>ALB forwards to the Fargate task on the configured container port.</li>
+      <li>Task pulls its image from ECR on cold start; logs stream to CloudWatch.</li>
+      <li>Outbound traffic from the task → NAT gateway → internet.</li>
+    </ol>
+  </div>
+
+  <h2>Gaps and risks</h2>
+  <div class="card">
+    <ul class="gap-list">
+      <li><b>No autoscaling</b> — <code>desiredCount: 1</code>; a single task is a single point of failure.</li>
+      <li><b>No secrets wiring</b> — only <code>NODE_ENV</code> and <code>PORT</code>; no SSM Parameter Store / Secrets Manager integration yet.</li>
+      <li><b>Hardcoded "dev." hostnames</b> in what's framed as the production stack — no stage/env split.</li>
+      <li><b>No WAF, no CloudFront</b> — ALB is directly internet-facing.</li>
+      <li><b>Shared VPC + cluster</b> for both services — co-located failure domain (acceptable at this scale).</li>
+      <li><b>Log retention 1 week</b> + <code>RemovalPolicy.DESTROY</code> — fine for dev, probably too aggressive for prod.</li>
+    </ul>
+  </div>
+</main>
+
+<footer>
+  Generated from <code>package/infrastructure/lib/infrastructure-stack.ts</code> · Flow Machine
+</footer>
+</body>
+</html>
