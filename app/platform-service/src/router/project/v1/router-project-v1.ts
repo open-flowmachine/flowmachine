@@ -14,7 +14,10 @@ import {
   postProjectRequestBodyDtoSchema,
 } from "@/router/project/v1/router-project-v1-dto";
 import { routerAuthGuard } from "@/router/router-auth-guard";
+import { routerLogger } from "@/router/router-logger";
 import { errEnvelope, okEnvelope } from "@/shared/http/http-envelope";
+
+const MODULE = "project-v1-router";
 
 const toDto = (project: Project) =>
   ({
@@ -26,12 +29,15 @@ const toDto = (project: Project) =>
   }) satisfies ProjectResponseDto;
 
 const projectV1Router = new Elysia({ name: "projectV1HttpRouter" })
+  .use(routerLogger)
   .use(routerAuthGuard)
   .group("/api/v1/project", (r) =>
     r
       .post(
         "",
-        async ({ body, tenant }) => {
+        async ({ body, tenant, log }) => {
+          const opLog = log.child({ module: MODULE, op: "create" });
+          opLog.info("creating project");
           const result = await projectService.create({
             ctx: { tenant },
             payload: body,
@@ -39,13 +45,16 @@ const projectV1Router = new Elysia({ name: "projectV1HttpRouter" })
           if (result.isErr()) {
             return errEnvelope(result.error);
           }
+          opLog.info({ projectId: result.value.id }, "project created");
           return okEnvelope({ data: { id: result.value.id } });
         },
         {
           body: postProjectRequestBodyDtoSchema,
         },
       )
-      .get("", async ({ tenant }) => {
+      .get("", async ({ tenant, log }) => {
+        const opLog = log.child({ module: MODULE, op: "list" });
+        opLog.info("listing projects");
         const result = await projectService.list({
           ctx: { tenant },
         });
@@ -58,7 +67,13 @@ const projectV1Router = new Elysia({ name: "projectV1HttpRouter" })
       })
       .get(
         "/:id",
-        async ({ tenant, params }) => {
+        async ({ tenant, params, log }) => {
+          const opLog = log.child({
+            module: MODULE,
+            op: "get",
+            projectId: params.id,
+          });
+          opLog.info("getting project");
           const result = await projectService.get({
             ctx: { tenant },
             id: params.id,
@@ -74,7 +89,13 @@ const projectV1Router = new Elysia({ name: "projectV1HttpRouter" })
       )
       .patch(
         "/:id",
-        async ({ body, tenant, params }) => {
+        async ({ body, tenant, params, log }) => {
+          const opLog = log.child({
+            module: MODULE,
+            op: "update",
+            projectId: params.id,
+          });
+          opLog.info("updating project");
           const result = await projectService.update({
             ctx: { tenant },
             id: params.id,
@@ -92,7 +113,13 @@ const projectV1Router = new Elysia({ name: "projectV1HttpRouter" })
       )
       .delete(
         "/:id",
-        async ({ tenant, params }) => {
+        async ({ tenant, params, log }) => {
+          const opLog = log.child({
+            module: MODULE,
+            op: "delete",
+            projectId: params.id,
+          });
+          opLog.info("deleting project");
           const result = await projectService.delete({
             ctx: { tenant },
             id: params.id,

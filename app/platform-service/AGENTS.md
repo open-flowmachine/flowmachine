@@ -45,3 +45,7 @@ export { makeFooService };
 const fooClient = new FooSDK({ apiKey });
 export { fooClient };
 ```
+
+## Logging
+
+See [`src/vendor/pino/AGENTS.md`](src/vendor/pino/AGENTS.md). Modules and vendors stay silent; routers and features log lifecycle; errors are logged once at the boundary.

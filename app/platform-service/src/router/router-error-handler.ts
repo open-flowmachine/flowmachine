@@ -6,12 +6,18 @@ import { baseLog } from "@/vendor/pino/pino-log";
 
 const MODULE_NAME = "router-error-handler";
 
-const log = baseLog.child({ module: MODULE_NAME });
+const fallbackLog = baseLog.child({ module: MODULE_NAME });
 
 const routerErrorHandler = new Elysia({ name: MODULE_NAME }).onError(
   { as: "global" },
-  ({ error, code }) => {
-    log.error({ error });
+  (ctx) => {
+    const { error, code, request } = ctx;
+    const log = (ctx as { log?: typeof fallbackLog }).log ?? fallbackLog;
+
+    log.error(
+      { err: error, path: new URL(request.url).pathname },
+      "request failed",
+    );
 
     if (code === "VALIDATION") {
       const domainErr = Err.code("unprocessableEntity", { cause: error });
