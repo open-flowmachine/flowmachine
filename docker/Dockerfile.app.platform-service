@@ -8,4 +8,4 @@ ENV NODE_ENV=production
 
 EXPOSE 8000
 
-CMD ["bun", "api.js"]
+CMD ["bun", "index.js"]
