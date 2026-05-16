@@ -1,29 +1,26 @@
 import { Inngest, InngestMiddleware } from "inngest";
 
-import { makeInngestLog } from "@/vendor/pino/pino-log-inngest";
+import { baseLogger } from "@/vendor/pino/pino-logger";
 
 const loggerMiddleware = new InngestMiddleware({
   name: "logger",
   init: () => ({
     onFunctionRun: ({ ctx }) => {
-      const baseScopeLog = makeInngestLog({
+      const baseInngestLogger = baseLogger.child({
+        inboundType: "inngest",
         runId: ctx.runId,
         eventName: ctx.event.name,
-        attempt: 0,
       });
 
       return {
-        transformInput: ({ ctx: inputCtx }) => {
-          const log = baseScopeLog.child({
-            attempt: (inputCtx as { attempt?: number }).attempt ?? 0,
-          });
-          return { ctx: { log } };
-        },
+        transformInput: ({ ctx }) => ({
+          ctx: { logger: baseInngestLogger.child({ attempt: ctx.attempt }) },
+        }),
         transformOutput: ({ result }) => {
           if (result.error !== undefined) {
-            baseScopeLog.error(
-              { err: result.error },
-              "inngest function failed",
+            baseInngestLogger.error(
+              { error: result.error },
+              "Inngest function failed",
             );
           }
         },

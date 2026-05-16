@@ -1,11 +1,15 @@
 import pino from "pino";
 
-const isProd = process.env.NODE_ENV === "production";
-const isTest = process.env.NODE_ENV === "test";
+import { getEnv } from "@/vendor/env/env";
+
+type Logger = pino.Logger;
+
+const isProd = getEnv().NODE_ENV === "production";
+const isTest = getEnv().NODE_ENV === "test";
 
 const level = isTest ? "silent" : isProd ? "info" : "debug";
 
-const baseLog = pino({
+const baseLogger = pino({
   level,
   base: { service: "platform-service" },
   redact: {
@@ -23,14 +27,7 @@ const baseLog = pino({
     ],
     censor: "[REDACTED]",
   },
-  ...(!isProd && !isTest
-    ? {
-        transport: {
-          target: "pino-pretty",
-          options: { colorize: true, translateTime: "SYS:standard" },
-        },
-      }
-    : {}),
 });
 
-export { baseLog };
+export { baseLogger };
+export type { Logger };

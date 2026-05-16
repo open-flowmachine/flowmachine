@@ -13,8 +13,7 @@ import {
   patchProjectRequestParamsDtoSchema,
   postProjectRequestBodyDtoSchema,
 } from "@/router/project/v1/router-project-v1-dto";
-import { routerAuthGuard } from "@/router/router-auth-guard";
-import { routerLogger } from "@/router/router-logger";
+import { routerProtectedSetup } from "@/router/router-plugin";
 import { errEnvelope, okEnvelope } from "@/shared/http/http-envelope";
 
 const MODULE = "project-v1-router";
@@ -29,8 +28,7 @@ const toDto = (project: Project) =>
   }) satisfies ProjectResponseDto;
 
 const projectV1Router = new Elysia({ name: "projectV1HttpRouter" })
-  .use(routerLogger)
-  .use(routerAuthGuard)
+  .use(routerProtectedSetup)
   .group("/api/v1/project", (r) =>
     r
       .post(

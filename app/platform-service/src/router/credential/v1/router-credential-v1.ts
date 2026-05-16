@@ -13,7 +13,7 @@ import {
   patchCredentialRequestParamsDtoSchema,
   postCredentialRequestBodyDtoSchema,
 } from "@/router/credential/v1/router-credential-v1-dto";
-import { routerAuthGuard } from "@/router/router-auth-guard";
+import { routerProtectedSetup } from "@/router/router-plugin";
 import { errEnvelope, okEnvelope } from "@/shared/http/http-envelope";
 
 const toDto = (credential: Credential) => {
@@ -42,7 +42,7 @@ const toDto = (credential: Credential) => {
 };
 
 const credentialV1Router = new Elysia({ name: "credentialV1HttpRouter" })
-  .use(routerAuthGuard)
+  .use(routerProtectedSetup)
   .group("/api/v1/credential", (r) =>
     r
       .post(

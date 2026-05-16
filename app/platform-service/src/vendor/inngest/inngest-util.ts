@@ -6,9 +6,9 @@ import type {
 } from "@/vendor/inngest/inngest-type";
 
 import { validate } from "@/shared/schema/schema-validation";
-import { baseLog } from "@/vendor/pino/pino-log";
+import { baseLogger } from "@/vendor/pino/pino-logger";
 
-const log = baseLog.child({ context: "inngest-step-fn" });
+const log = baseLogger.child({ context: "inngest-step-fn" });
 
 const makeInngestFnHandler =
   <T, K>(input1: MakeInngestFnInput<T, K>) =>

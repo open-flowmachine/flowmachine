@@ -19,6 +19,8 @@ const envSchema = z.object({
   MONGO_DB_URL: z.string(),
   MONGO_DB_NAME: z.string(),
 
+  NODE_ENV: z.enum(["production", "test", "development"]),
+
   RESEND_API_KEY: z.string(),
   RESEND_FROM_ADDRESS: z
     .string()

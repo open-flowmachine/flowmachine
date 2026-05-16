@@ -13,15 +13,11 @@ import { healthRouter } from "@/router/health/router-health";
 import { inngestRouter } from "@/router/inngest/router-inngest";
 import { projectSyncV1Router } from "@/router/project/v1/router-project-sync-v1";
 import { projectV1Router } from "@/router/project/v1/router-project-v1";
-import { routerErrorHandler } from "@/router/router-error-handler";
-import { routerLogger } from "@/router/router-logger";
 import { webhookV1Router } from "@/router/webhook/v1/router-webhook-v1";
 import { workflowDefinitionV1Router } from "@/router/workflow/v1/router-workflow-definition-v1";
 import { workflowExecutionV1Router } from "@/router/workflow/v1/router-workflow-execution-v1";
 
 const app = new Elysia()
-  .use(routerLogger)
-  .use(routerErrorHandler)
   .use(cors())
   .use(
     openapi({

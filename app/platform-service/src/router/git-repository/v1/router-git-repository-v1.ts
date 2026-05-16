@@ -15,7 +15,7 @@ import {
   patchGitRepositoryRequestParamsDtoSchema,
   postGitRepositoryRequestBodyDtoSchema,
 } from "@/router/git-repository/v1/router-git-repository-v1-dto";
-import { routerAuthGuard } from "@/router/router-auth-guard";
+import { routerProtectedSetup } from "@/router/router-plugin";
 import { errEnvelope, okEnvelope } from "@/shared/http/http-envelope";
 
 const toDto = (gitRepository: GitRepository) =>
@@ -33,7 +33,7 @@ const toDto = (gitRepository: GitRepository) =>
 const gitRepositoryV1Router = new Elysia({
   name: "gitRepositoryV1HttpRouter",
 })
-  .use(routerAuthGuard)
+  .use(routerProtectedSetup)
   .group("/api/v1/git-repository", (r) =>
     r
       .post(

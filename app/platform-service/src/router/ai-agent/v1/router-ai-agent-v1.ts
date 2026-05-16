@@ -10,7 +10,7 @@ import {
   patchAiAgentRequestParamsDtoSchema,
   postAiAgentRequestBodyDtoSchema,
 } from "@/router/ai-agent/v1/router-ai-agent-v1-dto";
-import { routerAuthGuard } from "@/router/router-auth-guard";
+import { routerProtectedSetup } from "@/router/router-plugin";
 import { errEnvelope, okEnvelope } from "@/shared/http/http-envelope";
 
 const aiAgentService = makeAiAgentService();
@@ -26,7 +26,7 @@ const toDto = (aiAgent: AiAgent) =>
   }) satisfies AiAgentResponseDto;
 
 const aiAgentV1Router = new Elysia({ name: "aiAgentV1HttpRouter" })
-  .use(routerAuthGuard)
+  .use(routerProtectedSetup)
   .group("/api/v1/ai-agent", (r) =>
     r
       .post(

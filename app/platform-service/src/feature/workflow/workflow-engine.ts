@@ -6,14 +6,14 @@ import { makeWorkflowDefinitionService } from "@/module/workflow/workflow-defini
 import { idSchema } from "@/shared/model/model-id";
 import { validate } from "@/shared/schema/schema-validation";
 import { tenantSchema } from "@/shared/tenant/tenant-model";
-import { baseLog } from "@/vendor/pino/pino-log";
+import { baseLogger } from "@/vendor/pino/pino-logger";
 
 const eventDataSchema = z.object({
   workflowDefinitionId: idSchema,
   tenant: tenantSchema,
 });
 
-const log = baseLog.child({ context: "workflow-engine" });
+const log = baseLogger.child({ context: "workflow-engine" });
 const workflowDefinitionService = makeWorkflowDefinitionService();
 
 const workflowEngine = new Engine({

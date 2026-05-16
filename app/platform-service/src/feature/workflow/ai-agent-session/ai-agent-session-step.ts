@@ -16,9 +16,9 @@ import { type Id } from "@/shared/model/model-id";
 import { type Tenant, type TenantAware } from "@/shared/tenant/tenant-model";
 import { daytonaClient } from "@/vendor/daytona/daytona-client";
 import { getEnv } from "@/vendor/env/env";
-import { baseLog } from "@/vendor/pino/pino-log";
+import { baseLogger } from "@/vendor/pino/pino-logger";
 
-const log = baseLog.child({ context: "ai-agent-session-step" });
+const log = baseLogger.child({ context: "ai-agent-session-step" });
 
 const aiAgentRunService = makeAiAgentRunService();
 const aiAgentService = makeAiAgentService();

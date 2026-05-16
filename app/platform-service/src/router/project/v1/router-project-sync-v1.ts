@@ -11,7 +11,7 @@ import { makeProjectIssueFieldDefinitionService } from "@/module/project/project
 import { makeProjectService } from "@/module/project/project-service";
 import { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";
 import { postProjectSyncRequestParamsDtoSchema } from "@/router/project/v1/router-project-sync-v1-dto";
-import { routerAuthGuard } from "@/router/router-auth-guard";
+import { routerProtectedSetup } from "@/router/router-plugin";
 import { errEnvelope, okEnvelope } from "@/shared/http/http-envelope";
 import { makeJiraService } from "@/vendor/jira/jira-service";
 
@@ -43,7 +43,7 @@ const projectSyncService = makeProjectSyncService({
 });
 
 const projectSyncV1Router = new Elysia({ name: "projectSyncV1HttpRouter" })
-  .use(routerAuthGuard)
+  .use(routerProtectedSetup)
   .group("/api/v1/project/:projectId/sync", (r) =>
     r.post(
       "",

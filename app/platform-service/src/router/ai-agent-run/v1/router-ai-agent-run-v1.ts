@@ -8,7 +8,7 @@ import {
   getAiAgentRunRequestParamsDtoSchema,
   listAiAgentRunsRequestParamsDtoSchema,
 } from "@/router/ai-agent-run/v1/router-ai-agent-run-v1-dto";
-import { routerAuthGuard } from "@/router/router-auth-guard";
+import { routerProtectedSetup } from "@/router/router-plugin";
 import { errEnvelope, okEnvelope } from "@/shared/http/http-envelope";
 
 const aiAgentRunService = makeAiAgentRunService();
@@ -25,7 +25,7 @@ const toDto = (aiAgentRun: AiAgentRun) =>
   }) satisfies AiAgentRunResponseDto;
 
 const aiAgentRunV1Router = new Elysia({ name: "aiAgentRunV1HttpRouter" })
-  .use(routerAuthGuard)
+  .use(routerProtectedSetup)
   .group("/api/v1/ai-agent/:aiAgentId/run", (r) =>
     r
       .get(

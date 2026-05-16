@@ -8,7 +8,7 @@ import {
   listAiAgentRunMessagesRequestParamsDtoSchema,
   postAiAgentRunMessageRequestBodyDtoSchema,
 } from "@/router/ai-agent-run-message/v1/router-ai-agent-run-message-v1-dto";
-import { routerAuthGuard } from "@/router/router-auth-guard";
+import { routerProtectedSetup } from "@/router/router-plugin";
 import { errEnvelope, okEnvelope } from "@/shared/http/http-envelope";
 
 const aiAgentRunMessageService = makeAiAgentRunMessageService();
@@ -29,7 +29,7 @@ const toDto = (message: AiAgentRunMessage) =>
 const aiAgentRunMessageV1Router = new Elysia({
   name: "aiAgentRunMessageV1HttpRouter",
 })
-  .use(routerAuthGuard)
+  .use(routerProtectedSetup)
   .group("/api/v1/ai-agent/:aiAgentId/run/:aiAgentRunId/message", (r) =>
     r
       .post(

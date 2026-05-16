@@ -4,7 +4,7 @@ import type { WorkflowDefinition } from "@/module/workflow/workflow-definition-m
 import type { WorkflowDefinitionResponseDto } from "@/router/workflow/v1/router-workflow-definition-v1-dto";
 
 import { makeWorkflowDefinitionService } from "@/module/workflow/workflow-definition-service";
-import { routerAuthGuard } from "@/router/router-auth-guard";
+import { routerProtectedSetup } from "@/router/router-plugin";
 import {
   deleteWorkflowDefinitionRequestParamsDtoSchema,
   patchWorkflowDefinitionRequestBodyDtoSchema,
@@ -31,7 +31,7 @@ const toDto = (definition: WorkflowDefinition) =>
 const workflowDefinitionV1Router = new Elysia({
   name: "workflowDefinitionV1HttpRouter",
 })
-  .use(routerAuthGuard)
+  .use(routerProtectedSetup)
   .group("/api/v1/workflow-definition", (r) =>
     r
       .post(
