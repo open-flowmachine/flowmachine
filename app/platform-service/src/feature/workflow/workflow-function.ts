@@ -29,7 +29,9 @@ const initializeWorkflowExecution = inngestClient.createFunction(
   { id: WORKFLOW_EXECUTION_INITIALIZE_FUNCTION_ID },
   { event: WORKFLOW_EXECUTION_TRIGGERED_EVENT },
   async (input) => {
-    const { event, step } = input;
+    const { event, step, log } = input as typeof input & {
+      log: import("pino").Logger;
+    };
 
     const validationResult = validate(
       initializeWorkflowExecutionEventDataSchema,
@@ -37,7 +39,7 @@ const initializeWorkflowExecution = inngestClient.createFunction(
     );
 
     if (validationResult.isErr()) {
-      console.error("Invalid event data:", validationResult.error);
+      log.warn({ err: validationResult.error }, "invalid event data");
       return;
     }
     const {
@@ -91,8 +93,17 @@ const startWorkflowExecution = inngestClient.createFunction(
   { id: WORKFLOW_EXECUTION_START_FUNCTION_ID },
   { event: WORKFLOW_EXECUTION_INITIALIZED_EVENT },
   async (input) => {
-    console.log("Starting workflow execution with input:", input);
-    const { event, step } = input;
+    const { event, step, log } = input as typeof input & {
+      log: import("pino").Logger;
+    };
+    log.info(
+      {
+        workflowDefinitionId: (event.data as { workflowDefinitionId?: string })
+          .workflowDefinitionId,
+        aiAgentId: (event.data as { aiAgentId?: string }).aiAgentId,
+      },
+      "starting workflow execution",
+    );
     await workflowEngine.run({ event, step });
   },
 );

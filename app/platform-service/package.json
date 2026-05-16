@@ -37,6 +37,7 @@
     "@inngest/test": "catalog:",
     "@total-typescript/ts-reset": "catalog:",
     "@types/bun": "catalog:",
+    "pino-pretty": "catalog:",
     "type-fest": "catalog:"
   }
 }

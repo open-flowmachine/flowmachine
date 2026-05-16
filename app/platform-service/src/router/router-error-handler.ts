@@ -2,25 +2,37 @@ import Elysia from "elysia";
 
 import { Err } from "@/shared/err/err";
 import { errEnvelope } from "@/shared/http/http-envelope";
-import { baseLog } from "@/vendor/pino/pino-log";
+import { baseLogger, type Logger } from "@/vendor/pino/pino-logger";
 
 const MODULE_NAME = "router-error-handler";
 
-const log = baseLog.child({ module: MODULE_NAME });
+const fallbackLogger = baseLogger.child({ module: MODULE_NAME });
 
-const routerErrorHandler = new Elysia({ name: MODULE_NAME }).onError(
-  { as: "global" },
-  ({ error, code }) => {
-    log.error({ error });
+const routerErrorHandler = (
+  app: Elysia<
+    "",
+    {
+      decorator: {};
+      derive: { logger: Logger };
+      resolve: {};
+      store: {};
+    }
+  >,
+) =>
+  app.onError(({ error, code, logger: defaultLogger }) => {
+    let err = null;
+    const logger = defaultLogger ?? fallbackLogger;
 
-    if (code === "VALIDATION") {
-      const domainErr = Err.code("unprocessableEntity", { cause: error });
-      return errEnvelope(domainErr);
+    switch (code) {
+      case "VALIDATION":
+        err = Err.code("unprocessableEntity", { cause: error });
+        break;
+      default:
+        err = Err.from(error);
     }
 
-    const domainErr = Err.from(error);
-    return errEnvelope(domainErr);
-  },
-);
+    logger.error({ error }, "Request failed");
+    return errEnvelope(err);
+  });
 
 export { routerErrorHandler };
